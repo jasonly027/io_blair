@@ -18,7 +18,7 @@ class Server : public std::enable_shared_from_this<Server> {
     int run(int8_t threads = 1);
 
    private:
-    static void fail(error_code ec, const char* what);
+    static void log_err(error_code ec, const char* what);
 
     void on_accept(error_code ec);
 

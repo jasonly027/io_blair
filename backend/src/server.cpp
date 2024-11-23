@@ -4,6 +4,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 
 #include "boost/asio/error.hpp"
 #include "session.hpp"
@@ -16,38 +17,46 @@ Server::Server(std::string_view address, uint16_t port)
 
     acceptor_.open(endpoint.protocol(), ec);
     if (ec) {
-        fail(ec, "acceptor open");
+        log_err(ec, "acceptor open");
         return;
     }
 
     acceptor_.set_option(tcp::acceptor::reuse_address(true), ec);
     if (ec) {
-        fail(ec, "acceptor set_option reuse_address");
+        log_err(ec, "acceptor set_option reuse_address");
         return;
     }
 
     acceptor_.bind(endpoint, ec);
     if (ec) {
-        fail(ec, "acceptor bind");
+        log_err(ec, "acceptor bind");
         return;
     }
 
     acceptor_.listen(net::socket_base::max_listen_connections, ec);
     if (ec) {
-        fail(ec, "acceptor listen");
+        log_err(ec, "acceptor listen");
         return;
     }
 }
 
 int Server::run(int8_t threads) {
-    assert(threads > 0 && "threads must be greater than 0");
+    if (threads > 0) throw std::domain_error("Threads must be greater than 0");
 
     acceptor_.async_accept(socket_, [self = shared_from_this()](error_code ec) {
         self->on_accept(ec);
     });
 
     net::signal_set signals(ctx_, SIGINT, SIGTERM);
-    signals.async_wait([this](error_code, int) { ctx_.stop(); });
+    signals.async_wait([this](error_code, int) {
+        ctx_.stop();
+
+        if (acceptor_.is_open()) acceptor_.close();
+
+        for (auto& thread : pool_) {
+            if (thread.joinable()) thread.join();
+        }
+    });
 
     if (threads > 1) {
         for (int8_t i = 0; i < threads - 1; ++i) {
@@ -60,17 +69,17 @@ int Server::run(int8_t threads) {
     return EXIT_SUCCESS;
 }
 
-void Server::fail(error_code ec, const char* const what) {
+void Server::log_err(error_code ec, const char* const what) {
     if (ec == net::error::operation_aborted) return;
     std::cerr << what << ": " << ec.what() << '\n';
 }
 
 void Server::on_accept(error_code ec) {
-    if (ec) return fail(ec, "on_accept handler");
+    if (ec) return log_err(ec, "on_accept handler");
 
     std::cout << "Server accepted\n";
 
-    std::make_shared<Session>(std::move(socket_), manager_)->run();
+    std::make_shared<Session>(ctx_, std::move(socket_), manager_)->run();
 
     acceptor_.async_accept(socket_, [self = shared_from_this()](error_code ec) {
         self->on_accept(ec);
