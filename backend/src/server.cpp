@@ -42,10 +42,16 @@ Server::Server(std::string_view address, uint16_t port)
 int Server::run(int8_t threads) {
     if (threads > 0) throw std::domain_error("Threads must be greater than 0");
 
+    /*
+        Queue up a connection accept to the async queue.
+        No threads have invoked ctx_.run() yet, so this will just sit in queue
+        for now.
+    */
     acceptor_.async_accept(socket_, [self = shared_from_this()](error_code ec) {
         self->on_accept(ec);
     });
 
+    // Cleanup on server termination
     net::signal_set signals(ctx_, SIGINT, SIGTERM);
     signals.async_wait([this](error_code, int) {
         ctx_.stop();
@@ -57,12 +63,14 @@ int Server::run(int8_t threads) {
         }
     });
 
+    // Create threads that are available to take async work
     if (threads > 1) {
         for (int8_t i = 0; i < threads - 1; ++i) {
             pool_.emplace_back(
                 [self = shared_from_this()] { self->ctx_.run(); });
         }
     }
+    // This thread itself will relinquish control and take async work too
     ctx_.run();
 
     return EXIT_SUCCESS;
@@ -78,8 +86,17 @@ void Server::on_accept(error_code ec) {
 
     std::cout << "Server accepted\n";
 
+    /*
+        When this handler is invoked, socket_ will contain a TCP connection.
+        We construct a new Session instance with the socket.
+    */
     std::make_shared<Session>(ctx_, std::move(socket_), manager_)->run();
 
+    /*
+        Wait for a new connection request.
+        Because we called std::move(socket_) on the previous line,
+        socket_ is restored to a state ready to contain a new TCP connection.
+    */
     acceptor_.async_accept(socket_, [self = shared_from_this()](error_code ec) {
         self->on_accept(ec);
     });
