@@ -26,6 +26,6 @@ class Server : public std::enable_shared_from_this<Server> {
     tcp::socket socket_;
     tcp::acceptor acceptor_;
     std::vector<std::thread> pool_;
-    std::shared_ptr<LobbyManager> manager_;
+    LobbyManager manager_;
 };
 }  // namespace io_blair

@@ -1,59 +1,50 @@
 #include "game.hpp"
 
-#include <boost/json.hpp>
 #include <iostream>
-#include <memory>
-#include <optional>
 
-#include "boost/json/object.hpp"
 #include "net_common.hpp"
 #include "response.hpp"
+#include "session.hpp"
 
-using std::optional, std::nullopt, std::shared_ptr, std::string;
+using std::string;
+namespace resp = io_blair::response;
+namespace fields = resp::fields;
 
 namespace io_blair {
-Game::Game(const std::shared_ptr<LobbyManager>& manager)
-    : manager_(manager), state_(State::kOutsideLobby) {}
+Game::Game(Session& session) : session_(session), state_(State::kPrelobby) {}
 
-optional<shared_ptr<string>> Game::parse(beast::string_view sv) {
-    optional<json::object> obj = parse_json(sv);
-    if (!obj.has_value()) return std::make_shared<string>(response::kError);
+void Game::parse(string data) {
+    // passed data must be non-const to allow library to add SIMDJSON_PADDING
+    auto doc = parser_.iterate(data);
+    if (doc.error()) return;
 
     switch (state_) {
-        case State::kOutsideLobby:
-            return parse_outside_lobby(*obj);
+        case State::kPrelobby:
+            return parse_prelobby(doc.value());
         case State::kCharacterSelect:
         case State::kInGame:
         case State::kGameDone:
             break;
     }
-    return {};
 }
 
 void Game::log_err(error_code ec, const char* what) {
     std::cerr << what << ": " << ec.what() << '\n';
 }
 
-std::optional<json::object> Game::parse_json(beast::string_view sv) {
-    parser_.reset();
+void Game::parse_prelobby(json::document& doc) {
+    using fields::kPrelobby;
 
-    try {
-        error_code ec;
-        parser_.write(sv, ec);
-        if (ec) {
-            log_err(ec, "parser_write");
-            return nullopt;
-        }
-        return parser_.release().as_object();
-    } catch (const boost::system::system_error& e) {
-        std::cerr << e.what();
-        return nullopt;
+    string lobby_type;
+    if (auto ec = doc[kPrelobby.type].get_string(lobby_type); ec) {
+        return;
     }
-}
 
-optional<shared_ptr<string>> Game::parse_outside_lobby(
-    const json::object& obj) {
-    return nullopt;
+    if (lobby_type == kPrelobby.type_create) {
+        // todo
+    } else if (lobby_type == kPrelobby.type_join) {
+        // todo
+    }
 }
 
 }  // namespace io_blair

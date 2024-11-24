@@ -5,21 +5,19 @@
 #include <memory>
 #include <string>
 
-#include "boost/asio/bind_executor.hpp"
-#include "boost/asio/io_context.hpp"
-#include "boost/asio/post.hpp"
-#include "net_common.hpp"
+#include "game.hpp"
+#include "lobby_manager.hpp"
 
 using std::cout, std::cerr;
 
 namespace io_blair {
 Session::Session(net::io_context& ctx, tcp::socket socket,
-                 const std::shared_ptr<LobbyManager>& manager)
+                 LobbyManager& manager)
     : socket_(std::move(socket)),
       ws_(socket_),
       manager_(manager),
       write_strand_(net::make_strand(ctx)),
-      state_(manager_) {
+      state_(*this) {
     ws_.set_option(
         websocket::stream_base::timeout::suggested(beast::role_type::server));
 }
@@ -28,6 +26,24 @@ void Session::run() {
     ws_.async_accept(
         [self = shared_from_this()](error_code ec) { self->on_accept(ec); });
 }
+
+void Session::write(const std::shared_ptr<std::string>& str) {
+    net::post(write_strand_, [str, self = shared_from_this()] {
+        self->queue_.push_back(str);
+
+        if (self->queue_.size() > 1) return;
+
+        self->ws_.async_write(
+            net::buffer(*self->queue_.front()),
+            net::bind_executor(self->write_strand_,
+                               [self = self->shared_from_this()](
+                                   error_code ec, std::size_t bytes) {
+                                   self->on_write(ec, bytes);
+                               }));
+    });
+}
+
+LobbyManager& Session::manager() { return manager_; }
 
 Session::Error Session::fail(error_code ec, const char* what) {
     if (ec == websocket::condition::handshake_failed ||
@@ -55,35 +71,16 @@ void Session::on_accept(error_code ec) {
         });
 }
 
-void Session::on_read(error_code ec, std::size_t bytes) {
+void Session::on_read(error_code ec, std::size_t) {
     if (ec && fail(ec, "ws on_read") == Error::kFatal) return;
 
-    const beast::string_view sv(net::buffer_cast<const char*>(buffer_.data()),
-                                bytes);
-    if (auto reply = state_.parse(sv)) {
-        write(*reply);
-    }
+    state_.parse(beast::buffers_to_string(buffer_.data()));
+    buffer_.consume(buffer_.size());
 
     ws_.async_read(
         buffer_, [self = shared_from_this()](error_code ec, std::size_t bytes) {
             self->on_read(ec, bytes);
         });
-}
-
-void Session::write(const std::shared_ptr<std::string>& str) {
-    net::post(write_strand_, [str, self = shared_from_this()] {
-        self->queue_.push_back(str);
-
-        if (self->queue_.size() > 1) return;
-
-        self->ws_.async_write(
-            net::buffer(*self->queue_.front()),
-            net::bind_executor(self->write_strand_,
-                               [self = self->shared_from_this()](
-                                   error_code ec, std::size_t bytes) {
-                                   self->on_write(ec, bytes);
-                               }));
-    });
 }
 
 void Session::on_write(error_code ec, std::size_t bytes [[maybe_unused]]) {

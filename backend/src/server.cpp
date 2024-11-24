@@ -6,12 +6,11 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "boost/asio/error.hpp"
 #include "session.hpp"
 
 namespace io_blair {
 Server::Server(std::string_view address, uint16_t port)
-    : socket_(ctx_), acceptor_(ctx_), manager_(new LobbyManager()) {
+    : socket_(ctx_), acceptor_(ctx_), manager_() {
     tcp::endpoint endpoint(net::ip::make_address(address), port);
     error_code ec;
 
