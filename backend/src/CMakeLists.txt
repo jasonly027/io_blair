@@ -2,6 +2,8 @@ add_library(${PROJECT_NAME}_lib STATIC
     server.cpp
     session.cpp
     game.cpp
+    lobby_manager.cpp
+    lobby.cpp
 )
 target_include_directories(${PROJECT_NAME}_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

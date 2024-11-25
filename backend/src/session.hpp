@@ -3,12 +3,12 @@
 #include <memory>
 #include <vector>
 
-#include "lobby_manager.hpp"
-#include "net_common.hpp"
 #include "game.hpp"
+#include "net_common.hpp"
 
 namespace io_blair {
-class Game;
+class LobbyManager;
+class Lobby;
 class Session : public std::enable_shared_from_this<Session> {
    public:
     enum class Error {
@@ -18,8 +18,7 @@ class Session : public std::enable_shared_from_this<Session> {
         kRecoverable
     };
 
-    Session(net::io_context& ctx, tcp::socket socket,
-            LobbyManager& manager);
+    Session(net::io_context& ctx, tcp::socket socket, LobbyManager& manager);
 
     // Listen for Websocket upgrade request
     void run();
@@ -28,6 +27,8 @@ class Session : public std::enable_shared_from_this<Session> {
     void write(const std::shared_ptr<std::string>& str);
 
     LobbyManager& manager();
+
+    std::shared_ptr<Lobby>& lobby();
 
    private:
     /*
@@ -56,13 +57,14 @@ class Session : public std::enable_shared_from_this<Session> {
     websocket::stream<tcp::socket&> ws_;
     // Incoming messages are written to this buffer
     beast::flat_static_buffer<500> buffer_;
-    LobbyManager& manager_;
     // Synchronizes writes
     net::strand<net::io_context::executor_type> write_strand_;
     // Queue of messages to be written
     std::vector<std::shared_ptr<const std::string>> queue_;
     // Parses and acts on incoming messages
     Game state_;
+    LobbyManager& manager_;
+    std::shared_ptr<Lobby> lobby_;
 };
 
 }  // namespace io_blair

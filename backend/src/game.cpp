@@ -2,15 +2,15 @@
 
 #include <iostream>
 
+#include "lobby_manager.hpp"
 #include "net_common.hpp"
 #include "response.hpp"
 #include "session.hpp"
 
 using std::string;
-namespace resp = io_blair::response;
-namespace fields = resp::fields;
 
 namespace io_blair {
+namespace resp = response;
 Game::Game(Session& session) : session_(session), state_(State::kPrelobby) {}
 
 void Game::parse(string data) {
@@ -41,7 +41,10 @@ void Game::parse_prelobby(json::document& doc) {
     }
 
     if (lobby_type == kPrelobby.type_create) {
-        // todo
+        session_.lobby() =
+            session_.manager().create(session_.shared_from_this());
+        session_.write(resp::create_lobby(session_.lobby()->code_));
+        state_ = State::kCharacterSelect;
     } else if (lobby_type == kPrelobby.type_join) {
         // todo
     }

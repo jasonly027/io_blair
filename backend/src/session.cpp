@@ -1,23 +1,21 @@
-
 #include "session.hpp"
 
 #include <iostream>
-#include <memory>
 #include <string>
 
-#include "game.hpp"
+#include "lobby.hpp"
 #include "lobby_manager.hpp"
 
-using std::cout, std::cerr;
+using std::cout, std::cerr, std::shared_ptr;
 
 namespace io_blair {
 Session::Session(net::io_context& ctx, tcp::socket socket,
                  LobbyManager& manager)
     : socket_(std::move(socket)),
       ws_(socket_),
-      manager_(manager),
       write_strand_(net::make_strand(ctx)),
-      state_(*this) {
+      state_(*this),
+      manager_(manager) {
     ws_.set_option(
         websocket::stream_base::timeout::suggested(beast::role_type::server));
 }
@@ -52,6 +50,8 @@ void Session::write(const std::shared_ptr<std::string>& str) {
 }
 
 LobbyManager& Session::manager() { return manager_; }
+
+shared_ptr<Lobby>& Session::lobby() { return lobby_; }
 
 Session::Error Session::fail(error_code ec, const char* what) {
     // If (ec) is one of the following errors, the session must close

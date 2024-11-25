@@ -1,9 +1,11 @@
 #pragma once
 
+#include <format>
 #include <memory>
 #include <string>
+#include <utility>
+
 namespace io_blair {
-namespace response {
 
 namespace fields {
 
@@ -15,9 +17,18 @@ constexpr struct {
 
 }  // namespace fields
 
-inline auto make(const char* const response) {
-    return std::make_shared<std::string>(response);
+namespace response {
+
+template <typename T>
+[[nodiscard]] inline auto make(T&& response) {
+    return std::make_shared<std::string>(std::forward<T>(response));
+}
+
+template <typename T>
+[[nodiscard]] inline auto create_lobby(T&& code) {
+    return make(std::format(R"({{ "code" : "{}" }})", std::forward<T>(code)));
 }
 
 }  // namespace response
+
 }  // namespace io_blair
