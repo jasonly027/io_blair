@@ -9,8 +9,11 @@
 namespace io_blair {
 
 namespace json = simdjson::ondemand;
+
 using json_parser = json::parser;
+
 class Session;
+
 class Game {
    public:
     // Game states
@@ -39,14 +42,20 @@ class Game {
 
     explicit Game(Session& session);
 
-    // Parse and act on incoming message
-    void parse(std::string data);
-
     // Print to stderr
     static void log_err(error_code ec, const char* what);
 
+    // Parse and act on incoming message
+    void parse(std::string data);
+
    private:
+    void write(const std::shared_ptr<std::string>& str);
+
     void parse_prelobby(json::document& doc);
+
+    void create_lobby();
+
+    void join_lobby(json::document& doc);
 
     // Reference to session that owns this game state
     Session& session_;

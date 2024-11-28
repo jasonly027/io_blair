@@ -1,21 +1,19 @@
 #include "session.hpp"
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "lobby.hpp"
-#include "lobby_manager.hpp"
 
-using std::cout, std::cerr, std::shared_ptr;
+using std::cout, std::cerr, std::string, std::shared_ptr;
 
 namespace io_blair {
-Session::Session(net::io_context& ctx, tcp::socket socket,
-                 LobbyManager& manager)
+Session::Session(net::io_context& ctx, tcp::socket socket)
     : socket_(std::move(socket)),
       ws_(socket_),
       write_strand_(net::make_strand(ctx)),
-      state_(*this),
-      manager_(manager) {
+      state_(*this) {
     ws_.set_option(
         websocket::stream_base::timeout::suggested(beast::role_type::server));
 }
@@ -34,22 +32,13 @@ void Session::write(const std::shared_ptr<std::string>& str) {
         /*
             If there there are already messages in the queue,
             the logic of on_write() will already know it needs to
-            keep queueing async_write().
+            keep queueing writes.
 
-            Otherwise, this needs to start the async_write() chain.
+            Otherwise, this needs to start the write chain.
         */
-        if (self->queue_.size() > 1) return;
-        self->ws_.async_write(
-            net::buffer(*self->queue_.front()),
-            net::bind_executor(self->write_strand_,
-                               [self = self->shared_from_this()](
-                                   error_code ec, std::size_t bytes) {
-                                   self->on_write(ec, bytes);
-                               }));
+        if (self->queue_.size() <= 1) self->prepare_for_next_write();
     });
 }
-
-LobbyManager& Session::manager() { return manager_; }
 
 shared_ptr<Lobby>& Session::lobby() { return lobby_; }
 
@@ -73,8 +62,10 @@ void Session::log_err(error_code ec, const char* what) {
 
 void Session::on_accept(error_code ec) {
     if (ec && fail(ec, "ws on_accept") == Error::kFatal) return;
+    prepare_for_next_read();
+}
 
-    // If no errors, we can now start listening for messages
+void Session::prepare_for_next_read() {
     ws_.async_read(
         buffer_, [self = shared_from_this()](error_code ec, std::size_t bytes) {
             self->on_read(ec, bytes);
@@ -84,36 +75,33 @@ void Session::on_accept(error_code ec) {
 void Session::on_read(error_code ec, std::size_t) {
     if (ec && fail(ec, "ws on_read") == Error::kFatal) return;
 
-    // Let state_ parse incoming message
     state_.parse(beast::buffers_to_string(buffer_.data()));
     buffer_.consume(buffer_.size());
 
-    // Wait for a new incoming message
-    ws_.async_read(
-        buffer_, [self = shared_from_this()](error_code ec, std::size_t bytes) {
-            self->on_read(ec, bytes);
-        });
+    prepare_for_next_read();
+}
+
+void Session::prepare_for_next_write() {
+    ws_.async_write(net::buffer(*queue_.front()),
+                    net::bind_executor(write_strand_,
+                                       [self = shared_from_this()](
+                                           error_code ec, std::size_t bytes) {
+                                           self->on_write(ec, bytes);
+                                       }));
 }
 
 void Session::on_write(error_code ec, std::size_t bytes [[maybe_unused]]) {
     if (ec && fail(ec, "ws on_write") == Error::kFatal) return;
 
-    // We can now erase it from the queue
+    // Finished writing msg, remove it from the queue
     queue_.erase(queue_.begin());
 
     // Continue writing if queue isn't empty
-    if (!queue_.empty()) {
-        ws_.async_write(
-            net::buffer(*queue_.front()),
-            net::bind_executor(
-                write_strand_,
-                [self = shared_from_this()](error_code ec, std::size_t bytes) {
-                    self->on_write(ec, bytes);
-                }));
-    }
+    if (!queue_.empty()) prepare_for_next_write();
 }
 
 void Session::close() {
+    if (lobby_) lobby_->leave(this);
     // Send close message through Websocket stream
     ws_.async_close(websocket::close_code::normal,
                     [self = shared_from_this()](error_code ec) {
