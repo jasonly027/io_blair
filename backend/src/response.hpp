@@ -13,6 +13,8 @@ constexpr struct {
     const char* type = "lobby_type";
     const char* type_create = "create";
     const char* type_join = "join";
+    const char* join_code = "code";
+
 } kPrelobby;
 
 }  // namespace fields
@@ -27,6 +29,11 @@ template <typename T>
 template <typename T>
 [[nodiscard]] inline auto create_lobby(T&& code) {
     return make(std::format(R"({{ "code" : "{}" }})", std::forward<T>(code)));
+}
+
+inline auto join(bool success) {
+    return make(
+        std::format(R"({{ "join" : "{}" }})", success ? "success" : "fail"));
 }
 
 }  // namespace response
