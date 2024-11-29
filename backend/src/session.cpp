@@ -40,7 +40,7 @@ void Session::write(const std::shared_ptr<std::string>& str) {
     });
 }
 
-shared_ptr<Lobby>& Session::lobby() { return lobby_; }
+auto Session::lobby() -> shared_ptr<Lobby>& { return lobby_; }
 
 Session::Error Session::fail(error_code ec, const char* what) {
     // If (ec) is one of the following errors, the session must close

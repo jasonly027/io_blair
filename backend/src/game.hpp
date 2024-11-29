@@ -4,6 +4,8 @@
 
 #include <string>
 
+#include "lobby.hpp"
+#include "lobby_manager.hpp"
 #include "net_common.hpp"
 
 namespace io_blair {
@@ -15,6 +17,9 @@ using json_parser = json::parser;
 template <typename Session>
 class BasicGame {
    public:
+    using Lobby = BasicLobby<Session>;
+    using LobbyManager = BasicLobbyManager<Lobby>;
+
     // Game states
     enum class State {
         /*

@@ -3,12 +3,16 @@
 #include <memory>
 #include <string>
 
+#include "lobby_manager.hpp"
+
 namespace io_blair {
-class Session;
-class Lobby : public std::enable_shared_from_this<Lobby> {
+template <typename Session>
+class BasicLobby : public std::enable_shared_from_this<BasicLobby<Session>> {
    public:
-    explicit Lobby(std::string code, std::shared_ptr<Session> p1 = nullptr,
-                   std::shared_ptr<Session> p2 = nullptr);
+    using LobbyManager = BasicLobbyManager<BasicLobby<Session>>;
+
+    explicit BasicLobby(std::string code, std::shared_ptr<Session> p1 = nullptr,
+                        std::shared_ptr<Session> p2 = nullptr);
 
     bool join(std::shared_ptr<Session> ptr);
 

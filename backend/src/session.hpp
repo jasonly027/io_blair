@@ -4,17 +4,17 @@
 #include <vector>
 
 #include "game.hpp"
+#include "lobby.hpp"
 #include "net_common.hpp"
 
 namespace io_blair {
-class LobbyManager;
-class Lobby;
 class Session : public std::enable_shared_from_this<Session> {
    public:
     template <std::size_t N>
     using static_buffer = beast::flat_static_buffer<N>;
     using strand = net::strand<net::io_context::executor_type>;
     using message_queue = std::vector<std::shared_ptr<const std::string>>;
+    using Lobby = BasicLobby<Session>;
 
     enum class Error {
         // Session should close

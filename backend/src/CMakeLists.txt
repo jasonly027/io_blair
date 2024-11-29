@@ -11,6 +11,7 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC
     Boost::beast
     simdjson
+    gmock
 )
 
 if(WIN32)

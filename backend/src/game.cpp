@@ -4,10 +4,12 @@
 #include <memory>
 #include <optional>
 
+#include "lobby.hpp"
 #include "lobby_manager.hpp"
 #include "net_common.hpp"
 #include "response.hpp"
 #include "session.hpp"
+#include "session_mock.hpp"
 
 using std::string, std::shared_ptr, std::optional;
 
@@ -82,5 +84,6 @@ void BasicGame<Session>::write(const std::shared_ptr<string>& str) {
 }
 
 template class BasicGame<Session>;
+template class BasicGame<MockSession>;
 
 }  // namespace io_blair
