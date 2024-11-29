@@ -13,13 +13,18 @@ using std::string, std::shared_ptr, std::optional;
 
 namespace io_blair {
 namespace resp = response;
-Game::Game(Session& session) : session_(session), state_(State::kPrelobby) {}
 
-void Game::log_err(error_code ec, const char* what) {
+template <typename Session>
+BasicGame<Session>::BasicGame(Session& session)
+    : session_(session), state_(State::kPrelobby) {}
+
+template <typename Session>
+void BasicGame<Session>::log_err(error_code ec, const char* what) {
     std::cerr << what << ": " << ec.what() << '\n';
 }
 
-void Game::parse(string data) {
+template <typename Session>
+void BasicGame<Session>::parse(string data) {
     // passed data must be non-const to allow library to add SIMDJSON_PADDING
     auto doc = parser_.iterate(data);
     if (doc.error()) return;
@@ -34,7 +39,8 @@ void Game::parse(string data) {
     }
 }
 
-void Game::parse_prelobby(json::document& doc) {
+template <typename Session>
+void BasicGame<Session>::parse_prelobby(json::document& doc) {
     using fields::kPrelobby;
 
     string lobby_type;
@@ -46,28 +52,35 @@ void Game::parse_prelobby(json::document& doc) {
         join_lobby(doc);
 }
 
-void Game::create_lobby() {
-    session_.lobby() = LobbyManager::get().create(session_.shared_from_this());
+template <typename Session>
+void BasicGame<Session>::create_lobby() {
+    LobbyManager::get().create()->join(session_.shared_from_this());
     write(resp::create_lobby(session_.lobby()->code_));
 
     state_ = State::kCharacterSelect;
 }
 
-void Game::join_lobby(json::document& doc) {
+template <typename Session>
+void BasicGame<Session>::join_lobby(json::document& doc) {
     using fields::kPrelobby;
 
     string code;
     if (doc[kPrelobby.join_code].get_string(code) != 0) return;
 
     optional<shared_ptr<Lobby>> lobby = LobbyManager::get().find(code);
-    if (!lobby) return write(resp::join(false));
+    if (!lobby || lobby.value()->full()) return write(resp::join(false));
 
-    session_.lobby() = std::move(lobby.value());
+    lobby.value()->join(session_.shared_from_this());
     write(resp::join(true));
 
     state_ = State::kCharacterSelect;
 }
 
-void Game::write(const std::shared_ptr<string>& str) { session_.write(str); }
+template <typename Session>
+void BasicGame<Session>::write(const std::shared_ptr<string>& str) {
+    session_.write(str);
+}
+
+template class BasicGame<Session>;
 
 }  // namespace io_blair

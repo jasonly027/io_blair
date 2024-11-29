@@ -14,7 +14,7 @@ class LobbyManager {
    public:
     static LobbyManager& get();
 
-    std::shared_ptr<Lobby> create(std::shared_ptr<Session> p1);
+    std::shared_ptr<Lobby> create();
 
     std::optional<std::shared_ptr<Lobby>> find(const std::string& code);
 

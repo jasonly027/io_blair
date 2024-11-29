@@ -12,9 +12,8 @@ namespace json = simdjson::ondemand;
 
 using json_parser = json::parser;
 
-class Session;
-
-class Game {
+template <typename Session>
+class BasicGame {
    public:
     // Game states
     enum class State {
@@ -40,7 +39,7 @@ class Game {
         kGameDone
     };
 
-    explicit Game(Session& session);
+    explicit BasicGame(Session& session);
 
     // Print to stderr
     static void log_err(error_code ec, const char* what);
@@ -63,4 +62,7 @@ class Game {
     State state_;
     json_parser parser_;
 };
+
+class Session;
+using Game = BasicGame<Session>;
 }  // namespace io_blair

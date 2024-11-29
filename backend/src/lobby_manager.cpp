@@ -16,7 +16,7 @@ LobbyManager& LobbyManager::get() {
     return manager;
 }
 
-shared_ptr<Lobby> LobbyManager::create(shared_ptr<Session> p1) {
+shared_ptr<Lobby> LobbyManager::create() {
     lock guard(mutex_);
 
     string code = generate_code();
@@ -24,7 +24,7 @@ shared_ptr<Lobby> LobbyManager::create(shared_ptr<Session> p1) {
         code = generate_code();
     }
 
-    auto lobby = std::make_shared<Lobby>(code, std::move(p1));
+    auto lobby = std::make_shared<Lobby>(code);
     lobbies_[code] = lobby;
 
     return lobby;
@@ -35,7 +35,7 @@ optional<shared_ptr<Lobby>> LobbyManager::find(
     lock guard(mutex_);
     auto it = lobbies_.find(code);
     if (it == lobbies_.end()) return std::nullopt;
-    return it->second;
+    return optional{it->second};
 }
 
 void LobbyManager::remove(const string& code) {

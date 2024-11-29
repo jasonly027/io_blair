@@ -16,7 +16,7 @@ CPMAddPackage(
     URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip
     URL_HASH SHA256=F179EC217F9B3B3F3C6E8B02D3E7EDA997B49E4CE26D6B235C9053BEC9C0BF9F
     OPTIONS
-    "BUILD_GMOCK OFF"
+    "BUILD_GMOCK ON"
     "INSTALL_GTEST OFF"
     "gtest_forced_shared_crt ON CACHE BOOL \"\" FORCE"
 )
