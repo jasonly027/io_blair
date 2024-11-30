@@ -5,7 +5,6 @@
 
 #include "lobby.hpp"
 #include "session.hpp"
-#include "session_mock.hpp"
 
 using lock = std::lock_guard<std::mutex>;
 using std::shared_ptr, std::string, std::optional;
@@ -67,6 +66,12 @@ string BasicLobbyManager<Lobby>::generate_code() {
 }
 
 template class BasicLobbyManager<BasicLobby<Session>>;
-template class BasicLobbyManager<BasicLobby<MockSession>>;
 
 }  // namespace io_blair
+
+#ifdef OPTION_BUILD_MOCKS 
+#include "session_mock.hpp"
+namespace io_blair {
+template class BasicLobbyManager<BasicLobby<MockSession>>;
+}
+#endif

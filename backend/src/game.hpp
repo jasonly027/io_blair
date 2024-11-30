@@ -3,6 +3,7 @@
 #include <simdjson.h>
 
 #include <string>
+#include <memory>
 
 #include "lobby.hpp"
 #include "lobby_manager.hpp"

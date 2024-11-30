@@ -1,10 +1,6 @@
 #include "lobby.hpp"
 
-#include <memory>
-
-#include "lobby_manager.hpp"
 #include "session.hpp"
-#include "session_mock.hpp"
 
 using std::string, std::shared_ptr;
 
@@ -54,5 +50,12 @@ bool BasicLobby<Session>::full() const {
 }
 
 template class BasicLobby<Session>;
-template class BasicLobby<MockSession>;
+
 }  // namespace io_blair
+
+#ifdef OPTION_BUILD_MOCKS
+#include "session_mock.hpp"
+namespace io_blair {
+template class BasicLobby<MockSession>;
+}
+#endif
