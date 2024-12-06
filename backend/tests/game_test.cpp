@@ -5,12 +5,12 @@
 
 namespace io_blair {
 
-class GameTest : public testing::Test {
-   protected:
-    MockSession session_;
-    BasicGame<MockSession> game_{session_};
-};
+// class GameTest : public testing::Test {
+//    protected:
+//     MockSession session_;
+//     BasicGame<MockSession> game_{session_};
+// };
 
-TEST_F(GameTest, ParseOutsideLobbyJson) { SUCCEED(); }
+// TEST_F(GameTest, ParseOutsideLobbyJson) { SUCCEED(); }
 
 }  // namespace io_blair

@@ -1,39 +1,32 @@
 #include "lobby.hpp"
 
+#include "lobby_manager.hpp"
 #include "session.hpp"
 
 using std::string, std::shared_ptr;
 
 namespace io_blair {
 
-template <typename Session>
-BasicLobby<Session>::BasicLobby(string code, shared_ptr<Session> p1,
-                                shared_ptr<Session> p2)
-    : code_(std::move(code)), p1_(std::move(p1)), p2_(std::move(p2)) {}
+Lobby::Lobby(string code, LobbyManager& manager)
+    : code_(std::move(code)), manager_(manager) {}
 
-template <typename Session>
-bool BasicLobby<Session>::join(shared_ptr<Session> ptr) {
+bool Lobby::join(shared_ptr<ISession> ptr) {
     if (!p1_) {
         p1_ = std::move(ptr);
-        p1_->lobby() = this->shared_from_this();
         return true;
     }
 
     if (!p2_) {
         p2_ = std::move(ptr);
-        p2_->lobby() = this->shared_from_this();
         return true;
     }
 
     return false;
 }
 
-template <typename Session>
-void BasicLobby<Session>::leave(Session* const session) {
+void Lobby::leave(const ISession* const session) {
     assert((session == p1_.get() || session == p2_.get()) &&
            "Session is neither in lobby");
-
-    session->lobby().reset();
 
     if (session == p1_.get()) {
         p1_.reset();
@@ -41,21 +34,9 @@ void BasicLobby<Session>::leave(Session* const session) {
         p2_.reset();
     }
 
-    if (!p1_ && !p2_) LobbyManager::get().remove(code_);
+    if (!p1_ && !p2_) manager_.remove(code_);
 }
 
-template <typename Session>
-bool BasicLobby<Session>::full() const {
-    return p1_ && p2_;
-}
-
-template class BasicLobby<Session>;
+bool Lobby::full() const { return p1_ && p2_; }
 
 }  // namespace io_blair
-
-#ifdef OPTION_BUILD_MOCKS
-#include "session_mock.hpp"
-namespace io_blair {
-template class BasicLobby<MockSession>;
-}
-#endif

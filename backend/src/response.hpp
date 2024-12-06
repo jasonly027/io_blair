@@ -1,7 +1,6 @@
 #pragma once
 
 #include <format>
-#include <memory>
 #include <string>
 #include <utility>
 
@@ -22,18 +21,12 @@ constexpr struct {
 namespace response {
 
 template <typename T>
-[[nodiscard]] inline auto make(T&& response) {
-    return std::make_shared<std::string>(std::forward<T>(response));
-}
-
-template <typename T>
 [[nodiscard]] inline auto create_lobby(T&& code) {
-    return make(std::format(R"({{ "code" : "{}" }})", std::forward<T>(code)));
+    return std::format(R"({{ "code" : "{}" }})", std::forward<T>(code));
 }
 
-inline auto join(bool success) {
-    return make(
-        std::format(R"({{ "join" : "{}" }})", success ? "success" : "fail"));
+inline std::string join(bool success) {
+    return std::format(R"({{ "join" : "{}" }})", success ? "success" : "fail");
 }
 
 }  // namespace response

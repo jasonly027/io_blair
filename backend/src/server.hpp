@@ -6,6 +6,7 @@
 #include <thread>
 #include <vector>
 
+#include "lobby_manager.hpp"
 #include "net_common.hpp"
 
 namespace io_blair {
@@ -50,5 +51,6 @@ class Server : public std::enable_shared_from_this<Server> {
     net::signal_set signals_;
     // Pool of threads that can accept work
     thread_pool pool_;
+    LobbyManager manager_;
 };
 }  // namespace io_blair

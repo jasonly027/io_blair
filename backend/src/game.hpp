@@ -3,10 +3,7 @@
 #include <simdjson.h>
 
 #include <string>
-#include <memory>
 
-#include "lobby.hpp"
-#include "lobby_manager.hpp"
 #include "net_common.hpp"
 
 namespace io_blair {
@@ -15,12 +12,9 @@ namespace json = simdjson::ondemand;
 
 using json_parser = json::parser;
 
-template <typename Session>
-class BasicGame {
+class ISession;
+class Game {
    public:
-    using Lobby = BasicLobby<Session>;
-    using LobbyManager = BasicLobbyManager<Lobby>;
-
     // Game states
     enum class State {
         /*
@@ -45,7 +39,7 @@ class BasicGame {
         kGameDone
     };
 
-    explicit BasicGame(Session& session);
+    explicit Game(ISession& session);
 
     // Print to stderr
     static void log_err(error_code ec, const char* what);
@@ -54,7 +48,7 @@ class BasicGame {
     void parse(std::string data);
 
    private:
-    void write(const std::shared_ptr<std::string>& str);
+    void write(std::string msg);
 
     void parse_prelobby(json::document& doc);
 
@@ -63,12 +57,9 @@ class BasicGame {
     void join_lobby(json::document& doc);
 
     // Reference to session that owns this game state
-    Session& session_;
+    ISession& session_;
     // Current game state to understand what msgs to expect
     State state_;
     json_parser parser_;
 };
-
-class Session;
-using Game = BasicGame<Session>;
 }  // namespace io_blair

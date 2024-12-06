@@ -1,29 +1,23 @@
 #include "game.hpp"
 
 #include <iostream>
-#include <memory>
-#include <optional>
 
 #include "net_common.hpp"
 #include "response.hpp"
 #include "session.hpp"
 
-using std::string, std::shared_ptr, std::optional;
+using std::string;
 
 namespace io_blair {
-namespace resp = response;
+// namespace resp = response;
 
-template <typename Session>
-BasicGame<Session>::BasicGame(Session& session)
-    : session_(session), state_(State::kPrelobby) {}
+Game::Game(ISession& session) : session_(session), state_(State::kPrelobby) {}
 
-template <typename Session>
-void BasicGame<Session>::log_err(error_code ec, const char* what) {
+void Game::log_err(error_code ec, const char* what) {
     std::cerr << what << ": " << ec.what() << '\n';
 }
 
-template <typename Session>
-void BasicGame<Session>::parse(string data) {
+void Game::parse(string data) {
     // passed data must be non-const to allow library to add SIMDJSON_PADDING
     auto doc = parser_.iterate(data);
     if (doc.error()) return;
@@ -38,8 +32,7 @@ void BasicGame<Session>::parse(string data) {
     }
 }
 
-template <typename Session>
-void BasicGame<Session>::parse_prelobby(json::document& doc) {
+void Game::parse_prelobby(json::document& doc) {
     using fields::kPrelobby;
 
     string lobby_type;
@@ -51,42 +44,22 @@ void BasicGame<Session>::parse_prelobby(json::document& doc) {
         join_lobby(doc);
 }
 
-template <typename Session>
-void BasicGame<Session>::create_lobby() {
-    LobbyManager::get().create()->join(session_.shared_from_this());
-    write(resp::create_lobby(session_.lobby()->code_));
-
+void Game::create_lobby() {
+    session_.join_new_lobby();
     state_ = State::kCharacterSelect;
 }
 
-template <typename Session>
-void BasicGame<Session>::join_lobby(json::document& doc) {
+void Game::join_lobby(json::document& doc) {
     using fields::kPrelobby;
 
     string code;
     if (doc[kPrelobby.join_code].get_string(code) != 0) return;
 
-    optional<shared_ptr<Lobby>> lobby = LobbyManager::get().find(code);
-    if (!lobby || lobby.value()->full()) return write(resp::join(false));
-
-    lobby.value()->join(session_.shared_from_this());
-    write(resp::join(true));
-
-    state_ = State::kCharacterSelect;
+    if (session_.join_lobby(code)) {
+        state_ = State::kCharacterSelect;
+    }
 }
 
-template <typename Session>
-void BasicGame<Session>::write(const std::shared_ptr<string>& str) {
-    session_.write(str);
-}
-
-template class BasicGame<Session>;
+void Game::write(string msg) { session_.write(std::move(msg)); }
 
 }  // namespace io_blair
-
-#ifdef OPTION_BUILD_MOCKS
-#include "session_mock.hpp"
-namespace io_blair {
-template class BasicGame<MockSession>;
-}
-#endif

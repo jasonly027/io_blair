@@ -3,27 +3,27 @@
 #include <memory>
 #include <string>
 
-#include "lobby_manager.hpp"
-
 namespace io_blair {
-template <typename Session>
-class BasicLobby : public std::enable_shared_from_this<BasicLobby<Session>> {
+
+class LobbyManager;
+
+class ISession;
+
+class Lobby : public std::enable_shared_from_this<Lobby> {
    public:
-    using LobbyManager = BasicLobbyManager<BasicLobby<Session>>;
+    explicit Lobby(std::string code, LobbyManager& manager);
 
-    explicit BasicLobby(std::string code, std::shared_ptr<Session> p1 = nullptr,
-                        std::shared_ptr<Session> p2 = nullptr);
+    bool join(std::shared_ptr<ISession> ptr);
 
-    bool join(std::shared_ptr<Session> ptr);
-
-    void leave(Session* session);
+    void leave(const ISession* session);
 
     bool full() const;
 
     const std::string code_;
 
    private:
-    std::shared_ptr<Session> p1_;
-    std::shared_ptr<Session> p2_;
+    std::shared_ptr<ISession> p1_;
+    std::shared_ptr<ISession> p2_;
+    LobbyManager& manager_;
 };
 }  // namespace io_blair

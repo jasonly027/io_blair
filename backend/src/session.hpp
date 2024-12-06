@@ -1,20 +1,32 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "game.hpp"
 #include "lobby.hpp"
+#include "lobby_manager.hpp"
 #include "net_common.hpp"
 
 namespace io_blair {
-class Session : public std::enable_shared_from_this<Session> {
+
+class ISession {
+   public:
+    virtual void run() = 0;
+    virtual void write(std::string msg) = 0;
+    virtual void join_new_lobby() = 0;
+    virtual bool join_lobby(const std::string& code) = 0;
+};
+
+class WebSocketSession : public ISession,
+                         public std::enable_shared_from_this<WebSocketSession> {
    public:
     template <std::size_t N>
-    using static_buffer = beast::flat_static_buffer<N>;
+    using buffer = beast::flat_static_buffer<N>;
     using strand = net::strand<net::io_context::executor_type>;
-    using message_queue = std::vector<std::shared_ptr<const std::string>>;
-    using Lobby = BasicLobby<Session>;
+    using msg_queue = std::vector<std::string>;
+    using websock = websocket::stream<tcp::socket&>;
 
     enum class Error {
         // Session should close
@@ -23,15 +35,18 @@ class Session : public std::enable_shared_from_this<Session> {
         kRecoverable
     };
 
-    Session(net::io_context& ctx, tcp::socket socket);
+    WebSocketSession(net::io_context& ctx, tcp::socket socket,
+                     LobbyManager& manager);
 
     // Listen for Websocket upgrade request
-    void run();
+    void run() override;
 
-    // Queue message to send through Websocket
-    void write(const std::shared_ptr<std::string>& str);
+    // Enqueue message to write through Websocket
+    void write(std::string msg) override;
 
-    std::shared_ptr<Lobby>& lobby();
+    void join_new_lobby() override;
+
+    bool join_lobby(const std::string& code) override;
 
    private:
     /*
@@ -63,15 +78,16 @@ class Session : public std::enable_shared_from_this<Session> {
 
     tcp::socket socket_;
     // Websocket
-    websocket::stream<tcp::socket&> ws_;
+    websock ws_;
     // Incoming messages are written to this buffer
-    static_buffer<500> buffer_;
+    buffer<500> buffer_;
     // Synchronizes writes
     strand write_strand_;
     // Queue of messages to be written
-    message_queue queue_;
+    msg_queue queue_;
     // Parses and acts on incoming messages
     Game state_;
+    LobbyManager& manager_;
     std::shared_ptr<Lobby> lobby_;
 };
 

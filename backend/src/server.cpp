@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <csignal>
-#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 
@@ -103,7 +102,7 @@ void Server::on_accept(error_code ec) {
 
     // When this handler is invoked, socket_ will contain a TCP connection.
     // We construct a new Session instance with the socket.
-    std::make_shared<Session>(ctx_, std::move(socket_))->run();
+    std::make_shared<WebSocketSession>(ctx_, std::move(socket_), manager_)->run();
 
     // Because we moved socket_ on the previous line,
     // socket_ is reset to a state ready to contain a new TCP connection.

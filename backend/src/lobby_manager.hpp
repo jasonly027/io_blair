@@ -6,12 +6,14 @@
 #include <string>
 #include <unordered_map>
 
-namespace io_blair {
-template <typename Lobby>
-class BasicLobbyManager {
-   public:
-    static BasicLobbyManager& get();
+#include "lobby.hpp"
 
+namespace io_blair {
+
+class ISession;
+
+class LobbyManager {
+   public:
     std::shared_ptr<Lobby> create();
 
     std::optional<std::shared_ptr<Lobby>> find(const std::string& code);
@@ -19,8 +21,6 @@ class BasicLobbyManager {
     void remove(const std::string& code);
 
    private:
-    BasicLobbyManager() = default;
-
     static std::string generate_code();
 
     std::unordered_map<std::string, std::shared_ptr<Lobby>> lobbies_;

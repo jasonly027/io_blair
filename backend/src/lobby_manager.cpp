@@ -4,21 +4,13 @@
 #include <random>
 
 #include "lobby.hpp"
-#include "session.hpp"
 
 using lock = std::lock_guard<std::mutex>;
 using std::shared_ptr, std::string, std::optional;
 
 namespace io_blair {
 
-template <typename Lobby>
-BasicLobbyManager<Lobby>& BasicLobbyManager<Lobby>::get() {
-    static BasicLobbyManager<Lobby> manager;
-    return manager;
-}
-
-template <typename Lobby>
-shared_ptr<Lobby> BasicLobbyManager<Lobby>::create() {
+shared_ptr<Lobby> LobbyManager::create() {
     lock guard(mutex_);
 
     string code = generate_code();
@@ -26,30 +18,29 @@ shared_ptr<Lobby> BasicLobbyManager<Lobby>::create() {
         code = generate_code();
     }
 
-    auto lobby = std::make_shared<Lobby>(code);
+    auto lobby = std::make_shared<Lobby>(code, *this);
     lobbies_[code] = lobby;
 
     return lobby;
 }
 
-template <typename Lobby>
-optional<shared_ptr<Lobby>> BasicLobbyManager<Lobby>::find(const string& code) {
+optional<shared_ptr<Lobby>> LobbyManager::find(const std::string& code) {
     lock guard(mutex_);
+
     auto it = lobbies_.find(code);
     if (it == lobbies_.end()) return std::nullopt;
+
     return optional{it->second};
 }
 
-template <typename Lobby>
-void BasicLobbyManager<Lobby>::remove(const string& code) {
+void LobbyManager::remove(const string& code) {
     lock guard(mutex_);
 
     assert(lobbies_.contains(code));
     lobbies_.erase(code);
 }
 
-template <typename Lobby>
-string BasicLobbyManager<Lobby>::generate_code() {
+string LobbyManager::generate_code() {
     static constexpr auto kCodeLength = 6;
 
     static constexpr auto kCharacters = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -65,13 +56,4 @@ string BasicLobbyManager<Lobby>::generate_code() {
     return res;
 }
 
-template class BasicLobbyManager<BasicLobby<Session>>;
-
 }  // namespace io_blair
-
-#ifdef OPTION_BUILD_MOCKS 
-#include "session_mock.hpp"
-namespace io_blair {
-template class BasicLobbyManager<BasicLobby<MockSession>>;
-}
-#endif
