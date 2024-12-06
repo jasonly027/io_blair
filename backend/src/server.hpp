@@ -6,8 +6,8 @@
 #include <thread>
 #include <vector>
 
-#include "lobby_manager.hpp"
 #include "net_common.hpp"
+#include "lobby.hpp"
 
 namespace io_blair {
 

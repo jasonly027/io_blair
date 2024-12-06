@@ -6,7 +6,6 @@
 
 #include "game.hpp"
 #include "lobby.hpp"
-#include "lobby_manager.hpp"
 #include "net_common.hpp"
 
 namespace io_blair {

@@ -5,8 +5,6 @@
 #include <memory>
 #include <optional>
 
-#include "lobby.hpp"
-#include "lobby_manager.hpp"
 #include "response.hpp"
 
 using std::cout, std::cerr, std::optional, std::string, std::string_view,
