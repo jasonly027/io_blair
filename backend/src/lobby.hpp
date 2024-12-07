@@ -27,6 +27,7 @@ class Lobby : public std::enable_shared_from_this<Lobby> {
    private:
     std::shared_ptr<ISession> p1_;
     std::shared_ptr<ISession> p2_;
+    mutable std::mutex mutex_;
     LobbyManager& manager_;
 };
 

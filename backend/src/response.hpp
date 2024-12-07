@@ -1,33 +1,25 @@
 #pragma once
 
-#include <format>
+#include <optional>
 #include <string>
-#include <utility>
 
 namespace io_blair {
 
-namespace fields {
+namespace request {
 
 constexpr struct {
-    const char* type = "lobby_type";
+    const char* type = "lobbyType";
     const char* type_create = "create";
     const char* type_join = "join";
     const char* join_code = "code";
 
 } kPrelobby;
 
-}  // namespace fields
+}  // namespace request
 
 namespace response {
 
-template <typename T>
-[[nodiscard]] inline auto create_lobby(T&& code) {
-    return std::format(R"({{ "code" : "{}" }})", std::forward<T>(code));
-}
-
-inline std::string join(bool success) {
-    return std::format(R"({{ "join" : "{}" }})", success ? "success" : "fail");
-}
+std::string join(bool success, std::optional<std::string> code = std::nullopt);
 
 }  // namespace response
 

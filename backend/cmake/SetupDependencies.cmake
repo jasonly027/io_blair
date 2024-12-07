@@ -27,3 +27,10 @@ CPMAddPackage(
     URL https://github.com/simdjson/simdjson/archive/refs/tags/v3.10.1.zip
     URL_HASH SHA256=17A30CEEEC26CCB55D5B784B8559FFA2ADBC76BF0609EA6671E8D9AADB5C4C10
 )
+
+CPMAddPackage(
+    NAME reflect-cpp
+    VERSION 0.16.0
+    URL https://github.com/getml/reflect-cpp/archive/refs/tags/v0.16.0.zip
+    URL_HASH SHA256=16494784CF7AF86A9903213EB4F654579258D44502B6FC8B1B50467C66B5A4A3
+)

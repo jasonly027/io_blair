@@ -4,6 +4,7 @@ add_library(${PROJECT_NAME}_lib STATIC
     session.cpp
     game.cpp
     lobby.cpp
+    response.cpp
 )
 target_include_directories(${PROJECT_NAME}_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -11,6 +12,7 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC
     Boost::beast
     simdjson
+    reflectcpp
 )
 
 if(WIN32)

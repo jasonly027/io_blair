@@ -5,10 +5,10 @@
 #include <memory>
 #include <optional>
 
+#include "lobby.hpp"
 #include "response.hpp"
 
-using std::cout, std::cerr, std::optional, std::string, std::string_view,
-    std::shared_ptr, std::size_t;
+using std::cout, std::cerr, std::string, std::string_view, std::size_t;
 
 namespace io_blair {
 
@@ -47,22 +47,29 @@ void WebSocketSession::write(string msg) {
     });
 }
 
-void WebSocketSession::join_new_lobby() {
+bool WebSocketSession::join_new_lobby() {
     auto lobby = manager_.create();
-    if (lobby->join(shared_from_this())) {
-        lobby_ = std::move(lobby);
+
+    if (!lobby->join(shared_from_this())) {
+        write(resp::join(false));
+        return false;
     }
+
+    lobby_ = std::move(lobby);
+    write(resp::join(true, lobby_->code_));
+    return true;
 }
 
 bool WebSocketSession::join_lobby(const string& code) {
-    optional<shared_ptr<Lobby>> lobby = manager_.find(code);
+    auto lobby = manager_.find(code);
+
     if (!lobby || !(*lobby)->join(shared_from_this())) {
         write(resp::join(false));
         return false;
     }
 
     lobby_ = std::move(*lobby);
-    write(resp::join(true));
+    write(resp::join(true, lobby_->code_));
     return true;
 }
 

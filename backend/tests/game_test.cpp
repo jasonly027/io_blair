@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <game.hpp>
-#include <session_mock.hpp>
 
 namespace io_blair {
 

@@ -5,10 +5,6 @@ add_executable(${PROJECT_NAME}_test
     lobby_test.cpp
 )
 
-# Add mocks
-target_compile_definitions(${PROJECT_NAME}_lib PRIVATE OPTION_BUILD_MOCKS)
-target_link_libraries(${PROJECT_NAME}_lib PUBLIC gmock)
-
 target_link_libraries(${PROJECT_NAME}_test PRIVATE
     ${PROJECT_NAME}_lib
     GTest::gmock_main

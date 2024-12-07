@@ -11,6 +11,8 @@ Lobby::Lobby(string code, LobbyManager& manager)
     : code_(std::move(code)), manager_(manager) {}
 
 bool Lobby::join(shared_ptr<ISession> ptr) {
+    lock guard(mutex_);
+
     if (!p1_) {
         p1_ = std::move(ptr);
         return true;
@@ -25,6 +27,8 @@ bool Lobby::join(shared_ptr<ISession> ptr) {
 }
 
 void Lobby::leave(const ISession* const session) {
+    lock guard(mutex_);
+
     assert((session == p1_.get() || session == p2_.get()) &&
            "Session is neither in lobby");
 
@@ -37,7 +41,10 @@ void Lobby::leave(const ISession* const session) {
     if (!p1_ && !p2_) manager_.remove(code_);
 }
 
-bool Lobby::full() const { return p1_ && p2_; }
+bool Lobby::full() const {
+    lock guard(mutex_);
+    return p1_ && p2_;
+}
 
 shared_ptr<Lobby> LobbyManager::create() {
     lock guard(mutex_);
