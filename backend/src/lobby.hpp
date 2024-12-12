@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -33,9 +32,9 @@ class Lobby : public std::enable_shared_from_this<Lobby> {
 
 class LobbyManager {
    public:
-    std::shared_ptr<Lobby> create();
+    std::shared_ptr<Lobby> create(std::shared_ptr<ISession> session);
 
-    std::optional<std::shared_ptr<Lobby>> find(const std::string& code);
+    std::shared_ptr<Lobby> join(const std::string& code, std::shared_ptr<ISession> session);
 
     void remove(const std::string& code);
 

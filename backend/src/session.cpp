@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <iostream>
-#include <memory>
 #include <optional>
 
 #include "lobby.hpp"
@@ -48,29 +47,34 @@ void WebSocketSession::write(string msg) {
 }
 
 bool WebSocketSession::join_new_lobby() {
-    auto lobby = manager_.create();
+    lobby_ = manager_.create(shared_from_this());
 
-    if (!lobby->join(shared_from_this())) {
-        write(resp::join(false));
-        return false;
+    if (lobby_) {
+        write(resp::join(true, lobby_->code_));
+        return true;
     }
 
-    lobby_ = std::move(lobby);
-    write(resp::join(true, lobby_->code_));
-    return true;
+    write(resp::join(false));
+    return false;
 }
 
 bool WebSocketSession::join_lobby(const string& code) {
-    auto lobby = manager_.find(code);
+    lobby_ = manager_.join(code, shared_from_this());
 
-    if (!lobby || !(*lobby)->join(shared_from_this())) {
-        write(resp::join(false));
-        return false;
+    if (lobby_) {
+        write(resp::join(true, lobby_->code_));
+        return true;
     }
 
-    lobby_ = std::move(*lobby);
-    write(resp::join(true, lobby_->code_));
-    return true;
+    write(resp::join(false));
+    return false;
+}
+
+void WebSocketSession::leave_lobby() {
+    assert(lobby_ && "Should not be nullptr");
+
+    lobby_->leave(this);
+    lobby_.reset();
 }
 
 auto WebSocketSession::fail(error_code ec, const char* what) -> Error {
@@ -132,7 +136,8 @@ void WebSocketSession::on_write(error_code ec, size_t bytes [[maybe_unused]]) {
 }
 
 void WebSocketSession::close() {
-    if (lobby_) lobby_->leave(this);
+    if (lobby_) leave_lobby();
+
     // Send close message through Websocket stream
     ws_.async_close(websocket::close_code::normal,
                     [self = shared_from_this()](error_code ec) {

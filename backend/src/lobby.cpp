@@ -1,8 +1,10 @@
 #include "lobby.hpp"
 
+#include <utility>
+
 #include "session.hpp"
 
-using std::shared_ptr, std::string, std::optional;
+using std::shared_ptr, std::string;
 using lock = std::lock_guard<std::mutex>;
 
 namespace io_blair {
@@ -46,7 +48,7 @@ bool Lobby::full() const {
     return p1_ && p2_;
 }
 
-shared_ptr<Lobby> LobbyManager::create() {
+shared_ptr<Lobby> LobbyManager::create(shared_ptr<ISession> session) {
     lock guard(mutex_);
 
     string code = generate_code();
@@ -57,16 +59,17 @@ shared_ptr<Lobby> LobbyManager::create() {
     auto lobby = std::make_shared<Lobby>(code, *this);
     lobbies_[code] = lobby;
 
-    return lobby;
+    return lobby->join(std::move(session)) ? lobby : nullptr;
 }
 
-optional<shared_ptr<Lobby>> LobbyManager::find(const std::string& code) {
+shared_ptr<Lobby> LobbyManager::join(const std::string& code,
+                                     std::shared_ptr<ISession> session) {
     lock guard(mutex_);
 
     auto it = lobbies_.find(code);
-    if (it == lobbies_.end()) return std::nullopt;
+    if (it == lobbies_.end()) return nullptr;
 
-    return optional{it->second};
+    return it->second->join(std::move(session)) ? it->second : nullptr;
 }
 
 void LobbyManager::remove(const string& code) {

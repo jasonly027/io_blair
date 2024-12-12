@@ -12,10 +12,12 @@ namespace io_blair {
 
 class ISession {
    public:
+    virtual ~ISession() = default;
     virtual void run() = 0;
     virtual void write(std::string msg) = 0;
     virtual bool join_new_lobby() = 0;
     virtual bool join_lobby(const std::string& code) = 0;
+    virtual void leave_lobby() = 0;
 };
 
 class WebSocketSession : public ISession,
@@ -46,6 +48,8 @@ class WebSocketSession : public ISession,
     bool join_new_lobby() override;
 
     bool join_lobby(const std::string& code) override;
+
+    void leave_lobby() override;
 
    private:
     /*
