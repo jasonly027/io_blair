@@ -21,7 +21,7 @@ class Game {
         kPrelobby,
         /*
             In a lobby, Expecting incoming msgs of self/other
-            joining/leaving, changing desired character
+            joining/leaving, changing/confirming desired character
         */
         kCharacterSelect,
         /*
@@ -43,6 +43,8 @@ class Game {
 
     // Parse and act on incoming message
     void parse(std::string data);
+
+    State state() const;
 
    private:
     using parser = simdjson::ondemand::parser;

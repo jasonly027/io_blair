@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "game.hpp"
@@ -13,11 +14,13 @@ namespace io_blair {
 class ISession {
    public:
     virtual ~ISession() = default;
+
     virtual void run() = 0;
     virtual void write(std::string msg) = 0;
     virtual bool join_new_lobby() = 0;
     virtual bool join_lobby(const std::string& code) = 0;
     virtual void leave_lobby() = 0;
+    virtual std::string_view code() const = 0;
 };
 
 class WebSocketSession : public ISession,
@@ -45,17 +48,25 @@ class WebSocketSession : public ISession,
     // Enqueue message to write through Websocket
     void write(std::string msg) override;
 
+    // Create and join a lobby
+    // Returns true if successful otherwise false
     bool join_new_lobby() override;
 
+    // Join a lobby specified by (code)
+    // Returns true if successful otherwise false
     bool join_lobby(const std::string& code) override;
 
+    // Leave the lobby
+    // This will throw if not in a lobby
     void leave_lobby() override;
 
+    // Gets the join code for the lobby
+    // This will throw if not in a lobby
+    std::string_view code() const override;
+
    private:
-    /*
-        If error was recoverable, invoke log_err().
-        Otherwise, close session.
-    */
+    // If error was recoverable, invoke log_err().
+    // Otherwise, close session.
     Error fail(error_code ec, const char* what);
 
     // Print (ec) and (what) to stderr

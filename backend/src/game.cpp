@@ -9,13 +9,17 @@
 using std::string;
 
 namespace io_blair {
-// namespace resp = response;
+namespace resp = response;
 
 Game::Game(ISession& session) : session_(session), state_(State::kPrelobby) {}
 
 void Game::log_err(error_code ec, const char* what) {
     std::cerr << what << ": " << ec.what() << '\n';
 }
+
+auto Game::state() const -> State { return state_; }
+
+void Game::write(string msg) { session_.write(std::move(msg)); }
 
 void Game::parse(string data) {
     // passed data must be non-const to allow library to add SIMDJSON_PADDING
@@ -46,7 +50,10 @@ void Game::parse_prelobby(document& doc) {
 
 void Game::create_lobby() {
     if (session_.join_new_lobby()) {
+        write(resp::join(true, string(session_.code())));
         state_ = State::kCharacterSelect;
+    } else {
+        write(resp::join(false));
     }
 }
 
@@ -57,10 +64,11 @@ void Game::join_lobby(document& doc) {
     if (doc[kPrelobby.join_code].get_string(code) != 0) return;
 
     if (session_.join_lobby(code)) {
+        write(resp::join(true, std::move(code)));
         state_ = State::kCharacterSelect;
+    } else {
+        write(resp::join(false));
     }
 }
-
-void Game::write(string msg) { session_.write(std::move(msg)); }
 
 }  // namespace io_blair

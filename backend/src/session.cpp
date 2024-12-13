@@ -2,16 +2,12 @@
 
 #include <cstddef>
 #include <iostream>
-#include <optional>
 
 #include "lobby.hpp"
-#include "response.hpp"
 
 using std::cout, std::cerr, std::string, std::string_view, std::size_t;
 
 namespace io_blair {
-
-namespace resp = response;
 
 WebSocketSession::WebSocketSession(net::io_context& ctx, tcp::socket socket,
                                    LobbyManager& manager)
@@ -48,34 +44,20 @@ void WebSocketSession::write(string msg) {
 
 bool WebSocketSession::join_new_lobby() {
     lobby_ = manager_.create(shared_from_this());
-
-    if (lobby_) {
-        write(resp::join(true, lobby_->code_));
-        return true;
-    }
-
-    write(resp::join(false));
-    return false;
+    return lobby_ != nullptr;
 }
 
 bool WebSocketSession::join_lobby(const string& code) {
     lobby_ = manager_.join(code, shared_from_this());
-
-    if (lobby_) {
-        write(resp::join(true, lobby_->code_));
-        return true;
-    }
-
-    write(resp::join(false));
-    return false;
+    return lobby_ != nullptr;
 }
 
 void WebSocketSession::leave_lobby() {
-    assert(lobby_ && "Should not be nullptr");
-
     lobby_->leave(this);
     lobby_.reset();
 }
+
+string_view WebSocketSession::code() const { return lobby_->code_; }
 
 auto WebSocketSession::fail(error_code ec, const char* what) -> Error {
     // If (ec) is one of the following errors, the session must close
