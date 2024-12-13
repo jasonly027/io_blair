@@ -14,14 +14,14 @@ using testing::Return, testing::StrictMock;
 
 namespace io_blair::request {
 struct Join {
-    rfl::Rename<"lobbyType", string> lobby_type;
+    string type;
     optional<string> code;
 };
 }  // namespace io_blair::request
 
 namespace io_blair {
 
-using request::Join, request::kPrelobby;
+using request::Join, request::Prelobby;
 using State = Game::State;
 
 class GameTest : public testing::Test {
@@ -47,7 +47,7 @@ TEST_F(GameTest, RequestIsInvalidJson) {
 }
 
 TEST_F(GameTest, RequestCreateLobby) {
-    const string& req = json::write(Join{.lobby_type = kPrelobby.type_create});
+    const string& req = json::write(Join{.type = Prelobby.type.create});
 
     EXPECT_CALL(session_, join_new_lobby)
         .WillOnce(Return(false))
@@ -70,9 +70,9 @@ TEST_F(GameTest, RequestJoinLobby) {
     const string& code = "code";
 
     const string& req =
-        json::write(Join{.lobby_type = kPrelobby.type_join, .code = code});
+        json::write(Join{.type = Prelobby.type.join, .code = code});
     const string& req_missing_code =
-        json::write(Join{.lobby_type = kPrelobby.type_join});
+        json::write(Join{.type = Prelobby.type.join});
 
     EXPECT_CALL(session_, join_lobby(code))
         .WillOnce(Return(false))

@@ -11,15 +11,23 @@ namespace io_blair {
 namespace response {
 
 struct Join {
+    string type = "join";
     bool success;
     optional<string> code;
 };
 
 string join(bool success, optional<string> code) {
-    assert(success == code.has_value()
-        && "Either success alongside a code or fail by itself");
+    assert(success == code.has_value() &&
+           "Either success alongside a code or fail by itself");
     return json::write(Join{.success = success, .code = std::move(code)});
 }
+
+struct Chat {
+    string type = "chat";
+    string msg;
+};
+
+string chat(string msg) { return json::write(Chat{.msg = std::move(msg)}); }
 
 }  // namespace response
 }  // namespace io_blair

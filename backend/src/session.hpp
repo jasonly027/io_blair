@@ -17,6 +17,7 @@ class ISession {
 
     virtual void run() = 0;
     virtual void write(std::string msg) = 0;
+    virtual void write_other(std::string msg) = 0;
     virtual bool join_new_lobby() = 0;
     virtual bool join_lobby(const std::string& code) = 0;
     virtual void leave_lobby() = 0;
@@ -45,8 +46,11 @@ class WebSocketSession : public ISession,
     // Listen for Websocket upgrade request
     void run() override;
 
-    // Enqueue message to write through Websocket
+    // Enqueue msg to client
     void write(std::string msg) override;
+
+    // Enqueue msg to other client in lobby
+    void write_other(std::string msg) override;
 
     // Create and join a lobby
     // Returns true if successful otherwise false

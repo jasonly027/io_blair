@@ -28,6 +28,19 @@ bool Lobby::join(shared_ptr<ISession> ptr) {
     return false;
 }
 
+void Lobby::msg(const ISession* const session, string msg) {
+    lock guard(mutex_);
+
+    assert((session == p1_.get() || session == p2_.get()) &&
+           "Session is neither in lobby");
+
+    if (session == p1_.get() && p2_) {
+        p2_->write(std::move(msg));
+    } else if (session == p2_.get() && p1_) {
+        p1_->write(std::move(msg));
+    }
+}
+
 void Lobby::leave(const ISession* const session) {
     lock guard(mutex_);
 

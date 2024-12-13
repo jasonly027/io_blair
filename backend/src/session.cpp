@@ -42,6 +42,10 @@ void WebSocketSession::write(string msg) {
     });
 }
 
+void WebSocketSession::write_other(string msg) {
+    lobby_->msg(this, std::move(msg));
+}
+
 bool WebSocketSession::join_new_lobby() {
     lobby_ = manager_.create(shared_from_this());
     return lobby_ != nullptr;

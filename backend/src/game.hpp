@@ -52,11 +52,15 @@ class Game {
 
     void write(std::string msg);
 
-    void parse_prelobby(document& doc);
+    void write_other(std::string msg);
 
-    void create_lobby();
+    void prelobby(document& doc);
 
-    void join_lobby(document& doc);
+    void character_select(document& doc);
+
+    void msg(document& doc);
+
+    void leave();
 
     // Reference to session that owns this game state
     ISession& session_;

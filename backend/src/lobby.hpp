@@ -17,6 +17,8 @@ class Lobby : public std::enable_shared_from_this<Lobby> {
 
     bool join(std::shared_ptr<ISession> ptr);
 
+    void msg(const ISession* session, std::string msg);
+
     void leave(const ISession* session);
 
     bool full() const;

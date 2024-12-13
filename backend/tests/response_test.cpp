@@ -6,8 +6,14 @@ namespace io_blair {
 namespace resp = response;
 
 TEST(Response, Join) {
-    EXPECT_EQ(R"({"success":true,"code":"12345"})", resp::join(true, "12345"));
-    EXPECT_EQ(R"({"success":false})", resp::join(false));
+    EXPECT_EQ(R"({"type":"join","success":true,"code":"12345"})",
+              resp::join(true, "12345"));
+    EXPECT_EQ(R"({"type":"join","success":false})", resp::join(false));
+}
+
+TEST(Response, Chat) {
+    EXPECT_EQ(R"({"type":"chat","msg":"Hello World"})",
+              resp::chat("Hello World"));
 }
 
 }  // namespace io_blair
