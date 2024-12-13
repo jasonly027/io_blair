@@ -1,35 +1,66 @@
-
 #include "session.hpp"
 
+#include <cstddef>
 #include <iostream>
-#include <memory>
-#include <string>
 
-#include "boost/asio/bind_executor.hpp"
-#include "boost/asio/io_context.hpp"
-#include "boost/asio/post.hpp"
-#include "net_common.hpp"
+#include "lobby.hpp"
 
-using std::cout, std::cerr;
+using std::cout, std::cerr, std::string, std::string_view, std::size_t;
 
 namespace io_blair {
-Session::Session(net::io_context& ctx, tcp::socket socket,
-                 const std::shared_ptr<LobbyManager>& manager)
+
+WebSocketSession::WebSocketSession(net::io_context& ctx, tcp::socket socket,
+                                   LobbyManager& manager)
     : socket_(std::move(socket)),
       ws_(socket_),
-      manager_(manager),
       write_strand_(net::make_strand(ctx)),
-      state_(manager_) {
+      state_(*this),
+      manager_(manager) {
     ws_.set_option(
         websocket::stream_base::timeout::suggested(beast::role_type::server));
 }
 
-void Session::run() {
+void WebSocketSession::run() {
+    // Expects a Websocket upgrade request
     ws_.async_accept(
         [self = shared_from_this()](error_code ec) { self->on_accept(ec); });
 }
 
-Session::Error Session::fail(error_code ec, const char* what) {
+void WebSocketSession::write(string msg) {
+    net::post(write_strand_, [msg = std::move(msg), self = shared_from_this()] {
+        // Add to queue
+        self->queue_.push_back(msg);
+
+        /*
+            If there there are already messages in the queue,
+            the logic of on_write() will already know it needs to
+            keep queueing writes.
+
+            Otherwise, this needs to start the write chain.
+        */
+        if (self->queue_.size() <= 1) self->prepare_for_next_write();
+    });
+}
+
+bool WebSocketSession::join_new_lobby() {
+    lobby_ = manager_.create(shared_from_this());
+    return lobby_ != nullptr;
+}
+
+bool WebSocketSession::join_lobby(const string& code) {
+    lobby_ = manager_.join(code, shared_from_this());
+    return lobby_ != nullptr;
+}
+
+void WebSocketSession::leave_lobby() {
+    lobby_->leave(this);
+    lobby_.reset();
+}
+
+string_view WebSocketSession::code() const { return lobby_->code_; }
+
+auto WebSocketSession::fail(error_code ec, const char* what) -> Error {
+    // If (ec) is one of the following errors, the session must close
     if (ec == websocket::condition::handshake_failed ||
         ec == net::error::operation_aborted ||
         ec == net::error::connection_aborted ||
@@ -42,67 +73,54 @@ Session::Error Session::fail(error_code ec, const char* what) {
     return Error::kRecoverable;
 }
 
-void Session::log_err(error_code ec, const char* what) {
+void WebSocketSession::log_err(error_code ec, const char* what) {
     cerr << what << ": " << ec.message() << '\n';
 }
 
-void Session::on_accept(error_code ec) {
+void WebSocketSession::on_accept(error_code ec) {
     if (ec && fail(ec, "ws on_accept") == Error::kFatal) return;
-
-    ws_.async_read(
-        buffer_, [self = shared_from_this()](error_code ec, std::size_t bytes) {
-            self->on_read(ec, bytes);
-        });
+    prepare_for_next_read();
 }
 
-void Session::on_read(error_code ec, std::size_t bytes) {
+void WebSocketSession::prepare_for_next_read() {
+    ws_.async_read(buffer_,
+                   [self = shared_from_this()](error_code ec, size_t bytes) {
+                       self->on_read(ec, bytes);
+                   });
+}
+
+void WebSocketSession::on_read(error_code ec, size_t) {
     if (ec && fail(ec, "ws on_read") == Error::kFatal) return;
 
-    const beast::string_view sv(net::buffer_cast<const char*>(buffer_.data()),
-                                bytes);
-    if (auto reply = state_.parse(sv)) {
-        write(*reply);
-    }
+    state_.parse(beast::buffers_to_string(buffer_.data()));
+    buffer_.consume(buffer_.size());
 
-    ws_.async_read(
-        buffer_, [self = shared_from_this()](error_code ec, std::size_t bytes) {
-            self->on_read(ec, bytes);
-        });
+    prepare_for_next_read();
 }
 
-void Session::write(const std::shared_ptr<std::string>& str) {
-    net::post(write_strand_, [str, self = shared_from_this()] {
-        self->queue_.push_back(str);
-
-        if (self->queue_.size() > 1) return;
-
-        self->ws_.async_write(
-            net::buffer(*self->queue_.front()),
-            net::bind_executor(self->write_strand_,
-                               [self = self->shared_from_this()](
-                                   error_code ec, std::size_t bytes) {
-                                   self->on_write(ec, bytes);
-                               }));
-    });
+void WebSocketSession::prepare_for_next_write() {
+    ws_.async_write(
+        net::buffer(queue_.front()),
+        net::bind_executor(write_strand_, [self = shared_from_this()](
+                                              error_code ec, size_t bytes) {
+            self->on_write(ec, bytes);
+        }));
 }
 
-void Session::on_write(error_code ec, std::size_t bytes [[maybe_unused]]) {
+void WebSocketSession::on_write(error_code ec, size_t bytes [[maybe_unused]]) {
     if (ec && fail(ec, "ws on_write") == Error::kFatal) return;
 
+    // Finished writing msg, remove it from the queue
     queue_.erase(queue_.begin());
 
-    if (!queue_.empty()) {
-        ws_.async_write(
-            net::buffer(*queue_.front()),
-            net::bind_executor(
-                write_strand_,
-                [self = shared_from_this()](error_code ec, std::size_t bytes) {
-                    self->on_write(ec, bytes);
-                }));
-    }
+    // Continue writing if queue isn't empty
+    if (!queue_.empty()) prepare_for_next_write();
 }
 
-void Session::close() {
+void WebSocketSession::close() {
+    if (lobby_) leave_lobby();
+
+    // Send close message through Websocket stream
     ws_.async_close(websocket::close_code::normal,
                     [self = shared_from_this()](error_code ec) {
                         if (ec != net::error::operation_aborted)

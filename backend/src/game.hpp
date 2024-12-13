@@ -1,34 +1,67 @@
 #pragma once
 
-#include <boost/json.hpp>
-#include <memory>
-#include <optional>
+#include <simdjson.h>
+
 #include <string>
 
-#include "boost/beast/core/string_type.hpp"
-#include "boost/json/object.hpp"
-#include "lobby_manager.hpp"
 #include "net_common.hpp"
 
 namespace io_blair {
-    namespace json = boost::json;
+
+class ISession;
+
 class Game {
    public:
-    enum class State { kOutsideLobby, kCharacterSelect, kInGame, kGameDone };
+    // Game states
+    enum class State {
+        /*
+            Before joining a lobby. Expecting incoming msg
+            to request to create/join a lobby
+        */
+        kPrelobby,
+        /*
+            In a lobby, Expecting incoming msgs of self/other
+            joining/leaving, changing/confirming desired character
+        */
+        kCharacterSelect,
+        /*
+            In game, Expecting incoming msgs of self/other
+            movement, self/other leaving
+        */
+        kInGame,
+        /*
+            Finished game, Expecting incoming msg of self/other
+            leaving, requesting new map
+        */
+        kGameDone
+    };
 
-    explicit Game(const std::shared_ptr<LobbyManager>& manager);
+    explicit Game(ISession& session);
 
-    std::optional<std::shared_ptr<std::string>> parse(beast::string_view sv);
-
+    // Print to stderr
     static void log_err(error_code ec, const char* what);
 
+    // Parse and act on incoming message
+    void parse(std::string data);
+
+    State state() const;
+
    private:
-    std::optional<json::object> parse_json(beast::string_view sv);
+    using parser = simdjson::ondemand::parser;
+    using document = simdjson::ondemand::document;
 
-    std::optional<std::shared_ptr<std::string>> parse_outside_lobby(const json::object& obj);
+    void write(std::string msg);
 
-    std::shared_ptr<LobbyManager> manager_;
+    void parse_prelobby(document& doc);
+
+    void create_lobby();
+
+    void join_lobby(document& doc);
+
+    // Reference to session that owns this game state
+    ISession& session_;
+    // Current game state to understand what msgs to expect
     State state_;
-    json::parser parser_;
+    parser parser_;
 };
 }  // namespace io_blair

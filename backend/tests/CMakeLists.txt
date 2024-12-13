@@ -1,15 +1,16 @@
 add_executable(${PROJECT_NAME}_test
-    example_test.cpp
+    response_test.cpp
+    game_test.cpp
+    lobby_test.cpp
+)
+target_include_directories(${PROJECT_NAME}_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/mocks
 )
 
 target_link_libraries(${PROJECT_NAME}_test PRIVATE
     ${PROJECT_NAME}_lib
-    GTest::gtest_main
+    GTest::gmock_main
 )
-
-if(WIN32)
-    target_compile_definitions(${PROJECT_NAME}_test PRIVATE _WIN32_WINNT=0x0A00)
-endif()
 
 include(GoogleTest)
 gtest_discover_tests("${PROJECT_NAME}_test")
