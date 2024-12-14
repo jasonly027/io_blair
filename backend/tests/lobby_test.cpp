@@ -7,8 +7,7 @@
 #include "gmock/gmock.h"
 #include "session_mock.hpp"
 
-using std::shared_ptr, std::string;
-
+using std::shared_ptr;
 using testing::NotNull, testing::IsNull;
 
 namespace io_blair {
@@ -19,7 +18,7 @@ class LobbyManagerTest : public testing::Test {
 
 TEST_F(LobbyManagerTest, OneSessionCreatingAndLeavingALobby) {
     auto session = std::make_shared<MockSession>();
-    shared_ptr<Lobby> lobby = manager_.create(session);
+    shared_ptr<ILobby> lobby = manager_.create(session);
 
     ASSERT_THAT(lobby, NotNull());
 
@@ -31,20 +30,18 @@ TEST_F(LobbyManagerTest, OneSessionCreatingAndLeavingALobby) {
     EXPECT_EQ(session.use_count(), 2)
         << "Local var and lobby should each hold a ref";
 
-    lobby->leave(session.get());
+    lobby->leave(*session);
 
     EXPECT_EQ(lobby.use_count(), 1)
-        << "Manager should have removed its ref to "
-           "empty lobby. Only local var ref should remain";
+        << "Manager should have removed its ref to empty lobby";
 
     EXPECT_EQ(session.use_count(), 1)
-        << "Lobby should have removed its ref to session. "
-           "Only local var ref should remain";
+        << "Lobby should have removed its ref to session. ";
 }
 
-TEST_F(LobbyManagerTest, ThreeSessionsTryingToJoinAndLeaveANewLobby) {
+TEST_F(LobbyManagerTest, ThreeSessionsTryingToJoinANewLobby) {
     auto s1 = std::make_shared<MockSession>();
-    shared_ptr<Lobby> lobby1 = manager_.create(s1);
+    shared_ptr<ILobby> lobby1 = manager_.create(s1);
 
     ASSERT_THAT(lobby1, NotNull());
 
@@ -57,8 +54,8 @@ TEST_F(LobbyManagerTest, ThreeSessionsTryingToJoinAndLeaveANewLobby) {
         << "Local var and lobby should each hold a ref";
 
     auto s2 = std::make_shared<MockSession>();
-    const string& code = lobby1->code_;
-    shared_ptr<Lobby> lobby2 = manager_.join(code, s2);
+    const auto code = lobby1->code();
+    shared_ptr<ILobby> lobby2 = manager_.join(code, s2);
 
     ASSERT_THAT(lobby2, NotNull());
 
@@ -92,15 +89,15 @@ TEST_F(LobbyManagerTest, ThreeSessionsTryingToJoinAndLeaveANewLobby) {
 static void three_sessions_before_leaving(shared_ptr<MockSession>& s1,
                                           shared_ptr<MockSession>& s2,
                                           shared_ptr<MockSession>& s3,
-                                          shared_ptr<Lobby>& lobby,
+                                          shared_ptr<ILobby>& lobby,
                                           LobbyManager& manager) {
-    EXPECT_EQ(manager.join(lobby->code_, s2), lobby);
+    EXPECT_EQ(manager.join(lobby->code(), s2), lobby);
     ASSERT_TRUE(lobby->full());
 
     EXPECT_EQ(s1.use_count(), 2);
     EXPECT_EQ(s2.use_count(), 2);
 
-    EXPECT_THAT(manager.join(lobby->code_, s3), IsNull());
+    EXPECT_THAT(manager.join(lobby->code(), s3), IsNull());
 
     EXPECT_EQ(s1.use_count(), 2);
     EXPECT_EQ(s2.use_count(), 2);
@@ -112,21 +109,21 @@ TEST_F(LobbyManagerTest, ThirdSessionJoinsLobbyAfterFirstSessionLeaves) {
     auto s2 = std::make_shared<MockSession>();
     auto s3 = std::make_shared<MockSession>();
 
-    shared_ptr<Lobby> lobby = manager_.create(s1);
+    shared_ptr<ILobby> lobby = manager_.create(s1);
 
     {
         SCOPED_TRACE("BeforeFirstSessionLeaves");
         three_sessions_before_leaving(s1, s2, s3, lobby, manager_);
     }
 
-    lobby->leave(s1.get());
+    lobby->leave(*s1);
     EXPECT_FALSE(lobby->full());
 
     EXPECT_EQ(s1.use_count(), 1);
     EXPECT_EQ(s2.use_count(), 2);
     EXPECT_EQ(s3.use_count(), 1);
 
-    EXPECT_EQ(manager_.join(lobby->code_, s3), lobby);
+    EXPECT_EQ(manager_.join(lobby->code(), s3), lobby);
 
     EXPECT_EQ(s1.use_count(), 1);
     EXPECT_EQ(s2.use_count(), 2);
@@ -138,21 +135,21 @@ TEST_F(LobbyManagerTest, ThirdSessionJoinsLobbyAfterSecondSessionLeaves) {
     auto s2 = std::make_shared<MockSession>();
     auto s3 = std::make_shared<MockSession>();
 
-    shared_ptr<Lobby> lobby = manager_.create(s1);
+    shared_ptr<ILobby> lobby = manager_.create(s1);
 
     {
         SCOPED_TRACE("BeforeSecondSessionLeaves");
         three_sessions_before_leaving(s1, s2, s3, lobby, manager_);
     }
 
-    lobby->leave(s2.get());
+    lobby->leave(*s2);
     EXPECT_FALSE(lobby->full());
 
     EXPECT_EQ(s1.use_count(), 2);
     EXPECT_EQ(s2.use_count(), 1);
     EXPECT_EQ(s3.use_count(), 1);
 
-    EXPECT_EQ(manager_.join(lobby->code_, s3), lobby);
+    EXPECT_EQ(manager_.join(lobby->code(), s3), lobby);
 
     EXPECT_EQ(s1.use_count(), 2);
     EXPECT_EQ(s2.use_count(), 1);

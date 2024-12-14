@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
+
+#include "character.hpp"
 
 namespace io_blair {
 
@@ -40,17 +43,17 @@ or
 */
 
 using name = const char*;
-using value = const char*;
+using value_str = const char*;
 
 constexpr struct {
     const struct {
         name _ = "type";
 
         // Possible in all states that aren't Prelobby
-        value chat = "chat";
+        value_str chat = "chat";
 
         // Possible in all states that aren't Prelobby
-        value leave = "leave";
+        value_str leave = "leave";
     } type;
 
     // Should exist if type is chat
@@ -63,8 +66,8 @@ constexpr struct {
 
 constexpr struct {
     const struct {
-        value create = "create";
-        value join = "join";
+        value_str create = "create";
+        value_str join = "join";
     } type;
 
     // Should exist if type is join
@@ -77,8 +80,8 @@ constexpr struct {
 
 constexpr struct {
     const struct {
-        value hover = "hover";
-        value confirm = "confirm";
+        value_str hover = "hover";
+        value_str confirm = "confirm";
     } type;
 
     // Should exist if type is hover
@@ -86,8 +89,12 @@ constexpr struct {
     const struct {
         name _ = "hover";
 
-        name io = "io";
-        name blair = "blair";
+        using CharImpl = std::underlying_type_t<Character>;
+
+        const uint8_t io =
+            static_cast<CharImpl>(Character::kIO);
+        const uint8_t blair =
+            static_cast<CharImpl>(Character::kBlair);
     } hover;
 
     // Should exist if type is confirm
@@ -95,8 +102,12 @@ constexpr struct {
     const struct {
         name _ = "confirm";
 
-        value io = "io";
-        value blair = "blair";
+        using CharImpl = std::underlying_type_t<Character>;
+
+        const uint8_t io =
+            static_cast<CharImpl>(Character::kIO);
+        const uint8_t blair =
+            static_cast<CharImpl>(Character::kBlair);
     } confirm;
 
 } CharacterSelect;  // NOLINT(readability-identifier-naming)
@@ -108,6 +119,8 @@ namespace response {
 std::string join(bool success, std::optional<std::string> code = std::nullopt);
 
 std::string chat(std::string msg);
+
+std::string hover(Character character);
 
 }  // namespace response
 

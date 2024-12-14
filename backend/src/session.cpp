@@ -5,7 +5,8 @@
 
 #include "lobby.hpp"
 
-using std::cout, std::cerr, std::string, std::string_view, std::size_t;
+using std::cout, std::cerr, std::string, std::string_view, std::size_t,
+    std::shared_ptr;
 
 namespace io_blair {
 
@@ -14,8 +15,7 @@ WebSocketSession::WebSocketSession(net::io_context& ctx, tcp::socket socket,
     : socket_(std::move(socket)),
       ws_(socket_),
       write_strand_(net::make_strand(ctx)),
-      state_(*this),
-      manager_(manager) {
+      state_(*this, manager) {
     ws_.set_option(
         websocket::stream_base::timeout::suggested(beast::role_type::server));
 }
@@ -42,26 +42,9 @@ void WebSocketSession::write(string msg) {
     });
 }
 
-void WebSocketSession::write_other(string msg) {
-    lobby_->msg(this, std::move(msg));
+shared_ptr<ISession> WebSocketSession::get_shared() {
+    return shared_from_this();
 }
-
-bool WebSocketSession::join_new_lobby() {
-    lobby_ = manager_.create(shared_from_this());
-    return lobby_ != nullptr;
-}
-
-bool WebSocketSession::join_lobby(const string& code) {
-    lobby_ = manager_.join(code, shared_from_this());
-    return lobby_ != nullptr;
-}
-
-void WebSocketSession::leave_lobby() {
-    lobby_->leave(this);
-    lobby_.reset();
-}
-
-string_view WebSocketSession::code() const { return lobby_->code_; }
 
 auto WebSocketSession::fail(error_code ec, const char* what) -> Error {
     // If (ec) is one of the following errors, the session must close
@@ -122,7 +105,7 @@ void WebSocketSession::on_write(error_code ec, size_t bytes [[maybe_unused]]) {
 }
 
 void WebSocketSession::close() {
-    if (lobby_) leave_lobby();
+    state_.leave();
 
     // Send close message through Websocket stream
     ws_.async_close(websocket::close_code::normal,

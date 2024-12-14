@@ -1,43 +1,51 @@
 #include <gtest/gtest.h>
 
 #include <game.hpp>
+#include <memory>
+#include <string>
 #include <optional>
 #include <rfl/json.hpp>
 
 #include "gmock/gmock.h"
+#include "lobby_mock.hpp"
 #include "response.hpp"
 #include "session_mock.hpp"
 
-using std::string, std::optional;
+using std::string, std::optional, std::shared_ptr;
 namespace json = rfl::json;
-using testing::Return, testing::StrictMock;
-
-namespace io_blair::request {
-struct Join {
-    string type;
-    optional<string> code;
-};
-}  // namespace io_blair::request
+using testing::Return, testing::ReturnRef, testing::StrictMock,
+    testing::InSequence;
 
 namespace io_blair {
 
-using request::Join, request::Prelobby;
+using request::Prelobby;
 using State = Game::State;
+namespace resp = response;
 
 class GameTest : public testing::Test {
    protected:
-    void SetUp() override { ASSERT_EQ(game_.state(), State::kPrelobby); }
+    void SetUp() override {
+        ASSERT_EQ(g1_.state(), State::kPrelobby);
+        ASSERT_EQ(g2_.state(), State::kPrelobby);
+    }
 
-    MockSession session_;
-    Game game_{session_};
+    MockLobbyManager manager_;
+    shared_ptr<MockLobby> lobby_ = std::make_shared<MockLobby>();
+
+    MockSession s1_;
+    Game g1_{s1_, manager_};
+
+    MockSession s2_;
+    Game g2_{s2_, manager_};
 };
 
 TEST_F(GameTest, RequestIsInvalidJson) {
     StrictMock<MockSession> session;
-    Game game(session);
+    StrictMock<MockLobbyManager> manager;
+    Game game(session, manager);
 
     // Game should return immediately on invalid JSON
-    // There should be no calls to session
+    // There should be no calls to session or manager
 
     static constexpr const char* kEmpty = "";
     game.parse(kEmpty);
@@ -46,52 +54,68 @@ TEST_F(GameTest, RequestIsInvalidJson) {
     game.parse(kInvalid);
 }
 
+struct Join {
+    string type;
+    optional<string> code;
+};
+
 TEST_F(GameTest, RequestCreateLobby) {
+    const string& code = "code";
+
+    EXPECT_CALL(manager_, create)
+        .WillOnce(Return(nullptr))
+        .WillOnce(Return(lobby_));
+
+    EXPECT_CALL(*lobby_, code).WillOnce(ReturnRef(code));
+
+    {
+        InSequence _;
+        EXPECT_CALL(s1_, write(resp::join(false)));
+        EXPECT_CALL(s1_, write(resp::join(true, code)));
+    }
+
     const string& req = json::write(Join{.type = Prelobby.type.create});
 
-    EXPECT_CALL(session_, join_new_lobby)
-        .WillOnce(Return(false))
-        .WillOnce(Return(true));
+    g1_.parse(req);
+    EXPECT_EQ(g1_.state(), State::kPrelobby)
+        << "Shouldn't advance state after manager returned nullptr";
 
-    EXPECT_CALL(session_, write).Times(2);
-
-    ON_CALL(session_, code).WillByDefault(Return(""));
-
-    game_.parse(req);
-    EXPECT_EQ(game_.state(), State::kPrelobby)
-        << "Shouldn't advance state after join_new_lobby() returned false";
-
-    game_.parse(req);
-    EXPECT_EQ(game_.state(), State::kCharacterSelect)
-        << "Should advance state after join_new_lobby() returned true";
+    g1_.parse(req);
+    EXPECT_EQ(g1_.state(), State::kCharacterSelect)
+        << "Should advance state after manager returned a lobby";
 }
 
 TEST_F(GameTest, RequestJoinLobby) {
     const string& code = "code";
 
-    const string& req =
-        json::write(Join{.type = Prelobby.type.join, .code = code});
+    EXPECT_CALL(manager_, join(code, testing::_))
+        .WillOnce(Return(nullptr))
+        .WillOnce(Return(lobby_));
+
+    {
+        InSequence _;
+        EXPECT_CALL(s1_, write(resp::join(false)));
+        EXPECT_CALL(s1_, write(resp::join(true, code)));
+    }
+
     const string& req_missing_code =
         json::write(Join{.type = Prelobby.type.join});
 
-    EXPECT_CALL(session_, join_lobby(code))
-        .WillOnce(Return(false))
-        .WillOnce(Return(true));
-
-    EXPECT_CALL(session_, write).Times(2);
-
-    game_.parse(req_missing_code);
-    EXPECT_EQ(game_.state(), State::kPrelobby)
+    g1_.parse(req_missing_code);
+    EXPECT_EQ(g1_.state(), State::kPrelobby)
         << "Should have returned early and without state change"
            " because missing join code";
 
-    game_.parse(req);
-    EXPECT_EQ(game_.state(), State::kPrelobby)
-        << "Shouldn't advance state after join_lobby() returned false";
+    const string& req =
+        json::write(Join{.type = Prelobby.type.join, .code = code});
 
-    game_.parse(req);
-    EXPECT_EQ(game_.state(), State::kCharacterSelect)
-        << "Should advance state after join_lobby() returned true";
+    g1_.parse(req);
+    EXPECT_EQ(g1_.state(), State::kPrelobby)
+        << "Shouldn't advance state after manager returned nullptr";
+
+    g1_.parse(req);
+    EXPECT_EQ(g1_.state(), State::kCharacterSelect)
+        << "Should advance state after manager returned a lobby";
 }
 
 }  // namespace io_blair

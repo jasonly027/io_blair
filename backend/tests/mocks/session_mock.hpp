@@ -2,8 +2,8 @@
 
 #include <gmock/gmock.h>
 
+#include <memory>
 #include <string>
-#include <string_view>
 
 #include "session.hpp"
 
@@ -12,10 +12,6 @@ class MockSession : public ISession {
    public:
     MOCK_METHOD(void, run, (), (override));
     MOCK_METHOD(void, write, (std::string msg), (override));
-    MOCK_METHOD(void, write_other, (std::string msg), (override));
-    MOCK_METHOD(bool, join_new_lobby, (), (override));
-    MOCK_METHOD(bool, join_lobby, (const std::string& code), (override));
-    MOCK_METHOD(void, leave_lobby, (), (override));
-    MOCK_METHOD(std::string_view, code, (), (const, override));
+    MOCK_METHOD(std::shared_ptr<ISession>, get_shared, (), (override));
 };
 }  // namespace io_blair
