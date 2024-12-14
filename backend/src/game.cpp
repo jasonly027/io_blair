@@ -88,7 +88,7 @@ void Game::character_select(document& doc) {
     string type;
     if (doc[SharedState.type._].get_string(type) != 0) return;
 
-    if (type == SharedState.type.chat) {
+    if (type == SharedState.type.msg) {
         msg(doc);
     }
 
@@ -104,8 +104,10 @@ void Game::character_select(document& doc) {
         switch (hover.get_int64()) {
             case CharacterSelect.hover.io:
                 write_other(resp::hover(kIO));
+                break;
             case CharacterSelect.hover.blair:
                 write_other(resp::hover(kBlair));
+                break;
         }
     }
 
@@ -117,6 +119,7 @@ void Game::character_select(document& doc) {
 
         switch (confirm.get_int64()) {
             case CharacterSelect.confirm.io:
+                break;
             case CharacterSelect.confirm.blair:
                 break;
         }
@@ -126,7 +129,7 @@ void Game::character_select(document& doc) {
 void Game::msg(document& doc) {
     string msg;
     if (doc[SharedState.msg._].get_string(msg) != 0) return;
-    write_other(resp::chat(std::move(msg)));
+    write_other(resp::msg(std::move(msg)));
 }
 
 }  // namespace io_blair

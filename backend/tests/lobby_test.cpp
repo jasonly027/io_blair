@@ -1,10 +1,10 @@
 #include "lobby.hpp"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <memory>
 
-#include "gmock/gmock.h"
 #include "session_mock.hpp"
 
 using std::shared_ptr;
@@ -102,6 +102,8 @@ static void three_sessions_before_leaving(shared_ptr<MockSession>& s1,
     EXPECT_EQ(s1.use_count(), 2);
     EXPECT_EQ(s2.use_count(), 2);
     EXPECT_EQ(s3.use_count(), 1);
+
+    ASSERT_FALSE(testing::Test::HasFailure());
 }
 
 TEST_F(LobbyManagerTest, ThirdSessionJoinsLobbyAfterFirstSessionLeaves) {

@@ -50,13 +50,13 @@ constexpr struct {
         name _ = "type";
 
         // Possible in all states that aren't Prelobby
-        value_str chat = "chat";
+        value_str msg = "msg";
 
         // Possible in all states that aren't Prelobby
         value_str leave = "leave";
     } type;
 
-    // Should exist if type is chat
+    // Should exist if type is msg
     // The msg that should be forwarded to other player
     const struct {
         name _ = "msg";
@@ -118,7 +118,7 @@ namespace response {
 
 std::string join(bool success, std::optional<std::string> code = std::nullopt);
 
-std::string chat(std::string msg);
+std::string msg(std::string msg);
 
 std::string hover(Character character);
 

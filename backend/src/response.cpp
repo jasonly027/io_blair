@@ -23,12 +23,12 @@ string join(bool success, optional<string> code) {
     return json::write(Join{.success = success, .code = std::move(code)});
 }
 
-struct Chat {
-    string type = "chat";
+struct Msg {
+    string type = "msg";
     string msg;
 };
 
-string chat(string msg) { return json::write(Chat{.msg = std::move(msg)}); }
+string msg(string msg) { return json::write(Msg{.msg = std::move(msg)}); }
 
 struct Hover {
     string type = "hover";
