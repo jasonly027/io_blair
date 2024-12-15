@@ -3,34 +3,38 @@
 #include <utility>
 
 #include "game.hpp"
+#include "response.hpp"
 #include "session.hpp"
 
 using std::shared_ptr, std::string;
 using lock = std::lock_guard<std::mutex>;
+using rec_lock = std::lock_guard<std::recursive_mutex>;
 
 namespace io_blair {
+
+namespace resp = response;
 
 Lobby::Lobby(string code, ILobbyManager& manager)
     : code_(std::move(code)), manager_(manager) {}
 
-bool Lobby::join(shared_ptr<ISession> ptr) {
-    lock guard(mutex_);
+bool Lobby::join(ISession& session) {
+    rec_lock guard(mutex_);
 
     if (!p1_) {
-        p1_ = std::move(ptr);
+        p1_ = session.get_shared();
         return true;
     }
 
     if (!p2_) {
-        p2_ = std::move(ptr);
+        p2_ = session.get_shared();
         return true;
     }
 
     return false;
 }
 
-void Lobby::msg(const ISession& session, string msg) {
-    lock guard(mutex_);
+void Lobby::msg_other(const ISession& session, string msg) {
+    rec_lock guard(mutex_);
 
     if (&session == p1_.get() && p2_) {
         p2_->write(std::move(msg));
@@ -39,14 +43,21 @@ void Lobby::msg(const ISession& session, string msg) {
     }
 }
 
-bool Lobby::confirm_character(const ISession& session, Character character) {
-    lock guard(mutex_);
+void Lobby::confirm_character(const ISession& session, Character character) {
+    rec_lock guard(mutex_);
 
-    return false;
+    switch (character) {
+        case Character::kUnset:
+            break;
+        case Character::kIO:
+            break;
+        case Character::kBlair:
+            break;
+    }
 }
 
 void Lobby::leave(const ISession& session) {
-    lock guard(mutex_);
+    rec_lock guard(mutex_);
 
     if (&session == p1_.get()) {
         p1_.reset();
@@ -58,13 +69,13 @@ void Lobby::leave(const ISession& session) {
 }
 
 bool Lobby::full() const {
-    lock guard(mutex_);
+    rec_lock guard(mutex_);
     return p1_ && p2_;
 }
 
 const string& Lobby::code() const { return code_; }
 
-shared_ptr<ILobby> LobbyManager::create(shared_ptr<ISession> session) {
+shared_ptr<ILobby> LobbyManager::create(ISession& session) {
     lock guard(mutex_);
 
     string code = generate_code();
@@ -75,17 +86,17 @@ shared_ptr<ILobby> LobbyManager::create(shared_ptr<ISession> session) {
     auto lobby = std::make_shared<Lobby>(code, *this);
     lobbies_[code] = lobby;
 
-    return lobby->join(std::move(session)) ? lobby : nullptr;
+    return lobby->join(session) ? lobby : nullptr;
 }
 
 shared_ptr<ILobby> LobbyManager::join(const std::string& code,
-                                      std::shared_ptr<ISession> session) {
+                                      ISession& session) {
     lock guard(mutex_);
 
     auto it = lobbies_.find(code);
     if (it == lobbies_.end()) return nullptr;
 
-    return it->second->join(std::move(session)) ? it->second : nullptr;
+    return it->second->join(session) ? it->second : nullptr;
 }
 
 void LobbyManager::remove(const string& code) {

@@ -14,11 +14,11 @@ class ISession;
 
 class ILobby {
    public:
-    virtual bool join(std::shared_ptr<ISession> ptr) = 0;
+    virtual bool join(ISession& session) = 0;
 
-    virtual void msg(const ISession& session, std::string msg) = 0;
+    virtual void msg_other(const ISession& session, std::string msg) = 0;
 
-    virtual bool confirm_character(const ISession& session,
+    virtual void confirm_character(const ISession& session,
                                    Character character) = 0;
 
     virtual void leave(const ISession& session) = 0;
@@ -32,11 +32,11 @@ class Lobby : public ILobby, public std::enable_shared_from_this<Lobby> {
    public:
     explicit Lobby(std::string code, ILobbyManager& manager);
 
-    bool join(std::shared_ptr<ISession> ptr) override;
+    bool join(ISession& session) override;
 
-    void msg(const ISession& session, std::string msg) override;
+    void msg_other(const ISession& session, std::string msg) override;
 
-    bool confirm_character(const ISession& session,
+    void confirm_character(const ISession& session,
                            Character character) override;
 
     void leave(const ISession& session) override;
@@ -49,27 +49,30 @@ class Lobby : public ILobby, public std::enable_shared_from_this<Lobby> {
     const std::string code_;
     std::shared_ptr<ISession> p1_;
     std::shared_ptr<ISession> p2_;
-    mutable std::mutex mutex_;
+    struct PlayerData {
+        Character character = Character::kUnset;
+    } d1_, d2_;
+
+    mutable std::recursive_mutex mutex_;
     ILobbyManager& manager_;
 };
 
 class ILobbyManager {
    public:
-    virtual std::shared_ptr<ILobby> create(
-        std::shared_ptr<ISession> session) = 0;
+    virtual std::shared_ptr<ILobby> create(ISession& session) = 0;
 
     virtual std::shared_ptr<ILobby> join(const std::string& code,
-                                         std::shared_ptr<ISession> session) = 0;
+                                         ISession& session) = 0;
 
     virtual void remove(const std::string& code) = 0;
 };
 
 class LobbyManager : public ILobbyManager {
    public:
-    std::shared_ptr<ILobby> create(std::shared_ptr<ISession> session) override;
+    std::shared_ptr<ILobby> create(ISession& session) override;
 
     std::shared_ptr<ILobby> join(const std::string& code,
-                                 std::shared_ptr<ISession> session) override;
+                                 ISession& session) override;
 
     void remove(const std::string& code) override;
 

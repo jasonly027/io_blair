@@ -8,14 +8,12 @@
 #include <optional>
 #include <rfl/json.hpp>
 #include <string>
-#include <type_traits>
 
 #include "lobby_mock.hpp"
 #include "response.hpp"
 #include "session_mock.hpp"
 
-using std::string, std::optional, std::shared_ptr, std::underlying_type_t,
-    std::numeric_limits;
+using std::string, std::optional, std::shared_ptr, std::numeric_limits;
 namespace json = rfl::json;
 using testing::Return, testing::ReturnRef, testing::StrictMock,
     testing::InSequence;
@@ -53,8 +51,8 @@ class PrelobbyTest : public testing::Test {
     Game g2_{s2_, manager_};
 
     void SetUp() override {
-        ASSERT_EQ(g1_.state(), State::kPrelobby);
-        ASSERT_EQ(g2_.state(), State::kPrelobby);
+        EXPECT_EQ(g1_.state(), State::kPrelobby);
+        EXPECT_EQ(g2_.state(), State::kPrelobby);
     }
 };
 
@@ -73,8 +71,8 @@ TEST_F(PrelobbyTest, RequestCreateLobby) {
 
     {
         InSequence _;
-        EXPECT_CALL(s1_, write(resp::join(false)));
-        EXPECT_CALL(s1_, write(resp::join(true, code)));
+        EXPECT_CALL(s1_, write(resp::join()));
+        EXPECT_CALL(s1_, write(resp::join(code)));
     }
 
     const string req = json::write(Join{.type = Prelobby.type.create});
@@ -96,8 +94,8 @@ TEST_F(PrelobbyTest, RequestJoinLobby) {
 
     {
         InSequence _;
-        EXPECT_CALL(s1_, write(resp::join(false)));
-        EXPECT_CALL(s1_, write(resp::join(true, code)));
+        EXPECT_CALL(s1_, write(resp::join()));
+        EXPECT_CALL(s1_, write(resp::join(code)));
     }
 
     const string req_missing_code =
@@ -141,19 +139,15 @@ class CharacterSelectTest : public testing::Test {
         const string code = "code";
         EXPECT_CALL(*lobby_, code).WillOnce(ReturnRef(code));
 
-        EXPECT_CALL(s1_, get_shared);
         EXPECT_CALL(s1_, write);
 
         g1_.parse(json::write(Join{.type = Prelobby.type.create}));
         EXPECT_EQ(g1_.state(), State::kCharacterSelect);
 
-        EXPECT_CALL(s2_, get_shared);
         EXPECT_CALL(s2_, write);
 
         g2_.parse(json::write(Join{.type = Prelobby.type.join, .code = code}));
         EXPECT_EQ(g2_.state(), State::kCharacterSelect);
-
-        ASSERT_FALSE(testing::Test::HasFailure());
     }
 };
 
@@ -167,7 +161,7 @@ TEST_F(CharacterSelectTest, MsgOther) {
     const string req = json::write(Msg{.msg = msg});
     const string req_no_msg = json::write(Msg{});
 
-    EXPECT_CALL(*lobby_, msg(testing::_, resp::msg(msg)));
+    EXPECT_CALL(*lobby_, msg_other(testing::_, resp::msg(msg)));
 
     g1_.parse(req_no_msg);
     g1_.parse(req);
@@ -191,7 +185,11 @@ struct Hover {
 };
 
 TEST_F(CharacterSelectTest, Hover) {
-    EXPECT_CALL(*lobby_, msg(testing::_, resp::hover(Character::kIO)));
+    {
+        InSequence _;
+        EXPECT_CALL(*lobby_, msg_other(testing::_, resp::hover(Character::kIO)));
+        EXPECT_CALL(*lobby_, msg_other(testing::_, resp::hover(Character::kBlair)));
+    }
 
     const string req_no_hover = json::write(Hover<string>{});
     g1_.parse(req_no_hover);
@@ -214,9 +212,13 @@ TEST_F(CharacterSelectTest, Hover) {
     const string req_decimal = json::write(Hover<double>{.hover = 1.0});
     g1_.parse(req_decimal);
 
-    const string req = json::write(
-        Hover<underlying_type_t<Character>>{.hover = CharacterSelect.hover.io});
-    g1_.parse(req);
+    const string req_io =
+        json::write(Hover<CharacterImpl>{.hover = CharacterSelect.hover.io});
+    g1_.parse(req_io);
+
+    const string req_blair =
+        json::write(Hover<CharacterImpl>{.hover = CharacterSelect.hover.blair});
+    g1_.parse(req_blair);
 }
 
 }  // namespace io_blair

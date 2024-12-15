@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <type_traits>
 
 #include "character.hpp"
 
@@ -89,12 +90,8 @@ constexpr struct {
     const struct {
         name _ = "hover";
 
-        using CharImpl = std::underlying_type_t<Character>;
-
-        const uint8_t io =
-            static_cast<CharImpl>(Character::kIO);
-        const uint8_t blair =
-            static_cast<CharImpl>(Character::kBlair);
+        const uint8_t io = static_cast<CharacterImpl>(Character::kIO);
+        const uint8_t blair = static_cast<CharacterImpl>(Character::kBlair);
     } hover;
 
     // Should exist if type is confirm
@@ -102,12 +99,9 @@ constexpr struct {
     const struct {
         name _ = "confirm";
 
-        using CharImpl = std::underlying_type_t<Character>;
-
-        const uint8_t io =
-            static_cast<CharImpl>(Character::kIO);
-        const uint8_t blair =
-            static_cast<CharImpl>(Character::kBlair);
+        const uint8_t unset = static_cast<CharacterImpl>(Character::kUnset);
+        const uint8_t io = static_cast<CharacterImpl>(Character::kIO);
+        const uint8_t blair = static_cast<CharacterImpl>(Character::kBlair);
     } confirm;
 
 } CharacterSelect;  // NOLINT(readability-identifier-naming)
@@ -116,11 +110,13 @@ constexpr struct {
 
 namespace response {
 
-std::string join(bool success, std::optional<std::string> code = std::nullopt);
+std::string join(std::optional<std::string> code = std::nullopt);
 
 std::string msg(std::string msg);
 
 std::string hover(Character character);
+
+std::string confirm(Character character);
 
 }  // namespace response
 

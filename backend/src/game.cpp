@@ -1,19 +1,21 @@
 #include "game.hpp"
 
 #include <iostream>
+#include <optional>
 
+#include "character.hpp"
 #include "lobby.hpp"
 #include "net_common.hpp"
 #include "response.hpp"
 #include "session.hpp"
 
-using std::string;
+using std::string, std::optional;
 namespace json = simdjson::ondemand;
 
 namespace io_blair {
 
 namespace resp = response;
-using Character::kIO, Character::kBlair;
+using Character::kUnset, Character::kIO, Character::kBlair;
 using request::SharedState, request::Prelobby, request::CharacterSelect;
 
 Game::Game(ISession& session, ILobbyManager& manager)
@@ -27,7 +29,9 @@ auto Game::state() const -> State { return state_; }
 
 void Game::write(string msg) { session_.write(std::move(msg)); }
 
-void Game::write_other(string msg) { lobby_->msg(session_, std::move(msg)); }
+void Game::write_other(string msg) {
+    lobby_->msg_other(session_, std::move(msg));
+}
 
 void Game::parse(string data) {
     // passed data must be non-const to allow library to add SIMDJSON_PADDING
@@ -59,13 +63,13 @@ void Game::prelobby(document& doc) {
     if (doc[SharedState.type._].get_string(type) != 0) return;
 
     if (type == Prelobby.type.create) {
-        lobby_ = manager_.create(session_.get_shared());
+        lobby_ = manager_.create(session_);
 
         if (lobby_) {
-            write(resp::join(true, lobby_->code()));
+            write(resp::join(lobby_->code()));
             state_ = State::kCharacterSelect;
         } else {
-            write(resp::join(false));
+            write(resp::join());
         }
     }
 
@@ -73,13 +77,13 @@ void Game::prelobby(document& doc) {
         string code;
         if (doc[Prelobby.code._].get_string(code) != 0) return;
 
-        lobby_ = manager_.join(code, session_.get_shared());
+        lobby_ = manager_.join(code, session_);
 
         if (lobby_) {
-            write(resp::join(true, std::move(code)));
+            write(resp::join(std::move(code)));
             state_ = State::kCharacterSelect;
         } else {
-            write(resp::join(false));
+            write(resp::join());
         }
     }
 }
@@ -117,11 +121,9 @@ void Game::character_select(document& doc) {
             return;
         if (!confirm.is_int64()) return;
 
-        switch (confirm.get_int64()) {
-            case CharacterSelect.confirm.io:
-                break;
-            case CharacterSelect.confirm.blair:
-                break;
+        if (optional<Character> character = to_character(confirm.get_int64());
+            character.has_value()) {
+            lobby_->confirm_character(session_, *character);
         }
     }
 }

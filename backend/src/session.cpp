@@ -27,9 +27,9 @@ void WebSocketSession::run() {
 }
 
 void WebSocketSession::write(string msg) {
-    net::post(write_strand_, [msg = std::move(msg), self = shared_from_this()] {
+    net::post(write_strand_, [msg = std::move(msg), self = shared_from_this()]() mutable {
         // Add to queue
-        self->queue_.push_back(msg);
+        self->queue_.push_back(std::move(msg));
 
         /*
             If there there are already messages in the queue,
