@@ -11,43 +11,70 @@ namespace io_blair {
 TEST(CellTest, ValuesUnsetByDefault) {
     Cell cell;
 
-    EXPECT_FALSE(cell.path());
-    EXPECT_FALSE(cell.io_path());
-    EXPECT_FALSE(cell.blair_path());
-    EXPECT_FALSE(cell.coin());
+    EXPECT_FALSE(cell.path);
+    EXPECT_FALSE(cell.io_path);
+    EXPECT_FALSE(cell.blair_path);
+    EXPECT_FALSE(cell.coin);
+}
+
+TEST(CellTest, SetAllPaths) {
+    Cell cell;
+
+    cell.set_all_paths(true);
+    EXPECT_TRUE(cell.path);
+    EXPECT_TRUE(cell.io_path);
+    EXPECT_TRUE(cell.blair_path);
+    EXPECT_TRUE(cell.coin);
+
+    cell.set_all_paths(false);
+    EXPECT_FALSE(cell.path);
+    EXPECT_FALSE(cell.io_path);
+    EXPECT_FALSE(cell.blair_path);
+    EXPECT_FALSE(cell.coin);
 }
 
 TEST(CellTest, SerializeIO) {
-    using bits = bitset<Cell::kFeatures>;
+    using bits = bitset<2>;
 
     Cell cell;
 
-    cell.set_path(true);
-    cell.set_io_path(true);
-    cell.set_coin(true);
+    cell.io_path = true;
+    cell.coin = true;
+    ASSERT_EQ(bits("11"), bits(cell.serialize_io()));
 
-    ASSERT_EQ(bits("1011"), bits(cell.serialize_io()));
+    cell.io_path = true;
+    cell.coin = false;
+    ASSERT_EQ(bits("01"), bits(cell.serialize_io()));
 
-    cell.set_blair_path(true);
-    ASSERT_EQ(bits("1011"), bits(cell.serialize_io()))
-        << "The third bit, blair_path, should always be off";
+    cell.io_path = false;
+    cell.coin = true;
+    ASSERT_EQ(bits("10"), bits(cell.serialize_io()));
+
+    cell.io_path = false;
+    cell.coin = false;
+    ASSERT_EQ(bits("00"), bits(cell.serialize_io()));
 }
 
 TEST(CellTest, SerializeBlair) {
-    using bits = bitset<Cell::kFeatures>;
+    using bits = bitset<2>;
 
     Cell cell;
 
-    cell.set_path(true);
-    cell.set_io_path(true);
-    cell.set_blair_path(true);
-    cell.set_coin(true);
+    cell.blair_path = true;
+    cell.coin = true;
+    ASSERT_EQ(bits("11"), bits(cell.serialize_blair()));
 
-    ASSERT_EQ(bits("1101"), bits(cell.serialize_blair()));
+    cell.blair_path = true;
+    cell.coin = false;
+    ASSERT_EQ(bits("01"), bits(cell.serialize_blair()));
 
-    cell.set_blair_path(true);
-    ASSERT_EQ(bits("1101"), bits(cell.serialize_blair()))
-        << "The second bit, io_path, should always be off";
+    cell.blair_path = false;
+    cell.coin = true;
+    ASSERT_EQ(bits("10"), bits(cell.serialize_blair()));
+
+    cell.blair_path = false;
+    cell.coin = false;
+    ASSERT_EQ(bits("00"), bits(cell.serialize_blair()));
 }
 
 }  // namespace io_blair

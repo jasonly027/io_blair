@@ -1,38 +1,24 @@
 #pragma once
 
 #include <array>
-#include <bitset>
 #include <cstdint>
 #include <utility>
 
 namespace io_blair {
 
-class Cell {
+struct Cell {
    public:
-    bool path() const;
-    void set_path(bool value);
+    bool path = false;
+    bool io_path = false;
+    bool blair_path = false;
+    bool coin = false;
 
-    // If IO can see path
-    bool io_path() const;
-    void set_io_path(bool value);
+    void set_all_paths(bool value);
 
-    // If Blair can see path
-    bool blair_path() const;
-    void set_blair_path(bool value);
-
-    bool coin() const;
-    void set_coin(bool value);
-
-    // Will serialize as if Blair can't see any paths
+    // Will serialize with only io_path and coin
     int8_t serialize_io() const;
-    // Will serialize as if IO can't see any paths
+    // Will serialize with only blair_path and coin
     int8_t serialize_blair() const;
-
-    static constexpr int8_t kFeatures = 4;
-
-   private:
-    // {coin, blair_path, io_path, path}
-    std::bitset<kFeatures> data_;
 };
 
 class Maze {
@@ -57,10 +43,10 @@ class Maze {
 
     bool is_end(int8_t row, int8_t col) const;
 
-    // Will serialize as if Blair can't see any paths
-    std::array<int8_t, kTotalDim> serialize_io() const;
-    // Will serialize as if IO can't see any paths
-    std::array<int8_t, kTotalDim> serialize_blair() const;
+    // Will serialize with only io_path and coin per cell
+    std::array<std::array<int8_t, kCols>, kRows> serialize_io() const;
+    // Will serialize with only blair_path and coin per cell
+    std::array<std::array<int8_t, kCols>, kRows> serialize_blair() const;
 
    private:
     std::array<Cell, kCols>& operator[](int8_t row);

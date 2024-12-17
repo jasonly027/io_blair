@@ -1,34 +1,28 @@
 #include "maze.hpp"
 
-#include <array>
-#include <cstdint>
-
 using std::array;
 
 namespace io_blair {
 
-bool Cell::path() const { return data_[0]; }
-void Cell::set_path(bool value) { data_[0] = value; }
-
-bool Cell::io_path() const { return data_[1]; }
-void Cell::set_io_path(bool value) { data_[1] = value; }
-
-bool Cell::blair_path() const { return data_[2]; }
-void Cell::set_blair_path(bool value) { data_[2] = value; }
-
-bool Cell::coin() const { return data_[3]; }
-void Cell::set_coin(bool value) { data_[3] = value; }
+void Cell::set_all_paths(bool value) {
+    path = value;
+    io_path = value;
+    blair_path = value;
+    coin = value;
+}
 
 int8_t Cell::serialize_io() const {
-    Cell copy = *this;
-    copy.set_blair_path(false);
-    return copy.data_.to_ulong();
+    int8_t bits = 0;
+    bits |= static_cast<int>(io_path);
+    bits |= static_cast<int>(coin) << 1;
+    return bits;
 }
 
 int8_t Cell::serialize_blair() const {
-    Cell copy = *this;
-    copy.set_io_path(false);
-    return copy.data_.to_ulong();
+    int8_t bits = 0;
+    bits |= static_cast<int>(blair_path);
+    bits |= static_cast<int>(coin) << 1;
+    return bits;
 }
 
 Maze Maze::generate_maze() {
@@ -67,22 +61,22 @@ bool Maze::is_end(int8_t row, int8_t col) const {
     return end_.first == row && end_.second == col;
 }
 
-auto Maze::serialize_io() const -> array<int8_t, kTotalDim> {
-    array<int8_t, kTotalDim> res;
+auto Maze::serialize_io() const -> array<array<int8_t, kCols>, kRows> {
+    array<array<int8_t, kCols>, kRows> res;
     for (size_t row = 0; row < matrix_.size(); ++row) {
         for (size_t col = 0; col < matrix_[row].size(); ++col) {
-            res[row * kCols + col] = matrix_[row][col].serialize_io();
+            res[row][col] = matrix_[row][col].serialize_io();
         }
     }
 
     return res;
 }
 
-auto Maze::serialize_blair() const -> array<int8_t, kTotalDim> {
-    array<int8_t, kTotalDim> res;
+auto Maze::serialize_blair() const -> array<array<int8_t, kCols>, kRows> {
+    array<array<int8_t, kCols>, kRows> res;
     for (size_t row = 0; row < matrix_.size(); ++row) {
         for (size_t col = 0; col < matrix_[row].size(); ++col) {
-            res[row * kCols + col] = matrix_[row][col].serialize_blair();
+            res[row][col] = matrix_[row][col].serialize_io();
         }
     }
 
