@@ -2,18 +2,17 @@
 
 #include <array>
 #include <cassert>
-#include <cstdint>
 #include <rfl/json.hpp>
 #include <utility>
 
 #include "character.hpp"
 #include "maze.hpp"
-#include "rfl/json/write.hpp"
-
-using std::string, std::string_view, std::optional, std::array;
-namespace json = rfl::json;
 
 namespace io_blair::response {
+
+using std::string, std::string_view, std::optional, std::array;
+
+namespace json = rfl::json;
 
 struct Join {
     string type = "join";

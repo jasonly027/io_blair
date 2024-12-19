@@ -8,11 +8,11 @@
 #include "response.hpp"
 #include "session.hpp"
 
+namespace io_blair {
+
 using std::shared_ptr, std::string, std::pair;
 using lock = std::lock_guard<std::mutex>;
 using rec_lock = std::lock_guard<std::recursive_mutex>;
-
-namespace io_blair {
 
 namespace resp = response;
 

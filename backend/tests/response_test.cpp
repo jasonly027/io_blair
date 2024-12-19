@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "character.hpp"
+#include <character.hpp>
 
 namespace io_blair {
 namespace resp = response;
@@ -40,8 +40,6 @@ TEST(Response, Confirm) {
               resp::confirm(Character::kBlair));
 }
 
-TEST(Response, Maze) {
-    FAIL();
-}
+TEST(Response, Maze) { FAIL(); }
 
 }  // namespace io_blair

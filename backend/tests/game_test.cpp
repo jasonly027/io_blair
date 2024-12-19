@@ -6,11 +6,12 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <request.hpp>
+#include <response.hpp>
 #include <rfl/json.hpp>
 #include <string>
 
 #include "lobby_mock.hpp"
-#include "response.hpp"
 #include "session_mock.hpp"
 
 using std::string, std::optional, std::shared_ptr, std::numeric_limits;

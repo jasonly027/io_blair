@@ -3,12 +3,12 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <character.hpp>
 #include <memory>
+#include <response.hpp>
 #include <string>
 
-#include "character.hpp"
 #include "lobby_mock.hpp"
-#include "response.hpp"
 #include "session_mock.hpp"
 
 using std::shared_ptr, std::string;

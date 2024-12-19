@@ -5,10 +5,10 @@
 
 #include "lobby.hpp"
 
+namespace io_blair {
+
 using std::cout, std::cerr, std::string, std::string_view, std::size_t,
     std::shared_ptr;
-
-namespace io_blair {
 
 WebSocketSession::WebSocketSession(net::io_context& ctx, tcp::socket socket,
                                    LobbyManager& manager)
@@ -27,19 +27,20 @@ void WebSocketSession::run() {
 }
 
 void WebSocketSession::write(string msg) {
-    net::post(write_strand_, [msg = std::move(msg), self = shared_from_this()]() mutable {
-        // Add to queue
-        self->queue_.push_back(std::move(msg));
+    net::post(write_strand_,
+              [msg = std::move(msg), self = shared_from_this()]() mutable {
+                  // Add to queue
+                  self->queue_.push_back(std::move(msg));
 
-        /*
-            If there there are already messages in the queue,
-            the logic of on_write() will already know it needs to
-            keep queueing writes.
+                  /*
+                      If there there are already messages in the queue,
+                      the logic of on_write() will already know it needs to
+                      keep queueing writes.
 
-            Otherwise, this needs to start the write chain.
-        */
-        if (self->queue_.size() <= 1) self->prepare_for_next_write();
-    });
+                      Otherwise, this needs to start the write chain.
+                  */
+                  if (self->queue_.size() <= 1) self->prepare_for_next_write();
+              });
 }
 
 shared_ptr<ISession> WebSocketSession::get_shared() {
