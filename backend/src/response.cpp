@@ -1,16 +1,18 @@
 #include "response.hpp"
 
+#include <array>
 #include <cassert>
 #include <rfl/json.hpp>
 #include <utility>
 
 #include "character.hpp"
-#include "rfl/json/write.hpp"
-
-using std::string, std::string_view, std::optional;
-namespace json = rfl::json;
+#include "maze.hpp"
 
 namespace io_blair::response {
+
+using std::string, std::string_view, std::optional, std::array;
+
+namespace json = rfl::json;
 
 struct Join {
     string type = "join";
@@ -37,14 +39,41 @@ string hover(Character character) {
     return json::write(Hover{.hover = static_cast<CharacterImpl>(character)});
 }
 
-struct ConfirmOther {
+struct OtherJoin {
+    string type = "otherJoin";
+};
+
+string other_join() { return json::write(OtherJoin{}); }
+
+struct OtherLeave {
+    string type = "otherLeave";
+};
+
+string other_leave() { return json::write(OtherLeave{}); }
+
+struct Confirm {
     string type = "confirm";
-    CharacterImpl character;
+    CharacterImpl confirm;
 };
 
 string confirm(Character character) {
     return json::write(
-        ConfirmOther{.character = static_cast<CharacterImpl>(character)});
+        Confirm{.confirm = static_cast<CharacterImpl>(character)});
+}
+
+struct Maze {
+    string type = "maze";
+    io_blair::Maze::position start;
+    io_blair::Maze::position end;
+    array<array<int8_t, io_blair::Maze::kCols>, io_blair::Maze::kRows> maze;
+};
+
+string maze(
+    io_blair::Maze::position start, io_blair::Maze::position end,
+    array<array<int8_t, io_blair::Maze::kCols>, io_blair::Maze::kRows> maze) {
+    return json::write(Maze{.start = std::move(start),
+                            .end = std::move(end),
+                            .maze = std::move(maze)});
 }
 
 }  // namespace io_blair::response
