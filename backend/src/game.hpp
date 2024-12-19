@@ -24,18 +24,18 @@ class Game {
         */
         kPrelobby,
         /*
-            In a lobby, Expecting incoming msgs of self/other
-            joining/leaving, changing/confirming desired character
+            In a lobby, Expecting incoming msgs of sending chat msgs,
+            leaving, hovering/confirming a character
         */
         kCharacterSelect,
         /*
-            In game, Expecting incoming msgs of self/other
-            movement, self/other leaving
+            In game, Expecting incoming msgs of moving or
+            leaving lobby
         */
         kInGame,
         /*
-            Finished game, Expecting incoming msg of self/other
-            leaving, requesting new map
+            Finished game, Expecting incoming msg of self
+            leaving or requesting new map
         */
         kGameDone
     };
@@ -58,7 +58,7 @@ class Game {
 
     void write(std::string msg);
 
-    void write_other(std::string msg);
+    void msg_other(std::string msg);
 
     void prelobby(document& doc);
 

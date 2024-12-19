@@ -15,7 +15,7 @@ namespace json = simdjson::ondemand;
 namespace io_blair {
 
 namespace resp = response;
-using Character::kUnset, Character::kIO, Character::kBlair;
+using Character::kIO, Character::kBlair;
 using request::SharedState, request::Prelobby, request::CharacterSelect;
 
 Game::Game(ISession& session, ILobbyManager& manager)
@@ -29,7 +29,7 @@ auto Game::state() const -> State { return state_; }
 
 void Game::write(string msg) { session_.write(std::move(msg)); }
 
-void Game::write_other(string msg) {
+void Game::msg_other(string msg) {
     lobby_->msg_other(session_, std::move(msg));
 }
 
@@ -107,10 +107,10 @@ void Game::character_select(document& doc) {
 
         switch (hover.get_int64()) {
             case CharacterSelect.hover.io:
-                write_other(resp::hover(kIO));
+                msg_other(resp::hover(kIO));
                 break;
             case CharacterSelect.hover.blair:
-                write_other(resp::hover(kBlair));
+                msg_other(resp::hover(kBlair));
                 break;
         }
     }
@@ -123,7 +123,9 @@ void Game::character_select(document& doc) {
 
         if (optional<Character> character = to_character(confirm.get_int64());
             character.has_value()) {
-            lobby_->confirm_character(session_, *character);
+            if (lobby_->confirm_character(session_, *character)) {
+                state_ = State::kInGame;
+            }
         }
     }
 }
@@ -131,7 +133,7 @@ void Game::character_select(document& doc) {
 void Game::msg(document& doc) {
     string msg;
     if (doc[SharedState.msg._].get_string(msg) != 0) return;
-    write_other(resp::msg(std::move(msg)));
+    msg_other(resp::msg(std::move(msg)));
 }
 
 }  // namespace io_blair

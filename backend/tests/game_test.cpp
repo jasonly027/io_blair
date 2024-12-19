@@ -43,6 +43,7 @@ class PrelobbyTest : public testing::Test {
    protected:
     MockLobbyManager manager_;
     shared_ptr<MockLobby> lobby_ = std::make_shared<MockLobby>();
+    const string code_ = "code";
 
     MockSession s1_;
     Game g1_{s1_, manager_};
@@ -51,6 +52,8 @@ class PrelobbyTest : public testing::Test {
     Game g2_{s2_, manager_};
 
     void SetUp() override {
+        ON_CALL(*lobby_, code).WillByDefault(ReturnRef(code_));
+
         EXPECT_EQ(g1_.state(), State::kPrelobby);
         EXPECT_EQ(g2_.state(), State::kPrelobby);
     }
@@ -66,13 +69,10 @@ TEST_F(PrelobbyTest, RequestCreateLobby) {
         .WillOnce(Return(nullptr))
         .WillOnce(Return(lobby_));
 
-    const string code = "code";
-    EXPECT_CALL(*lobby_, code).WillOnce(ReturnRef(code));
-
     {
         InSequence _;
         EXPECT_CALL(s1_, write(resp::join()));
-        EXPECT_CALL(s1_, write(resp::join(code)));
+        EXPECT_CALL(s1_, write(resp::join(code_)));
     }
 
     const string req = json::write(Join{.type = Prelobby.type.create});
@@ -87,27 +87,25 @@ TEST_F(PrelobbyTest, RequestCreateLobby) {
 }
 
 TEST_F(PrelobbyTest, RequestJoinLobby) {
-    const string& code = "code";
-    EXPECT_CALL(manager_, join(code, testing::_))
+    EXPECT_CALL(manager_, join(code_, testing::_))
         .WillOnce(Return(nullptr))
         .WillOnce(Return(lobby_));
 
     {
         InSequence _;
         EXPECT_CALL(s1_, write(resp::join()));
-        EXPECT_CALL(s1_, write(resp::join(code)));
+        EXPECT_CALL(s1_, write(resp::join(code_)));
     }
 
-    const string req_missing_code =
-        json::write(Join{.type = Prelobby.type.join});
+    const string req_no_code = json::write(Join{.type = Prelobby.type.join});
 
-    g1_.parse(req_missing_code);
+    g1_.parse(req_no_code);
     EXPECT_EQ(g1_.state(), State::kPrelobby)
         << "Should have returned early and without state change"
            " because missing join code";
 
     const string req =
-        json::write(Join{.type = Prelobby.type.join, .code = code});
+        json::write(Join{.type = Prelobby.type.join, .code = code_});
 
     g1_.parse(req);
     EXPECT_EQ(g1_.state(), State::kPrelobby)
@@ -118,61 +116,50 @@ TEST_F(PrelobbyTest, RequestJoinLobby) {
         << "Should advance state after manager returned a lobby";
 }
 
-class CharacterSelectTest : public testing::Test {
+class CharacterSelectTest : public PrelobbyTest {
    protected:
-    MockLobbyManager manager_;
-    shared_ptr<MockLobby> lobby_ = std::make_shared<MockLobby>();
-
-    MockSession s1_;
-    Game g1_{s1_, manager_};
-
-    MockSession s2_;
-    Game g2_{s2_, manager_};
-
     void SetUp() override {
+        PrelobbyTest::SetUp();
+
         {
             InSequence _;
             EXPECT_CALL(manager_, create).WillOnce(Return(lobby_));
             EXPECT_CALL(manager_, join).WillOnce(Return(lobby_));
         }
 
-        const string code = "code";
-        EXPECT_CALL(*lobby_, code).WillOnce(ReturnRef(code));
-
         EXPECT_CALL(s1_, write);
-
         g1_.parse(json::write(Join{.type = Prelobby.type.create}));
         EXPECT_EQ(g1_.state(), State::kCharacterSelect);
 
         EXPECT_CALL(s2_, write);
-
-        g2_.parse(json::write(Join{.type = Prelobby.type.join, .code = code}));
+        g2_.parse(json::write(Join{.type = Prelobby.type.join, .code = code_}));
         EXPECT_EQ(g2_.state(), State::kCharacterSelect);
     }
 };
 
-struct Msg {
-    string type = "msg";
-    optional<string> msg;
-};
-
 TEST_F(CharacterSelectTest, MsgOther) {
     const string msg = "Hello World";
-    const string req = json::write(Msg{.msg = msg});
-    const string req_no_msg = json::write(Msg{});
 
     EXPECT_CALL(*lobby_, msg_other(testing::_, resp::msg(msg)));
 
+    struct Msg {
+        string type = "msg";
+        optional<string> msg;
+    };
+
+    const string req_no_msg = json::write(Msg{});
     g1_.parse(req_no_msg);
+
+    const string req = json::write(Msg{.msg = msg});
     g1_.parse(req);
 }
 
-struct Leave {
-    string type = "leave";
-};
-
 TEST_F(CharacterSelectTest, Leave) {
     EXPECT_CALL(*lobby_, leave);
+
+    struct Leave {
+        string type = "leave";
+    };
 
     const string req = json::write(Leave{});
     g1_.parse(req);
@@ -187,9 +174,13 @@ struct Hover {
 TEST_F(CharacterSelectTest, Hover) {
     {
         InSequence _;
-        EXPECT_CALL(*lobby_, msg_other(testing::_, resp::hover(Character::kIO)));
-        EXPECT_CALL(*lobby_, msg_other(testing::_, resp::hover(Character::kBlair)));
+        EXPECT_CALL(*lobby_,
+                    msg_other(testing::_, resp::hover(Character::kIO)));
+        EXPECT_CALL(*lobby_,
+                    msg_other(testing::_, resp::hover(Character::kBlair)));
     }
+
+    // These should not trigger EXPECT_CALLS
 
     const string req_no_hover = json::write(Hover<string>{});
     g1_.parse(req_no_hover);
@@ -211,6 +202,8 @@ TEST_F(CharacterSelectTest, Hover) {
 
     const string req_decimal = json::write(Hover<double>{.hover = 1.0});
     g1_.parse(req_decimal);
+
+    // These should trigger EXPECT_CALLS
 
     const string req_io =
         json::write(Hover<CharacterImpl>{.hover = CharacterSelect.hover.io});

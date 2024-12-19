@@ -1,11 +1,12 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <type_traits>
 
 #include "character.hpp"
+#include "maze.hpp"
 
 namespace io_blair {
 
@@ -116,7 +117,13 @@ std::string msg(std::string msg);
 
 std::string hover(Character character);
 
+std::string other_join();
+
+std::string other_leave();
+
 std::string confirm(Character character);
+
+std::string maze(Maze::position start, Maze::position end, std::array<std::array<int8_t, Maze::kCols>, Maze::kRows> maze);
 
 }  // namespace response
 
