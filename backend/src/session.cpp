@@ -1,5 +1,6 @@
 #include "session.hpp"
 
+#include <cassert>
 #include <cstddef>
 #include <iostream>
 
@@ -14,8 +15,10 @@ WebSocketSession::WebSocketSession(net::io_context& ctx, tcp::socket socket,
                                    LobbyManager& manager)
     : socket_(std::move(socket)),
       ws_(socket_),
+      read_strand_(net::make_strand(ctx)),
       write_strand_(net::make_strand(ctx)),
-      state_(*this, manager) {
+      state_(State::kPrelobby),
+      game_(*this, manager) {
     ws_.set_option(
         websocket::stream_base::timeout::suggested(beast::role_type::server));
 }
@@ -43,7 +46,22 @@ void WebSocketSession::write(string msg) {
               });
 }
 
+auto WebSocketSession::state() const -> State { return state_; }
+
+void WebSocketSession::set_state(State state) { state_ = state; }
+
+void WebSocketSession::try_lobby_update(string data) {
+    auto lobby = lobby_.load();
+    if (lobby) lobby->update(*this, std::move(data));
+}
+
+void WebSocketSession::set_lobby(shared_ptr<ILobby> lobby) { lobby_ = lobby; }
+
 shared_ptr<ISession> WebSocketSession::get_shared() {
+    return shared_from_this();
+}
+
+shared_ptr<const ISession> WebSocketSession::get_shared() const {
     return shared_from_this();
 }
 
@@ -77,10 +95,13 @@ void WebSocketSession::prepare_for_next_read() {
                    });
 }
 
-void WebSocketSession::on_read(error_code ec, size_t) {
+void WebSocketSession::on_read(error_code ec, size_t bytes [[maybe_unused]]) {
     if (ec && fail(ec, "ws on_read") == Error::kFatal) return;
 
-    state_.parse(beast::buffers_to_string(buffer_.data()));
+    net::post(read_strand_, [str = beast::buffers_to_string(buffer_.data()),
+                             self = shared_from_this()]() mutable {
+        self->game_.update(std::move(str));
+    });
     buffer_.consume(buffer_.size());
 
     prepare_for_next_read();
@@ -106,7 +127,7 @@ void WebSocketSession::on_write(error_code ec, size_t bytes [[maybe_unused]]) {
 }
 
 void WebSocketSession::close() {
-    state_.leave();
+    try_lobby_leave();
 
     // Send close message through Websocket stream
     ws_.async_close(websocket::close_code::normal,
@@ -115,4 +136,10 @@ void WebSocketSession::close() {
                             return log_err(ec, "ws async_close");
                     });
 }
+
+void WebSocketSession::try_lobby_leave() {
+    auto lobby = lobby_.load();
+    if (lobby) lobby->leave(*this);
+}
+
 }  // namespace io_blair

@@ -1,6 +1,5 @@
 #include "response.hpp"
 
-#include <array>
 #include <cassert>
 #include <rfl/json.hpp>
 #include <utility>

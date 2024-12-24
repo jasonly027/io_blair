@@ -85,8 +85,8 @@ constexpr struct {
     const struct {
         name _ = "hover";
 
-        const uint8_t io = static_cast<CharacterImpl>(Character::kIO);
-        const uint8_t blair = static_cast<CharacterImpl>(Character::kBlair);
+        const int8_t io = static_cast<CharacterImpl>(Character::kIO);
+        const int8_t blair = static_cast<CharacterImpl>(Character::kBlair);
     } hover;
 
     // Should exist if type is confirm
@@ -94,11 +94,27 @@ constexpr struct {
     const struct {
         name _ = "confirm";
 
-        const uint8_t unset = static_cast<CharacterImpl>(Character::kUnset);
-        const uint8_t io = static_cast<CharacterImpl>(Character::kIO);
-        const uint8_t blair = static_cast<CharacterImpl>(Character::kBlair);
+        const int8_t unset = static_cast<CharacterImpl>(Character::kUnset);
+        const int8_t io = static_cast<CharacterImpl>(Character::kIO);
+        const int8_t blair = static_cast<CharacterImpl>(Character::kBlair);
     } confirm;
 
 } CharacterSelect;  // NOLINT(readability-identifier-naming)
+
+constexpr struct {
+    const struct {
+        value_str move = "move";
+    } type;
+
+    const struct {
+        name _ = "move";
+
+        value_str up = "up";
+        value_str right = "right";
+        value_str down = "down";
+        value_str left = "left";
+    } move;
+
+} InGame;  // NOLINT(readability-identifier-naming)
 
 }  // namespace io_blair::request

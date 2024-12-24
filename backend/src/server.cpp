@@ -5,12 +5,16 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "lobby.hpp"
 #include "net_common.hpp"
 #include "session.hpp"
 
 namespace io_blair {
 Server::Server(std::string_view address, uint16_t port)
-    : socket_(ctx_), acceptor_(ctx_), signals_(ctx_, SIGINT, SIGTERM) {
+    : socket_(ctx_),
+      acceptor_(ctx_),
+      signals_(ctx_, SIGINT, SIGTERM),
+      manager_(ctx_) {
     prepare_acceptor(address, port);
     prepare_for_termination();
 }
@@ -102,7 +106,8 @@ void Server::on_accept(error_code ec) {
 
     // When this handler is invoked, socket_ will contain a TCP connection.
     // We construct a new Session instance with the socket.
-    std::make_shared<WebSocketSession>(ctx_, std::move(socket_), manager_)->run();
+    std::make_shared<WebSocketSession>(ctx_, std::move(socket_), manager_)
+        ->run();
 
     // Because we moved socket_ on the previous line,
     // socket_ is reset to a state ready to contain a new TCP connection.

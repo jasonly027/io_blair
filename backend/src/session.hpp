@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -14,20 +16,24 @@ class ISession {
    public:
     virtual ~ISession() = default;
 
+    enum class State : int8_t { kPrelobby, kWaitingForLobby, kInLobby };
+
     virtual void run() = 0;
     virtual void write(std::string msg) = 0;
+
+    virtual State state() const = 0;
+    virtual void set_state(State state) = 0;
+
+    virtual void try_lobby_update(std::string data) = 0;
+    virtual void set_lobby(std::shared_ptr<ILobby> lobby) = 0;
+
     virtual std::shared_ptr<ISession> get_shared() = 0;
+    virtual std::shared_ptr<const ISession> get_shared() const = 0;
 };
 
 class WebSocketSession : public ISession,
                          public std::enable_shared_from_this<WebSocketSession> {
    public:
-    template <std::size_t N>
-    using buffer = beast::flat_static_buffer<N>;
-    using strand = net::strand<net::io_context::executor_type>;
-    using msg_queue = std::vector<std::string>;
-    using websock = websocket::stream<tcp::socket&>;
-
     enum class Error {
         // Session should close
         kFatal,
@@ -44,9 +50,19 @@ class WebSocketSession : public ISession,
     // Enqueue msg to client
     void write(std::string msg) override;
 
+    State state() const override;
+    void set_state(State state) override;
+
+    void try_lobby_update(std::string data) override;
+    void set_lobby(std::shared_ptr<ILobby> lobby) override;
+
     std::shared_ptr<ISession> get_shared() override;
 
+    std::shared_ptr<const ISession> get_shared() const override;
+
    private:
+    using strand = net::strand<net::io_context::executor_type>;
+
     // If error was recoverable, invoke log_err().
     // Otherwise, close session.
     Error fail(error_code ec, const char* what);
@@ -72,18 +88,23 @@ class WebSocketSession : public ISession,
     // Close session
     void close();
 
+    void try_lobby_leave();
+
     tcp::socket socket_;
     // Websocket
-    websock ws_;
+    websocket::stream<tcp::socket&> ws_;
     // Incoming messages are written to this buffer
-    buffer<500> buffer_;
+    beast::flat_static_buffer<500> buffer_;
+    // Synchronizes reads
+    strand read_strand_;
     // Synchronizes writes
     strand write_strand_;
     // Queue of messages to be written
-    msg_queue queue_;
+    std::vector<std::string> queue_;
+    std::atomic<State> state_;
     // Parses and acts on incoming messages
-    Game state_;
-    std::shared_ptr<Lobby> lobby_;
+    Game game_;
+    std::atomic<std::shared_ptr<ILobby>> lobby_;
 };
 
 }  // namespace io_blair
