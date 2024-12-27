@@ -38,7 +38,7 @@ or
 
 */
 
-using name = const char*;
+using name      = const char*;
 using value_str = const char*;
 
 constexpr struct {
@@ -63,7 +63,7 @@ constexpr struct {
 constexpr struct {
   const struct {
     value_str create = "create";
-    value_str join = "join";
+    value_str join   = "join";
   } type;
 
   // Should exist if type is join
@@ -76,7 +76,7 @@ constexpr struct {
 
 constexpr struct {
   const struct {
-    value_str hover = "hover";
+    value_str hover   = "hover";
     value_str confirm = "confirm";
   } type;
 
@@ -85,7 +85,7 @@ constexpr struct {
   const struct {
     name _ = "hover";
 
-    const int8_t io = static_cast<CharacterImpl>(Character::kIO);
+    const int8_t io    = static_cast<CharacterImpl>(Character::kIO);
     const int8_t blair = static_cast<CharacterImpl>(Character::kBlair);
   } hover;
 
@@ -95,7 +95,7 @@ constexpr struct {
     name _ = "confirm";
 
     const int8_t unset = static_cast<CharacterImpl>(Character::kUnset);
-    const int8_t io = static_cast<CharacterImpl>(Character::kIO);
+    const int8_t io    = static_cast<CharacterImpl>(Character::kIO);
     const int8_t blair = static_cast<CharacterImpl>(Character::kBlair);
   } confirm;
 
@@ -109,10 +109,10 @@ constexpr struct {
   const struct {
     name _ = "move";
 
-    value_str up = "up";
+    value_str up    = "up";
     value_str right = "right";
-    value_str down = "down";
-    value_str left = "left";
+    value_str down  = "down";
+    value_str left  = "left";
   } move;
 
 } InGame;  // NOLINT(readability-identifier-naming)

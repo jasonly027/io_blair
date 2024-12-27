@@ -19,7 +19,7 @@ using request::Prelobby;
 using std::string, std::optional;
 using testing::Return, testing::Ref, testing::StrictMock, testing::InSequence;
 using SessionState = ISession::State;
-using LobbyState = Lobby::State;
+using LobbyState   = Lobby::State;
 
 namespace json = rfl::json;
 
@@ -43,7 +43,7 @@ TEST(GameTest, RequestIsInvalidJson) {
   StrictMock<MockLobbyManager> manager;
   Game game(session, manager);
 
-  static constexpr const char kEmpty[] = "";
+  static constexpr const char kEmpty[]   = "";
   static constexpr const char kInvalid[] = "abc123";
 
   game.update(kEmpty);

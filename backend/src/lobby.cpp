@@ -296,8 +296,7 @@ string LobbyManager::generate_code() {
   static constexpr auto kCharacters = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   static std::mt19937 gen{std::random_device{}()};
-  static std::uniform_int_distribution<std::string::size_type> pick(0,
-                                                                    std::strlen(kCharacters) - 1);
+  static std::uniform_int_distribution<string::size_type> pick(0, std::strlen(kCharacters) - 1);
 
   string res(kCodeLength, '\0');
   std::generate_n(res.begin(), kCodeLength, [&] { return kCharacters[pick(gen)]; });

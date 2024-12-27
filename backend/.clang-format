@@ -3,6 +3,13 @@ Language: Cpp
 BasedOnStyle: Google
 
 AlignArrayOfStructures: Left
+AlignConsecutiveAssignments:
+  Enabled:         true
+  AcrossEmptyLines: false
+  AcrossComments:  false
+  AlignCompound:   true
+  AlignFunctionPointers: false
+  PadOperators:    true
 AlignConsecutiveShortCaseStatements:
   Enabled: true
   AcrossEmptyLines: true

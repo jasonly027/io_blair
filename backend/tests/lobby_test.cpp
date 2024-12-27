@@ -25,10 +25,10 @@ using testing::IsNull, testing::InSequence, testing::MockFunction, testing::Save
     testing::StrictMock, testing::ReturnPointee, testing::Eq;
 
 using SessionState = ISession::State;
-using LobbyState = ILobby::State;
+using LobbyState   = ILobby::State;
 
 namespace resp = response;
-namespace req = request;
+namespace req  = request;
 namespace json = rfl::json;
 
 class LobbyTest : public testing::Test {
@@ -180,7 +180,7 @@ TEST(LobbyUpdate, InvalidJson) {
   net::io_context ctx;
   StrictMock<MockLobbyManager> manager;
 
-  auto lobby = std::make_shared<Lobby>(ctx, "code", manager);
+  auto lobby   = std::make_shared<Lobby>(ctx, "code", manager);
   auto session = std::make_shared<StrictMock<MockSession>>();
 
   {
@@ -194,7 +194,7 @@ TEST(LobbyUpdate, InvalidJson) {
 
   lobby->join(*session);
 
-  static constexpr const char kEmpty[] = "";
+  static constexpr const char kEmpty[]   = "";
   static constexpr const char kInvalid[] = "abc123";
 
   lobby->update(*session, kEmpty);

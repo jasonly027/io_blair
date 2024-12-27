@@ -68,13 +68,13 @@ class Cell {
 
   constexpr void clear_paths_io() {
     for (int offset = 0; offset < kDirections; ++offset) {
-      bits_[offset + kOffsetToIO] = false;
+      bits_.reset(offset + kOffsetToIO);
     }
   }
 
   constexpr void clear_paths_blair() {
     for (int offset = 0; offset < kDirections; ++offset) {
-      bits_[offset + kOffsetToBlair] = false;
+      bits_.reset(offset + kOffsetToBlair);
     }
   }
 
@@ -140,13 +140,13 @@ class Cell {
   // 9th bit is coin
   std::bitset<9> bits_;
 
-  static constexpr int kOffsetToUp = 0;
+  static constexpr int kOffsetToUp    = 0;
   static constexpr int kOffsetToRight = 1;
-  static constexpr int kOffsetToDown = 2;
-  static constexpr int kOffsetToLeft = 3;
-  static constexpr int kDirections = 4;
+  static constexpr int kOffsetToDown  = 2;
+  static constexpr int kOffsetToLeft  = 3;
+  static constexpr int kDirections    = 4;
 
-  static constexpr int kOffsetToIO = 0;
+  static constexpr int kOffsetToIO    = 0;
   static constexpr int kOffsetToBlair = 4;
   // Used for the second 4 bits of serialization
   static constexpr int kOffsetToExclusivePath = 4;
@@ -161,8 +161,8 @@ class Maze {
   // Generate a random maze
   static Maze generate_maze();
 
-  static constexpr int kRows = 16;
-  static constexpr int kCols = 16;
+  static constexpr int kRows     = 16;
+  static constexpr int kCols     = 16;
   static constexpr int kTotalDim = kRows * kCols;
 
   // Get the position in direction (dir) from (pos)

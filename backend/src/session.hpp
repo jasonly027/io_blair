@@ -19,16 +19,16 @@ class ISession {
 
   enum class State : int8_t { kPrelobby, kWaitingForLobby, kInLobby };
 
-  virtual void run() = 0;
+  virtual void run()                  = 0;
   virtual void write(std::string msg) = 0;
 
-  virtual State state() const = 0;
+  virtual State state() const         = 0;
   virtual void set_state(State state) = 0;
 
-  virtual void try_lobby_update(std::string data) = 0;
+  virtual void try_lobby_update(std::string data)       = 0;
   virtual void set_lobby(std::shared_ptr<ILobby> lobby) = 0;
 
-  virtual std::shared_ptr<ISession> get_shared() = 0;
+  virtual std::shared_ptr<ISession> get_shared()             = 0;
   virtual std::shared_ptr<const ISession> get_shared() const = 0;
 };
 
