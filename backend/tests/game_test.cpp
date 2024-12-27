@@ -24,75 +24,70 @@ using LobbyState = Lobby::State;
 namespace json = rfl::json;
 
 TEST(GameTest, RequestIsInvalidJson) {
-    StrictMock<MockSession> session;
+  StrictMock<MockSession> session;
 
-    {
-        InSequence _;
+  {
+    InSequence _;
 
-        EXPECT_CALL(session, state)
-            .Times(2)
-            .WillRepeatedly(Return(SessionState::kPrelobby));
+    EXPECT_CALL(session, state).Times(2).WillRepeatedly(Return(SessionState::kPrelobby));
 
-        EXPECT_CALL(session, state)
-            .Times(2)
-            .WillRepeatedly(Return(SessionState::kWaitingForLobby));
+    EXPECT_CALL(session, state).Times(2).WillRepeatedly(Return(SessionState::kWaitingForLobby));
 
-        EXPECT_CALL(session, state).WillOnce(Return(SessionState::kInLobby));
-        EXPECT_CALL(session, try_lobby_update);
+    EXPECT_CALL(session, state).WillOnce(Return(SessionState::kInLobby));
+    EXPECT_CALL(session, try_lobby_update);
 
-        EXPECT_CALL(session, state).WillOnce(Return(SessionState::kInLobby));
-        EXPECT_CALL(session, try_lobby_update);
-    }
+    EXPECT_CALL(session, state).WillOnce(Return(SessionState::kInLobby));
+    EXPECT_CALL(session, try_lobby_update);
+  }
 
-    StrictMock<MockLobbyManager> manager;
-    Game game(session, manager);
+  StrictMock<MockLobbyManager> manager;
+  Game game(session, manager);
 
-    static constexpr const char kEmpty[] = "";
-    static constexpr const char kInvalid[] = "abc123";
+  static constexpr const char kEmpty[] = "";
+  static constexpr const char kInvalid[] = "abc123";
 
-    game.update(kEmpty);
-    game.update(kInvalid);
+  game.update(kEmpty);
+  game.update(kInvalid);
 
-    game.update(kEmpty);
-    game.update(kInvalid);
+  game.update(kEmpty);
+  game.update(kInvalid);
 
-    game.update(kEmpty);
-    game.update(kInvalid);
+  game.update(kEmpty);
+  game.update(kInvalid);
 }
 
 TEST(GameTest, PreLobbyRequests) {
-    MockSession session;
-    MockLobbyManager manager;
+  MockSession session;
+  MockLobbyManager manager;
 
-    const string code = "code";
+  const string code = "code";
 
-    {
-        InSequence _;
-        EXPECT_CALL(session, state).WillOnce(Return(SessionState::kPrelobby));
-        EXPECT_CALL(manager, create(Ref(session)));
+  {
+    InSequence _;
+    EXPECT_CALL(session, state).WillOnce(Return(SessionState::kPrelobby));
+    EXPECT_CALL(manager, create(Ref(session)));
 
-        EXPECT_CALL(session, state).WillOnce(Return(SessionState::kPrelobby));
+    EXPECT_CALL(session, state).WillOnce(Return(SessionState::kPrelobby));
 
-        EXPECT_CALL(session, state).WillOnce(Return(SessionState::kPrelobby));
-        EXPECT_CALL(manager, join(code, Ref(session)));
-    }
+    EXPECT_CALL(session, state).WillOnce(Return(SessionState::kPrelobby));
+    EXPECT_CALL(manager, join(code, Ref(session)));
+  }
 
-    Game game = {session, manager};
+  Game game = {session, manager};
 
-    struct Join {
-        string type;
-        optional<string> code;
-    };
+  struct Join {
+    string type;
+    optional<string> code;
+  };
 
-    const string r_create = json::write(Join{.type = Prelobby.type.create});
-    game.update(r_create);
+  const string r_create = json::write(Join{.type = Prelobby.type.create});
+  game.update(r_create);
 
-    const string r_join_no_code = json::write(Join{.type = Prelobby.type.join});
-    game.update(r_join_no_code);
+  const string r_join_no_code = json::write(Join{.type = Prelobby.type.join});
+  game.update(r_join_no_code);
 
-    const string r_join =
-        json::write(Join{.type = Prelobby.type.join, .code = code});
-    game.update(r_join);
+  const string r_join = json::write(Join{.type = Prelobby.type.join, .code = code});
+  game.update(r_join);
 }
 
 }  // namespace io_blair

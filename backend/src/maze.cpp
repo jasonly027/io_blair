@@ -9,8 +9,8 @@
 
 namespace io_blair {
 
-using std::random_device, std::mt19937, std::uniform_int_distribution,
-    std::array, std::vector, std::stack, std::tuple, std::optional;
+using std::random_device, std::mt19937, std::uniform_int_distribution, std::array, std::vector,
+    std::stack, std::tuple, std::optional;
 using position = Maze::position;
 
 namespace ranges = std::ranges;
@@ -20,42 +20,41 @@ thread_local mt19937 mt{random_device{}()};
 
 // Get Directions in a uniformly random order
 array<Direction, 4> get_random_dirs() {
-    array<Direction, 4> res{Direction::kUp, Direction::kRight, Direction::kDown,
-                            Direction::kLeft};
-    ranges::shuffle(res, mt);
-    return res;
+  array<Direction, 4> res{Direction::kUp, Direction::kRight, Direction::kDown, Direction::kLeft};
+  ranges::shuffle(res, mt);
+  return res;
 }
 
 // 10% chance to return IO
 // 10% chance to return Blair
 // 80% chance to return Unset
 Character get_random_char() {
-    thread_local uniform_int_distribution dist(1, 10);
-    int rand = dist(mt);
+  thread_local uniform_int_distribution dist(1, 10);
+  int rand = dist(mt);
 
-    if (rand == 1) {
-        return Character::kIO;
-    }
+  if (rand == 1) {
+    return Character::kIO;
+  }
 
-    if (rand == 2) {
-        return Character::kBlair;
-    }
+  if (rand == 2) {
+    return Character::kBlair;
+  }
 
-    return Character::kUnset;
+  return Character::kUnset;
 }
 
 // 10% chance to return true
 bool get_random_coin() {
-    thread_local uniform_int_distribution dist(1, 10);
-    return dist(mt) == 1;
+  thread_local uniform_int_distribution dist(1, 10);
+  return dist(mt) == 1;
 }
 
 }  // namespace
 
 Maze Maze::generate_maze() {
-    Maze maze;
+  Maze maze;
 
-    // clang-format off
+  // clang-format off
     /*
         A tuple of:
         - position of "this" cell 
@@ -63,61 +62,60 @@ Maze Maze::generate_maze() {
             in the array (the 3rd tuple element)
         - a randomly shuffled sequence of the dirs
     */
-    // clang-format on
-    using pos_idx_arr = tuple<position, int, array<Direction, 4>>;
+  // clang-format on
+  using pos_idx_arr = tuple<position, int, array<Direction, 4>>;
 
-    // Iterative version of Recursive Backtracking for Maze gen
-    stack<pos_idx_arr, vector<pos_idx_arr>> stack;
-    stack.emplace(position{0, 0}, 0, get_random_dirs());
+  // Iterative version of Recursive Backtracking for Maze gen
+  stack<pos_idx_arr, vector<pos_idx_arr>> stack;
+  stack.emplace(position{0, 0}, 0, get_random_dirs());
 
-    while (!stack.empty()) {
-        auto [pos, idx, arr] = stack.top();
-        stack.pop();
+  while (!stack.empty()) {
+    auto [pos, idx, arr] = stack.top();
+    stack.pop();
 
-        optional<position> neighbor = get_neighbor(pos, arr[idx]);
-        // If valid, unmodified neighbor, create a path between them
-        if (neighbor.has_value() && !maze[*neighbor].any_path()) {
-            switch (get_random_char()) {
-                // Allow both to see newly added path
-                case Character::kUnset:
-                    maze[pos].set_path_both(arr[idx], true);
-                    maze[*neighbor].set_path_both(get_opposite(arr[idx]), true);
-                    break;
-                // Allow only IO to see newly added path
-                case Character::kIO:
-                    maze[pos].set_path_io(arr[idx], true);
-                    maze[*neighbor].set_path_io(get_opposite(arr[idx]), true);
-                    break;
-                // Allow only Blair to see newly added path
-                case Character::kBlair:
-                    maze[pos].set_path_blair(arr[idx], true);
-                    maze[*neighbor].set_path_blair(get_opposite(arr[idx]),
-                                                   true);
-                    break;
-            }
+    optional<position> neighbor = get_neighbor(pos, arr[idx]);
+    // If valid, unmodified neighbor, create a path between them
+    if (neighbor.has_value() && !maze[*neighbor].any_path()) {
+      switch (get_random_char()) {
+        // Allow both to see newly added path
+        case Character::kUnset:
+          maze[pos].set_path_both(arr[idx], true);
+          maze[*neighbor].set_path_both(get_opposite(arr[idx]), true);
+          break;
+        // Allow only IO to see newly added path
+        case Character::kIO:
+          maze[pos].set_path_io(arr[idx], true);
+          maze[*neighbor].set_path_io(get_opposite(arr[idx]), true);
+          break;
+        // Allow only Blair to see newly added path
+        case Character::kBlair:
+          maze[pos].set_path_blair(arr[idx], true);
+          maze[*neighbor].set_path_blair(get_opposite(arr[idx]), true);
+          break;
+      }
 
-            // Push this cell for later if there are still
-            // dirs in the array to try
-            if (idx + 1 < arr.size()) {
-                stack.emplace(pos, idx + 1, arr);
-            }
-            stack.emplace(*neighbor, 0, get_random_dirs());
-        }
-        // The neighbor was invalid, so we check the next dir
-        // in our randomly-generated sequence
-        else if (idx + 1 < arr.size()) {
-            stack.emplace(pos, idx + 1, arr);
-        }
-
-        // The roll to see if this cell should have a coin should
-        // only happen once, so this only evaluates when this cell
-        // is permanently leaving the stack
-        if (idx + 1 >= arr.size()) {
-            maze[pos].set_coin(get_random_coin());
-        }
+      // Push this cell for later if there are still
+      // dirs in the array to try
+      if (idx + 1 < arr.size()) {
+        stack.emplace(pos, idx + 1, arr);
+      }
+      stack.emplace(*neighbor, 0, get_random_dirs());
+    }
+    // The neighbor was invalid, so we check the next dir
+    // in our randomly-generated sequence
+    else if (idx + 1 < arr.size()) {
+      stack.emplace(pos, idx + 1, arr);
     }
 
-    return maze;
+    // The roll to see if this cell should have a coin should
+    // only happen once, so this only evaluates when this cell
+    // is permanently leaving the stack
+    if (idx + 1 >= arr.size()) {
+      maze[pos].set_coin(get_random_coin());
+    }
+  }
+
+  return maze;
 }
 
 }  // namespace io_blair

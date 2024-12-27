@@ -15,32 +15,33 @@ Game::Game(ISession& session, ILobbyManager& manager)
     : session_(session), manager_(manager) {}
 
 void Game::update(string data) {
-    switch (session_.state()) {
-        case State::kPrelobby: {
-            auto doc = parser_.iterate(data);
-            if (doc.error()) return;
+  switch (session_.state()) {
+    case State::kPrelobby: {
+      auto doc = parser_.iterate(data);
+      if (doc.error()) return;
 
-            string type;
-            if (doc[req::SharedState.type._].get_string(type) != 0) return;
+      string type;
+      if (doc[req::SharedState.type._].get_string(type) != 0) {
+        return;
+      }
 
-            if (type == req::Prelobby.type.create) {
-                return manager_.create(session_);
-            }
+      if (type == req::Prelobby.type.create) {
+        return manager_.create(session_);
+      }
 
-            if (type == req::Prelobby.type.join) {
-                string code;
-                if (doc[req::Prelobby.code._].get_string(code) != 0) return;
-
-                return manager_.join(code, session_);
-            }
-
-            return;
+      if (type == req::Prelobby.type.join) {
+        string code;
+        if (doc[req::Prelobby.code._].get_string(code) != 0) {
+          return;
         }
-        case State::kWaitingForLobby:
-            return;
-        case State::kInLobby:
-            return session_.try_lobby_update(std::move(data));
+        return manager_.join(code, session_);
+      }
+
+      return;
     }
+    case State::kWaitingForLobby: return;
+    case State::kInLobby:         return session_.try_lobby_update(std::move(data));
+  }
 }
 
 }  // namespace io_blair
