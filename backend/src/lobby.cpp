@@ -1,6 +1,5 @@
 #include "lobby.hpp"
 
-#include "character.hpp"
 #include "game.hpp"
 #include "request.hpp"
 #include "response.hpp"
@@ -138,11 +137,13 @@ optional<pair<const Player&, const Player&>> Lobby::get_players(
     return nullopt;
 }
 
-static void msg(Player& player, document& doc) {
+namespace {
+void msg(Player& player, document& doc) {
     string msg;
     if (doc[req::SharedState.msg._].get_string(msg) != 0) return;
     player.msg(resp::msg(std::move(msg)));
 }
+}  // namespace
 
 void Lobby::character_select(ISession& session, document& doc) {
     auto opt = get_players(session);
@@ -246,7 +247,6 @@ void Lobby::in_game(ISession& session, document& doc) {
     if (type == req::SharedState.type.leave) {
         return leave_impl(session, self, other);
     }
-
 }
 
 LobbyManager::LobbyManager(net::io_context& ctx) : ctx_(ctx) {}

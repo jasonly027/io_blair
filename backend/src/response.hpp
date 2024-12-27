@@ -23,6 +23,6 @@ std::string other_leave();
 std::string confirm(Character character);
 
 std::string maze(Maze::position start, Maze::position end,
-                 std::array<std::array<int8_t, Maze::kCols>, Maze::kRows> maze);
+                 std::array<std::array<int16_t, Maze::kCols>, Maze::kRows> maze);
 
 }  // namespace io_blair::response

@@ -43,26 +43,4 @@ void Game::update(string data) {
     }
 }
 
-// void Game::in_game(document& doc) {
-//     string type;
-//     if (doc[req::SharedState.type._].get_string(type) != 0) return;
-
-//     if (type == req::SharedState.type.msg) {
-//         msg(doc);
-//     }
-
-//     else if (type == req::SharedState.type.leave) {
-//         leave();
-//     }
-
-//     else if (type == req::InGame.type.move) {
-//         int64_t num;
-//         if (doc[req::InGame.move._].get_int64().get(num) != 0) return;
-
-//         if (optional<Move> move = to_move(num); move.has_value()) {
-
-//         }
-//     }
-// }
-
 }  // namespace io_blair

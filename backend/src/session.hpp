@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -90,6 +91,10 @@ class WebSocketSession : public ISession,
 
     void try_lobby_leave();
 
+    // Return value may change on repeated calls.
+    // STORE THE RETURN VALUE in a local variable before using it.
+    std::shared_ptr<ILobby> lobby_unsafe();
+
     tcp::socket socket_;
     // Websocket
     websocket::stream<tcp::socket&> ws_;
@@ -104,7 +109,10 @@ class WebSocketSession : public ISession,
     std::atomic<State> state_;
     // Parses and acts on incoming messages
     Game game_;
-    std::atomic<std::shared_ptr<ILobby>> lobby_;
+    // Mutex for lobby_unsafe_
+    std::mutex lobby_mutex_;
+    // DO NOT use this directly. Use the setter/getter accordingly
+    std::shared_ptr<ILobby> lobby_unsafe_;
 };
 
 }  // namespace io_blair

@@ -64,12 +64,12 @@ struct Maze {
     string type = "maze";
     io_blair::Maze::position start;
     io_blair::Maze::position end;
-    array<array<int8_t, io_blair::Maze::kCols>, io_blair::Maze::kRows> maze;
+    array<array<int16_t, io_blair::Maze::kCols>, io_blair::Maze::kRows> maze;
 };
 
 string maze(
     io_blair::Maze::position start, io_blair::Maze::position end,
-    array<array<int8_t, io_blair::Maze::kCols>, io_blair::Maze::kRows> maze) {
+    array<array<int16_t, io_blair::Maze::kCols>, io_blair::Maze::kRows> maze) {
     return json::write(Maze{.start = std::move(start),
                             .end = std::move(end),
                             .maze = std::move(maze)});

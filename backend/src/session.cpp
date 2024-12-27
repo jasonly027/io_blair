@@ -1,6 +1,5 @@
 #include "session.hpp"
 
-#include <cassert>
 #include <cstddef>
 #include <iostream>
 
@@ -10,6 +9,7 @@ namespace io_blair {
 
 using std::cout, std::cerr, std::string, std::string_view, std::size_t,
     std::shared_ptr;
+using lock = std::lock_guard<std::mutex>;
 
 WebSocketSession::WebSocketSession(net::io_context& ctx, tcp::socket socket,
                                    LobbyManager& manager)
@@ -51,11 +51,14 @@ auto WebSocketSession::state() const -> State { return state_; }
 void WebSocketSession::set_state(State state) { state_ = state; }
 
 void WebSocketSession::try_lobby_update(string data) {
-    auto lobby = lobby_.load();
+    auto lobby = lobby_unsafe();
     if (lobby) lobby->update(*this, std::move(data));
 }
 
-void WebSocketSession::set_lobby(shared_ptr<ILobby> lobby) { lobby_ = lobby; }
+void WebSocketSession::set_lobby(shared_ptr<ILobby> lobby) {
+    lock guard(lobby_mutex_);
+    lobby_unsafe_ = lobby;
+}
 
 shared_ptr<ISession> WebSocketSession::get_shared() {
     return shared_from_this();
@@ -98,11 +101,7 @@ void WebSocketSession::prepare_for_next_read() {
 void WebSocketSession::on_read(error_code ec, size_t bytes [[maybe_unused]]) {
     if (ec && fail(ec, "ws on_read") == Error::kFatal) return;
 
-    net::post(read_strand_, [str = beast::buffers_to_string(buffer_.data()),
-                             self = shared_from_this()]() mutable {
-        self->game_.update(std::move(str));
-    });
-    buffer_.consume(buffer_.size());
+    net::post(read_strand_, [str = beast::buffers_to_string(buffer_.data()), self = shared_from_this()]() mutable { self->game_.update(std::move(str)); }); buffer_.consume(buffer_.size());
 
     prepare_for_next_read();
 }
@@ -138,8 +137,13 @@ void WebSocketSession::close() {
 }
 
 void WebSocketSession::try_lobby_leave() {
-    auto lobby = lobby_.load();
+    auto lobby = lobby_unsafe();
     if (lobby) lobby->leave(*this);
+}
+
+shared_ptr<ILobby> WebSocketSession::lobby_unsafe() {
+    lock guard(lobby_mutex_);
+    return lobby_unsafe_;
 }
 
 }  // namespace io_blair
