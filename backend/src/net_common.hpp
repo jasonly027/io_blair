@@ -6,9 +6,9 @@
 
 namespace io_blair {
 // NOLINTBEGIN(misc-unused-alias-decls)
-namespace net = boost::asio;
-namespace beast = boost::beast;
-namespace http = boost::beast::http;
+namespace net       = boost::asio;
+namespace beast     = boost::beast;
+namespace http      = boost::beast::http;
 namespace websocket = boost::beast::websocket;
 // NOLINTEND(misc-unused-alias-decls)
 

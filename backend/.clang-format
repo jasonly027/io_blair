@@ -1,9 +1,34 @@
+Language: Cpp
+
 BasedOnStyle: Google
 
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments:
+  Enabled:         true
+  AcrossEmptyLines: false
+  AcrossComments:  false
+  AlignCompound:   true
+  AlignFunctionPointers: false
+  PadOperators:    true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCaseColons: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Empty
+BinPackArguments: false
+BreakBeforeBinaryOperators: All
+ColumnLimit: 100
 DerivePointerAlignment: false
-PointerAlignment: Left
-
-QualifierAlignment: Left
-
-IndentWidth: 4
+IntegerLiteralSeparator:
+  Binary:          4
+  Decimal:         3
+  Hex:             2
 LineEnding: CRLF
+MaxEmptyLinesToKeep: 2
+PackConstructorInitializers: NextLineOnly
+PointerAlignment: Left
+QualifierAlignment: Custom
+QualifierOrder: ['static', 'inline', 'constexpr', 'const', 'volatile', 'type']
+ReflowComments: false

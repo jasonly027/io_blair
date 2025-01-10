@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include "character.hpp"
 
 namespace io_blair::request {
@@ -38,67 +36,100 @@ or
 
 */
 
-using name = const char*;
+using name      = const char*;
 using value_str = const char*;
 
-constexpr struct {
-    const struct {
-        name _ = "type";
-
-        // Possible in all states that aren't Prelobby
-        value_str msg = "msg";
-
-        // Possible in all states that aren't Prelobby
-        value_str leave = "leave";
-    } type;
-
-    // Should exist if type is msg
-    // The msg that should be forwarded to other player
-    const struct {
-        name _ = "msg";
-    } msg;
-
-} SharedState;  // NOLINT(readability-identifier-naming)
+// NOLINTBEGIN(readability-identifier-naming)
 
 constexpr struct {
-    const struct {
-        value_str create = "create";
-        value_str join = "join";
-    } type;
+  const struct {
+    name _ = "type";
 
-    // Should exist if type is join
-    // The join code of the lobby
-    const struct {
-        name _ = "code";
-    } code;
+    // Possible in all states that aren't Prelobby
+    value_str msg = "msg";
 
-} Prelobby;  // NOLINT(readability-identifier-naming)
+    // Possible in all states that aren't Prelobby
+    value_str leave = "leave";
+  } type;
+
+  // Should exist if type is msg
+  // The msg that should be forwarded to other player
+  const struct {
+    name _ = "msg";
+  } msg;
+
+} SharedState;
 
 constexpr struct {
-    const struct {
-        value_str hover = "hover";
-        value_str confirm = "confirm";
-    } type;
+  const struct {
+    value_str create = "create";
+    value_str join   = "join";
+  } type;
 
-    // Should exist if type is hover
-    // Which character self hovered
-    const struct {
-        name _ = "hover";
+  // Should exist if type is join
+  // The join code of the lobby
+  const struct {
+    name _ = "code";
+  } code;
 
-        const uint8_t io = static_cast<CharacterImpl>(Character::kIO);
-        const uint8_t blair = static_cast<CharacterImpl>(Character::kBlair);
-    } hover;
+} Prelobby;
 
-    // Should exist if type is confirm
-    // Which character self confirmed
-    const struct {
-        name _ = "confirm";
+constexpr struct {
+  const struct {
+    value_str hover   = "hover";
+    value_str confirm = "confirm";
+  } type;
 
-        const uint8_t unset = static_cast<CharacterImpl>(Character::kUnset);
-        const uint8_t io = static_cast<CharacterImpl>(Character::kIO);
-        const uint8_t blair = static_cast<CharacterImpl>(Character::kBlair);
-    } confirm;
+  // Should exist if type is hover
+  // Which character self hovered
+  const struct {
+    name _ = "hover";
 
-} CharacterSelect;  // NOLINT(readability-identifier-naming)
+    const CharacterImpl io    = static_cast<CharacterImpl>(Character::kIO);
+    const CharacterImpl blair = static_cast<CharacterImpl>(Character::kBlair);
+  } hover;
+
+  // Should exist if type is confirm
+  // Which character self confirmed
+  const struct {
+    name _ = "confirm";
+
+    const CharacterImpl unset = static_cast<CharacterImpl>(Character::kUnset);
+    const CharacterImpl io    = static_cast<CharacterImpl>(Character::kIO);
+    const CharacterImpl blair = static_cast<CharacterImpl>(Character::kBlair);
+  } confirm;
+
+} CharacterSelect;
+
+constexpr struct {
+  const struct {
+    value_str move = "move";
+  } type;
+
+  // Should exist if type is move
+  // The row self is trying to move to
+  const struct {
+    name _ = "row";
+
+    const int64_t value = 0;  // [0, Maze::kRows)
+  } row;
+
+  // Should exist if type is move
+  // The col self is trying to move to
+  const struct {
+    name _ = "col";
+
+    const int64_t value = 0;  // [0, Maze::kCols)
+  } col;
+
+} InGame;
+
+constexpr struct {
+  const struct {
+    value_str restart = "restart";
+  } type;
+} GameFinished;
+
+// NOLINTEND(readability-identifier-naming)
 
 }  // namespace io_blair::request
