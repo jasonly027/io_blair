@@ -1,13 +1,16 @@
 #include "maze.hpp"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <bitset>
+#include <limits>
 #include <optional>
+
 
 namespace io_blair {
 
-using std::bitset, std::nullopt;
+using std::bitset, std::nullopt, std::numeric_limits;
 
 TEST(CellTest, SetPathIO) {
   Cell cell;
@@ -210,23 +213,34 @@ TEST(MazeTest, GetNeighbor) {
   EXPECT_EQ(Maze::get_neighbor(pos, Direction::kLeft), (position{1, 0}));
 }
 
-// TEST(MazeTest, asdf) {
-//     const Maze maze = Maze::generate_maze();
+TEST(MazeTest, AreNeighbors) {
+  using position = Maze::position;
 
-//     for (int row = 0; row < Maze::kRows; ++row) {
-//         for (int col = 0; col < Maze::kCols; ++col) {
-//             const auto& cell = maze[row][col];
-//             std::string str;
-//             str += cell.up() ? 'N' : '#';
-//             str += cell.right() ? 'E' : '#';
-//             str += cell.down() ? 'S' : '#';
-//             str += cell.left() ? 'W' : '#';
-//             std::cout << str << "   ";
-//         }
-//         std::cout << '\n';
-//     }
+  position center = {0, 0};
 
-//     FAIL();
-// }
+  position up    = {-1, 0};
+  position right = {0, 1};
+  position down  = {1, 0};
+  position left  = {0, -1};
+
+  EXPECT_TRUE(Maze::are_neighbors(center, up));
+  EXPECT_TRUE(Maze::are_neighbors(center, right));
+  EXPECT_TRUE(Maze::are_neighbors(center, down));
+  EXPECT_TRUE(Maze::are_neighbors(center, left));
+
+  position top_right    = {-1, 1};
+  position bottom_right = {1, 1};
+  position bottom_left  = {1, -1};
+  position top_left     = {-1, -1};
+
+  EXPECT_FALSE(Maze::are_neighbors(center, top_right));
+  EXPECT_FALSE(Maze::are_neighbors(center, bottom_right));
+  EXPECT_FALSE(Maze::are_neighbors(center, bottom_left));
+  EXPECT_FALSE(Maze::are_neighbors(center, top_left));
+
+  position far = {std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
+
+  EXPECT_FALSE(Maze::are_neighbors(center, far));
+}
 
 }  // namespace io_blair

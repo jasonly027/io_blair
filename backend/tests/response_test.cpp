@@ -1,10 +1,15 @@
 #include "response.hpp"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <character.hpp>
 
+
 namespace io_blair {
+
+using testing::StartsWith;
+
 namespace resp = response;
 
 TEST(Response, Join) {
@@ -37,7 +42,25 @@ TEST(Response, Confirm) {
 }
 
 TEST(Response, Maze) {
-  FAIL();
+  Maze::position start = {0, 0};
+  Maze::position end   = {1, 1};
+  EXPECT_THAT(resp::maze(start, end, {}),
+              StartsWith(R"({"type":"maze","start":[0,0],"end":[1,1],"maze":[[)"));
 }
+
+TEST(Response, MoveSelfAndOther) {
+  Maze::position pos = {0, 0};
+  EXPECT_EQ(R"({"type":"move","who":"self","pos":[0,0]})", resp::move_self(pos));
+  EXPECT_EQ(R"({"type":"move","who":"other","pos":[0,0]})", resp::move_other(pos));
+}
+
+TEST(Response, Win) {
+  EXPECT_EQ(R"({"type":"win"})", resp::win());
+}
+
+TEST(Response, Restart) {
+  EXPECT_EQ(R"({"type":"restart"})", resp::restart());
+}
+
 
 }  // namespace io_blair

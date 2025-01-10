@@ -11,17 +11,36 @@ namespace io_blair {
 
 enum class Direction : int8_t { kUp = 0, kRight = 1, kDown = 2, kLeft = 3 };
 
+using DirectionImpl = std::underlying_type_t<Direction>;
+
+constexpr std::optional<Direction> to_direction(int64_t num) {
+  using Direction::kUp, Direction::kRight, Direction::kDown, Direction::kLeft;
+
+  switch (num) {
+    case static_cast<DirectionImpl>(kUp):    return kUp;
+    case static_cast<DirectionImpl>(kRight): return kRight;
+    case static_cast<DirectionImpl>(kDown):  return kDown;
+    case static_cast<DirectionImpl>(kLeft):  return kLeft;
+    default:                                 return std::nullopt;
+  }
+}
+
 constexpr Direction get_opposite(Direction dir) {
+  using Direction::kUp, Direction::kRight, Direction::kDown, Direction::kLeft;
+
   switch (dir) {
-    case Direction::kUp:    return Direction::kDown;
-    case Direction::kRight: return Direction::kLeft;
-    case Direction::kDown:  return Direction::kUp;
-    case Direction::kLeft:  return Direction::kRight;
+    case kUp:    return kDown;
+    case kRight: return kLeft;
+    case kDown:  return kUp;
+    case kLeft:  return kRight;
   }
 }
 
 class Cell {
  public:
+  constexpr explicit Cell(std::bitset<9> bits = 0)
+      : bits_(std::move(bits)) {}
+
   // IO or Blair can see a path up
   constexpr bool up() const {
     return bits_[kOffsetToIO + kOffsetToUp] || bits_[kOffsetToBlair + kOffsetToUp];
@@ -40,6 +59,15 @@ class Cell {
   // IO or Blair can see a path left
   constexpr bool left() const {
     return bits_[kOffsetToIO + kOffsetToLeft] || bits_[kOffsetToBlair + kOffsetToLeft];
+  }
+
+  constexpr bool valid_move(Direction dir) const {
+    switch (dir) {
+      case Direction::kUp:    return up();
+      case Direction::kRight: return right();
+      case Direction::kDown:  return down();
+      case Direction::kLeft:  return left();
+    }
   }
 
   // True if any of up, right, down
@@ -116,24 +144,22 @@ class Cell {
     return static_cast<int16_t>(res.to_ulong());
   }
 
-  // clang-format off
-    /*
-        Paths are represented by 4 bits:
-        up, right, down, left
+  /*
+    Paths are represented by 4 bits:
+    up, right, down, left
 
-        An ON bit means theres a passage in that direction
-        to a cell, in other words, there is no wall obstructing
-        traversal. It is implied that that destination cell
-        has a passage back to the original cell, in other words,
-        the destination cell's bit for the opposite direction is
-        guaranteed ON.
+    An ON bit means theres a passage in that direction
+    to a cell, in other words, there is no wall obstructing
+    traversal. It is implied that that destination cell
+    has a passage back to the original cell, in other words,
+    the destination cell's bit for the opposite direction is
+    guaranteed ON.
 
-        Example:
-        For a cell of 0001 (Only up bit is ON),
-        The cell up of this cell should
-        AT LEAST be X1XX (Down bit is ON, X means unknown)
-    */
-  // clang-format on
+    Example:
+    For a cell of 0001 (Only up bit is ON),
+    The cell up of this cell should
+    AT LEAST be X1XX (Down bit is ON, X means unknown)
+  */
 
   // First 4 bits are paths IO sees
   // Second 4 bits are paths Blair sees
@@ -158,12 +184,20 @@ class Maze {
  public:
   using position = std::pair<int, int>;
 
-  // Generate a random maze
-  static Maze generate_maze();
-
   static constexpr int kRows     = 16;
   static constexpr int kCols     = 16;
   static constexpr int kTotalDim = kRows * kCols;
+
+  constexpr Maze() = default;
+
+  explicit constexpr Maze(std::array<std::array<Cell, kCols>, kRows> matrix)
+      : matrix_(std::move(matrix)) {}
+
+  constexpr Maze(std::array<std::array<Cell, kCols>, kRows> matrix, position start, position end)
+      : matrix_(std::move(matrix)), start_(start), end_(end) {}
+
+  // Generate a random maze
+  static Maze generate_maze();
 
   // Get the position in direction (dir) from (pos)
   // Returns nullopt if it would be out of bounds from the maze
@@ -182,6 +216,57 @@ class Maze {
     return std::nullopt;
   }
 
+  static constexpr bool are_neighbors(position a, position b) {
+    auto [a_row, a_col] = a;
+    auto [b_row, b_col] = b;
+
+    //  b
+    //  ↑  ?
+    //  a
+    if (a_row + 1 == b_row && a_col == b_col) return true;
+
+    //  a
+    //  ↓  ?
+    //  b
+    if (a_row - 1 == b_row && a_col == b_col) return true;
+
+    // b ← a  ?
+    if (a_col + 1 == b_col && a_row == b_row) return true;
+
+    // a → b  ?
+    if (a_col - 1 == b_col && a_row == b_row) return true;
+
+    return false;
+  }
+
+  constexpr bool valid_move(position a, position b) {
+    if (a == b) return true;
+
+    auto [a_row, a_col] = a;
+    auto [b_row, b_col] = b;
+
+    // Conditions are in terms of position a, so only a has to be bounds checked
+    if (a_row < 0 || a_row >= kRows || a_col < 0 || a_col >= kCols) return false;
+
+    //  b
+    //  ↑  ?
+    //  a
+    if (a_row + 1 == b_row && a_col == b_col) return cell(a).up();
+
+    //  a
+    //  ↓  ?
+    //  b
+    if (a_row - 1 == b_row && a_col == b_col) return cell(a).down();
+
+    // b ← a  ?
+    if (a_col + 1 == b_col && a_row == b_row) return cell(a).left();
+
+    // a → b  ?
+    if (a_col - 1 == b_col && a_row == b_row) return cell(a).right();
+
+    return false;
+  }
+
   constexpr const std::array<Cell, kCols>& operator[](size_t row) const {
     return matrix_[row];
   }
@@ -195,17 +280,9 @@ class Maze {
     return start_;
   }
 
-  constexpr bool is_start(position pos) const {
-    return pos == start_;
-  }
-
   // Where to end in the maze
   constexpr position end() const {
     return end_;
-  }
-
-  constexpr bool is_end(position pos) const {
-    return pos == end_;
   }
 
   // Will serialize with only io_path and coin per cell
@@ -231,24 +308,17 @@ class Maze {
   }
 
  private:
-  constexpr std::array<Cell, kCols>& operator[](size_t row) {
-    return matrix_[row];
-  }
-
-  constexpr Cell& operator[](position pos) {
+  constexpr Cell& cell(position pos) {
     return matrix_[pos.first][pos.second];
   }
 
-  constexpr void set_start(position pos) {
-    start_ = pos;
-  }
 
-  constexpr void set_end(position pos) {
-    end_ = pos;
-  }
+  static_assert(kRows - 2 >= 0);
+  position start_ = {kRows - 2, 1};  // (1, 1) from bot-left
 
-  position start_;
-  position end_;
+  static_assert(kCols - 2 >= 0);
+  position end_ = {1, kCols - 2};  // (1, 1) from top-right
+
   std::array<std::array<Cell, kCols>, kRows> matrix_;
 };
 

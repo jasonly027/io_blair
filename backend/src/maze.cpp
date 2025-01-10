@@ -1,5 +1,6 @@
 #include "maze.hpp"
 
+#include <cassert>
 #include <random>
 #include <stack>
 #include <tuple>
@@ -20,7 +21,8 @@ thread_local mt19937 mt{random_device{}()};
 
 // Get Directions in a uniformly random order
 array<Direction, 4> get_random_dirs() {
-  array<Direction, 4> res{Direction::kUp, Direction::kRight, Direction::kDown, Direction::kLeft};
+  using Dir = Direction;
+  array<Dir, 4> res{Dir::kUp, Dir::kRight, Dir::kDown, Dir::kLeft};
   ranges::shuffle(res, mt);
   return res;
 }
@@ -54,15 +56,12 @@ bool get_random_coin() {
 Maze Maze::generate_maze() {
   Maze maze;
 
-  // clang-format off
-    /*
-        A tuple of:
-        - position of "this" cell 
-        - idx of which dir to access
-            in the array (the 3rd tuple element)
-        - a randomly shuffled sequence of the dirs
-    */
-  // clang-format on
+  /*
+    A tuple of:
+    - position of "this" cell
+    - idx of which dir to access in the array (the 3rd tuple element)
+    - an array of all the dirs, randomly shuffled
+  */
   using pos_idx_arr = tuple<position, int, array<Direction, 4>>;
 
   // Iterative version of Recursive Backtracking for Maze gen
@@ -79,18 +78,18 @@ Maze Maze::generate_maze() {
       switch (get_random_char()) {
         // Allow both to see newly added path
         case Character::kUnset:
-          maze[pos].set_path_both(arr[idx], true);
-          maze[*neighbor].set_path_both(get_opposite(arr[idx]), true);
+          maze.cell(pos).set_path_both(arr[idx], true);
+          maze.cell(*neighbor).set_path_both(get_opposite(arr[idx]), true);
           break;
         // Allow only IO to see newly added path
         case Character::kIO:
-          maze[pos].set_path_io(arr[idx], true);
-          maze[*neighbor].set_path_io(get_opposite(arr[idx]), true);
+          maze.cell(pos).set_path_io(arr[idx], true);
+          maze.cell(*neighbor).set_path_io(get_opposite(arr[idx]), true);
           break;
         // Allow only Blair to see newly added path
         case Character::kBlair:
-          maze[pos].set_path_blair(arr[idx], true);
-          maze[*neighbor].set_path_blair(get_opposite(arr[idx]), true);
+          maze.cell(pos).set_path_blair(arr[idx], true);
+          maze.cell(*neighbor).set_path_blair(get_opposite(arr[idx]), true);
           break;
       }
 
@@ -111,7 +110,7 @@ Maze Maze::generate_maze() {
     // only happen once, so this only evaluates when this cell
     // is permanently leaving the stack
     if (idx + 1 >= arr.size()) {
-      maze[pos].set_coin(get_random_coin());
+      maze.cell(pos).set_coin(get_random_coin());
     }
   }
 

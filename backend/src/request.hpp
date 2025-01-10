@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include "character.hpp"
 
 namespace io_blair::request {
@@ -41,6 +39,8 @@ or
 using name      = const char*;
 using value_str = const char*;
 
+// NOLINTBEGIN(readability-identifier-naming)
+
 constexpr struct {
   const struct {
     name _ = "type";
@@ -58,7 +58,7 @@ constexpr struct {
     name _ = "msg";
   } msg;
 
-} SharedState;  // NOLINT(readability-identifier-naming)
+} SharedState;
 
 constexpr struct {
   const struct {
@@ -72,7 +72,7 @@ constexpr struct {
     name _ = "code";
   } code;
 
-} Prelobby;  // NOLINT(readability-identifier-naming)
+} Prelobby;
 
 constexpr struct {
   const struct {
@@ -85,8 +85,8 @@ constexpr struct {
   const struct {
     name _ = "hover";
 
-    const int8_t io    = static_cast<CharacterImpl>(Character::kIO);
-    const int8_t blair = static_cast<CharacterImpl>(Character::kBlair);
+    const CharacterImpl io    = static_cast<CharacterImpl>(Character::kIO);
+    const CharacterImpl blair = static_cast<CharacterImpl>(Character::kBlair);
   } hover;
 
   // Should exist if type is confirm
@@ -94,27 +94,42 @@ constexpr struct {
   const struct {
     name _ = "confirm";
 
-    const int8_t unset = static_cast<CharacterImpl>(Character::kUnset);
-    const int8_t io    = static_cast<CharacterImpl>(Character::kIO);
-    const int8_t blair = static_cast<CharacterImpl>(Character::kBlair);
+    const CharacterImpl unset = static_cast<CharacterImpl>(Character::kUnset);
+    const CharacterImpl io    = static_cast<CharacterImpl>(Character::kIO);
+    const CharacterImpl blair = static_cast<CharacterImpl>(Character::kBlair);
   } confirm;
 
-} CharacterSelect;  // NOLINT(readability-identifier-naming)
+} CharacterSelect;
 
 constexpr struct {
   const struct {
     value_str move = "move";
   } type;
 
+  // Should exist if type is move
+  // The row self is trying to move to
   const struct {
-    name _ = "move";
+    name _ = "row";
 
-    value_str up    = "up";
-    value_str right = "right";
-    value_str down  = "down";
-    value_str left  = "left";
-  } move;
+    const int64_t value = 0;  // [0, Maze::kRows)
+  } row;
 
-} InGame;  // NOLINT(readability-identifier-naming)
+  // Should exist if type is move
+  // The col self is trying to move to
+  const struct {
+    name _ = "col";
+
+    const int64_t value = 0;  // [0, Maze::kCols)
+  } col;
+
+} InGame;
+
+constexpr struct {
+  const struct {
+    value_str restart = "restart";
+  } type;
+} GameFinished;
+
+// NOLINTEND(readability-identifier-naming)
 
 }  // namespace io_blair::request

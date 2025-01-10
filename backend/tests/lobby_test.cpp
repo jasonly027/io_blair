@@ -3,7 +3,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <character.hpp>
+#include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -20,9 +22,9 @@
 
 namespace io_blair {
 
-using std::shared_ptr, std::string, std::optional, std::ref, std::numeric_limits;
+using std::shared_ptr, std::string, std::optional, std::ref, std::numeric_limits, std::array;
 using testing::IsNull, testing::InSequence, testing::MockFunction, testing::SaveArg,
-    testing::StrictMock, testing::ReturnPointee, testing::Eq;
+    testing::StartsWith, testing::StrictMock, testing::ReturnPointee, testing::Eq;
 
 using SessionState = ISession::State;
 using LobbyState   = ILobby::State;
@@ -203,7 +205,7 @@ TEST(LobbyUpdate, InvalidJson) {
   ctx.run();
 }
 
-class LobbyUpdateCharacterSelectTest : public testing::Test {
+class CharacterSelectTest : public testing::Test {
  protected:
   net::io_context ctx_;
   static string code_;
@@ -233,19 +235,27 @@ class LobbyUpdateCharacterSelectTest : public testing::Test {
     EXPECT_CALL(*s2_, write(resp::join(code_)));
   }
 
+  void join_lobby() {
+    lobby_->join(*s1_);
+    lobby_->join(*s2_);
+
+    process();
+
+    EXPECT_EQ(lobby_->state(), LobbyState::kCharacterSelect);
+  }
+
   void process() {
     ctx_.run();
     ctx_.restart();
   }
 };
-string LobbyUpdateCharacterSelectTest::code_ = "code";
+string CharacterSelectTest::code_ = "code";
 
-TEST_F(LobbyUpdateCharacterSelectTest, Msg) {
+TEST_F(CharacterSelectTest, Msg) {
   const string msg = "Hello World";
   EXPECT_CALL(*s2_, write(resp::msg(msg))).After(EXPECT_CALL(check_, Call("1")));
 
-  lobby_->join(*s1_);
-  lobby_->join(*s2_);
+  join_lobby();
 
   struct Msg {
     string type = "msg";
@@ -263,13 +273,12 @@ TEST_F(LobbyUpdateCharacterSelectTest, Msg) {
   process();
 }
 
-TEST_F(LobbyUpdateCharacterSelectTest, Leave) {
+TEST_F(CharacterSelectTest, Leave) {
   EXPECT_CALL(*s1_, set_lobby(IsNull()));
   EXPECT_CALL(*s1_, set_state(SessionState::kPrelobby));
   EXPECT_CALL(*s2_, write(resp::other_leave()));
 
-  lobby_->join(*s1_);
-  lobby_->join(*s2_);
+  join_lobby();
 
   struct Leave {
     string type = "leave";
@@ -292,7 +301,7 @@ struct Hover<void> {
   string type = "hover";
 };
 
-TEST_F(LobbyUpdateCharacterSelectTest, Hover) {
+TEST_F(CharacterSelectTest, Hover) {
   {
     InSequence _;
     EXPECT_CALL(check_, Call("1"));
@@ -300,8 +309,7 @@ TEST_F(LobbyUpdateCharacterSelectTest, Hover) {
     EXPECT_CALL(*s2_, write(resp::hover(Character::kBlair)));
   }
 
-  lobby_->join(*s1_);
-  lobby_->join(*s2_);
+  join_lobby();
 
   // These should not trigger EXPECT_CALLS
 
@@ -352,7 +360,7 @@ struct Confirm<void> {
   string type = "confirm";
 };
 
-TEST_F(LobbyUpdateCharacterSelectTest, ConfirmCharacter) {
+TEST_F(CharacterSelectTest, ConfirmCharacter) {
   {
     InSequence _;
     EXPECT_CALL(check_, Call("1"));
@@ -368,12 +376,13 @@ TEST_F(LobbyUpdateCharacterSelectTest, ConfirmCharacter) {
 
     EXPECT_CALL(*s2_, write(resp::confirm(Character::kBlair)));
     EXPECT_CALL(*s1_, write(resp::confirm(Character::kIO)));
-    EXPECT_CALL(*s1_, write);
-    EXPECT_CALL(*s2_, write);
+
+    // Writes from generating maze
+    EXPECT_CALL(*s1_, write(StartsWith(R"({"type":"maze")")));
+    EXPECT_CALL(*s2_, write(StartsWith(R"({"type":"maze")")));
   }
 
-  lobby_->join(*s1_);
-  lobby_->join(*s2_);
+  join_lobby();
 
   // These should not trigger EXPECT_CALLS
 
@@ -423,6 +432,158 @@ TEST_F(LobbyUpdateCharacterSelectTest, ConfirmCharacter) {
   lobby_->update(*s1_, req_blair);
   lobby_->update(*s2_, req_io);
   process();
+
+  EXPECT_EQ(lobby_->state(), LobbyState::kInGame);
+}
+
+class InGameTest : public testing::Test {
+ protected:
+  net::io_context ctx_;
+  static string code_;
+  MockLobbyManager manager_;
+
+  static constexpr Maze::position kStart = {Maze::kRows - 1, 1};
+
+  static constexpr Maze::position kEnd = {1, Maze::kCols - 1};
+
+  static constexpr Maze generate_maze() {
+    // Create a matrix where going up/right is possible on all cells
+    array<Cell, Maze::kCols> row;
+    row.fill(Cell{0b0'0011'0011});
+
+    array<array<Cell, Maze::kCols>, Maze::kRows> matrix;
+    matrix.fill(row);
+
+    return Maze(matrix, kStart, kEnd);
+  }
+
+  shared_ptr<ILobby> lobby_
+      = std::make_shared<Lobby>(ctx_, code_, manager_, &InGameTest::generate_maze);
+
+  shared_ptr<MockSession> s1_ = std::make_shared<MockSession>();
+  shared_ptr<MockSession> s2_ = std::make_shared<MockSession>();
+
+  MockFunction<void(string checkpoint)> check_;
+
+  void SetUp() override {
+    EXPECT_CALL(*s1_, get_shared()).WillRepeatedly(ReturnPointee(&s1_));
+    EXPECT_CALL(*s2_, get_shared()).WillRepeatedly(ReturnPointee(&s2_));
+
+    // Expected when sessions join the lobby
+    EXPECT_CALL(*s1_, set_state(SessionState::kWaitingForLobby));
+    EXPECT_CALL(*s1_, set_lobby(SharedPtrEq(lobby_)));
+    EXPECT_CALL(*s1_, set_state(SessionState::kInLobby));
+    EXPECT_CALL(*s1_, write(resp::join(code_)));
+
+    EXPECT_CALL(*s2_, set_state(SessionState::kWaitingForLobby));
+    EXPECT_CALL(*s1_, write(resp::other_join()));
+    EXPECT_CALL(*s2_, set_lobby(SharedPtrEq(lobby_)));
+    EXPECT_CALL(*s2_, set_state(SessionState::kInLobby));
+    EXPECT_CALL(*s2_, write(resp::join(code_)));
+
+    // Expected when confirming characters
+    EXPECT_CALL(*s2_, write(resp::confirm(Character::kIO)));
+    EXPECT_CALL(*s1_, write(resp::confirm(Character::kBlair)));
+
+    EXPECT_CALL(*s1_, write(StartsWith(R"({"type":"maze")")));
+    EXPECT_CALL(*s2_, write(StartsWith(R"({"type":"maze")")));
+  }
+
+  void join_lobby() {
+    lobby_->join(*s1_);
+    lobby_->join(*s2_);
+
+    process();
+
+    EXPECT_EQ(lobby_->state(), LobbyState::kCharacterSelect);
+  }
+
+  void confirm_characters() {
+    const string req_io
+        = json::write(Confirm<CharacterImpl>{.confirm = req::CharacterSelect.confirm.io});
+    const string req_blair
+        = json::write(Confirm<CharacterImpl>{.confirm = req::CharacterSelect.confirm.blair});
+
+    lobby_->update(*s1_, req_io);
+    lobby_->update(*s2_, req_blair);
+
+    process();
+
+    EXPECT_EQ(lobby_->state(), LobbyState::kInGame);
+  }
+
+  void process() {
+    ctx_.run();
+    ctx_.restart();
+  }
+};
+string InGameTest::code_ = "code";
+
+TEST_F(InGameTest, Msg) {
+  const string msg = "Hello World";
+  EXPECT_CALL(*s2_, write(resp::msg(msg))).After(EXPECT_CALL(check_, Call("1")));
+
+  join_lobby();
+  confirm_characters();
+
+  struct Msg {
+    string type = "msg";
+    optional<string> msg;
+  };
+
+  const string req_no_msg = json::write(Msg{});
+  lobby_->update(*s1_, req_no_msg);
+
+  check_.Call("1");
+
+  const string req = json::write(Msg{.msg = msg});
+  lobby_->update(*s1_, req);
+
+  process();
+}
+
+TEST_F(InGameTest, Leave) {
+  EXPECT_CALL(*s1_, set_lobby(IsNull()));
+  EXPECT_CALL(*s1_, set_state(SessionState::kPrelobby));
+  EXPECT_CALL(*s2_, write(resp::other_leave()));
+
+  join_lobby();
+  confirm_characters();
+
+  struct Leave {
+    string type = "leave";
+  };
+
+  const string req = json::write(Leave{});
+  lobby_->update(*s1_, req);
+
+  process();
+}
+
+TEST_F(InGameTest, Move) {
+  {
+    InSequence _;
+    EXPECT_CALL(check_, Call("1"));
+  }
+
+  join_lobby();
+  confirm_characters();
+
+  struct Move {
+    string type = "move";
+    optional<int64_t> row;
+    optional<int64_t> col;
+  };
+
+  const string req_no_row = json::write(Move{.col = 0});
+  const string req_no_col = json::write(Move{.row = 0});
+
+  lobby_->update(*s1_, req_no_row);
+  lobby_->update(*s1_, req_no_col);
+
+  check_.Call("1");
+
+
 }
 
 class LobbyManagerTest : public testing::Test {

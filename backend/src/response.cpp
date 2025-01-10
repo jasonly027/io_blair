@@ -64,17 +64,47 @@ string confirm(Character character) {
   return json::write(Confirm{.confirm = static_cast<CharacterImpl>(character)});
 }
 
-struct Maze {
+struct RespMaze {
   string type = "maze";
-  io_blair::Maze::position start;
-  io_blair::Maze::position end;
-  array<array<int16_t, io_blair::Maze::kCols>, io_blair::Maze::kRows> maze;
+  Maze::position start;
+  Maze::position end;
+  array<array<int16_t, Maze::kCols>, Maze::kRows> maze;
 };
 
-string maze(io_blair::Maze::position start, io_blair::Maze::position end,
-            array<array<int16_t, io_blair::Maze::kCols>, io_blair::Maze::kRows> maze) {
+string maze(Maze::position start, Maze::position end,
+            array<array<int16_t, Maze::kCols>, Maze::kRows> maze) {
   return json::write(
-      Maze{.start = std::move(start), .end = std::move(end), .maze = std::move(maze)});
+      RespMaze{.start = std::move(start), .end = std::move(end), .maze = std::move(maze)});
+}
+
+struct Move {
+  string type = "move";
+  string who;
+  Maze::position pos;
+};
+
+string move_self(Maze::position pos) {
+  return json::write(Move{.who = "self", .pos = std::move(pos)});
+}
+
+string move_other(Maze::position pos) {
+  return json::write(Move{.who = "other", .pos = std::move(pos)});
+}
+
+struct Win {
+  string type = "win";
+};
+
+string win() {
+  return json::write(Win{});
+}
+
+struct Restart {
+  string type = "restart";
+};
+
+string restart() {
+  return json::write(Restart{});
 }
 
 }  // namespace io_blair::response

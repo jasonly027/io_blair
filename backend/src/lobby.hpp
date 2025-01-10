@@ -24,8 +24,6 @@ class Player {
 
   void set_session(std::shared_ptr<ISession> session);
 
-  void set_position(Maze::position position);
-
   bool connected() const;
 
   void reset();
@@ -33,10 +31,10 @@ class Player {
   friend bool operator==(const Player& player, const ISession& session);
 
   Character character = Character::kUnset;
+  Maze::position position;
 
  private:
   std::shared_ptr<ISession> session_;
-  Maze::position position_;
 };
 
 class ILobby {
@@ -56,7 +54,7 @@ class ILobby {
     kInGame,
     /*
         Expecting incoming msg of chat msgs,
-        leaving, requesting new map
+        leaving, restarting
     */
     kGameFinished,
   };
@@ -80,7 +78,8 @@ class ILobbyManager;
 
 class Lobby : public ILobby, public std::enable_shared_from_this<Lobby> {
  public:
-  Lobby(net::io_context& ctx, std::string code, ILobbyManager& manager);
+  Lobby(net::io_context& ctx, std::string code, ILobbyManager& manager,
+        Maze (*maze_generator)() = &Maze::generate_maze);
 
   void join(ISession& session) override;
 
@@ -103,19 +102,22 @@ class Lobby : public ILobby, public std::enable_shared_from_this<Lobby> {
 
   std::optional<std::pair<const Player&, const Player&>> get_players(const ISession& session) const;
 
-  void character_select(ISession& session, document& doc);
+  void character_select(Player& self, Player& other, document& doc);
 
-  void leave_impl(ISession& session, Player& self, Player& other);
+  void leave_impl(Player& self, Player& other);
 
   void generate_maze();
 
-  void in_game(ISession& session, document& doc);
+  void in_game(Player& self, Player& other, document& doc);
+
+  void game_finished(Player& self, Player& other, document& doc);
 
   ILobbyManager& manager_;
   net::strand<net::io_context::executor_type> strand_;
   simdjson::ondemand::parser parser_;
   const std::string code_;
   State state_;
+  Maze (*maze_generator_)();
   Player p1_;
   Player p2_;
   Maze maze_;
