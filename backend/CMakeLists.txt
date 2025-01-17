@@ -8,6 +8,7 @@ project(io_blair_server
 option(ENABLE_TESTING "" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 include(SetupDependencies)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -22,3 +23,5 @@ if(ENABLE_TESTING)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+add_subdirectory(docs)
