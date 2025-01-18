@@ -11,7 +11,7 @@
 #include <thread>
 #include <vector>
 
-#include "lobby.hpp"
+#include "lobby_manager.hpp"
 
 namespace io_blair {
 

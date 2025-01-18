@@ -4,11 +4,11 @@
 #include <memory>
 #include <utility>
 
-#include "context.hpp"
 #include "json.hpp"
+#include "handler.hpp"
+#include "session_context.hpp"
 
 namespace io_blair {
-
 using std::shared_ptr;
 using std::string;
 

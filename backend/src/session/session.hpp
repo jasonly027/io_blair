@@ -9,26 +9,16 @@
 #include <memory>
 #include <vector>
 
-#include "handler.hpp"
-#include "lobby.hpp"
+#include "ihandler.hpp"
+#include "isession.hpp"
+#include "lobby_manager.hpp"
 
 namespace io_blair {
-
 namespace net       = boost::asio;
 using tcp           = net::ip::tcp;
 using error_code    = boost::system::error_code;
 namespace beast     = boost::beast;
 namespace websocket = beast::websocket;
-
-/**
- * @brief An interface for sessions that communicate with a client.
- */
-class ISession {
- public:
-  virtual void async_send(std::shared_ptr<const std::string> msg) = 0;
-
- private:
-};
 
 /**
  * @brief Session communicates with the client.
@@ -64,11 +54,6 @@ class Session : public ISession, public std::enable_shared_from_this<Session> {
    */
   void run();
 
-  /**
-   * @brief Queues a message to be sent to the client and immediately return.
-   * 
-   * @param msg The message to send.
-   */
   void async_send(std::shared_ptr<const std::string> msg) override;
 
  private:
