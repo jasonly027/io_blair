@@ -56,6 +56,8 @@ class Session : public ISession, public std::enable_shared_from_this<Session> {
 
   void async_send(std::shared_ptr<const std::string> msg) override;
 
+  void async_send(std::string msg) override;
+
  private:
   // Checks if the error code is fatal, meaning the session should terminate.
   static bool is_fatal(error_code);

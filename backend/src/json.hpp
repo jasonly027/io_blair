@@ -117,6 +117,22 @@ struct lobbyJoin {
  */
 std::string lobby_join(const std::optional<std::string_view>& code);
 
+struct lobbyOtherJoin {};
+
+std::string lobby_other_join();
+
+/**
+ * @brief Indicates the other session in the lobby has left.
+ */
+struct lobbyOtherLeave {};
+
+/**
+ * @brief Encodes lobbyOtherLeave as a string.
+ * 
+ * @return std::string 
+ */
+std::string lobby_other_leave();
+
 //NOLINTEND(readability-identifier-naming)
 }  // namespace out
 

@@ -7,6 +7,7 @@
 
 #include "igame.hpp"
 #include "ilobby.hpp"
+#include "json.hpp"
 #include "lobby_context.hpp"
 #include "session_context.hpp"
 
@@ -31,7 +32,12 @@ class Game : public IGame {
   void operator()(const json::in::LobbyJoin&) override;
 
  private:
+  // Session::make() creates a Session that uses Game. That Game
+  // has the same lifetime as the session so that Game's ctx_.session
+  // will always be a valid pointer to the session.
   SessionContext ctx_;
+
+  // The current state to forward events to.
   std::unique_ptr<IGameHandler> state_;
 };
 
@@ -65,8 +71,12 @@ class Lobby : public ILobby {
 
   void transition_to(std::unique_ptr<ILobbyHandler>) override;
 
+  void operator()(IGame&, SessionContext&, const json::in::LobbyLeave&) override;
+
  private:
   LobbyContext ctx_;
+
+  // The current state to forward events to.
   std::unique_ptr<ILobbyHandler> state_;
 };
 

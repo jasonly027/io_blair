@@ -19,6 +19,14 @@ class ISession {
    * @param msg The message to send.
    */
   virtual void async_send(std::shared_ptr<const std::string> msg) = 0;
+
+  /**
+   * @brief Convenience method for async_send() that automatically wraps the string
+   * in a shared_ptr.
+   * 
+   * @param msg The message to send.
+   */
+  virtual void async_send(std::string msg) = 0;
 };
 
 }  // namespace io_blair

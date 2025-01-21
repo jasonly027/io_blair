@@ -4,9 +4,10 @@
 #include <memory>
 #include <utility>
 
-#include "json.hpp"
 #include "handler.hpp"
+#include "json.hpp"
 #include "session_context.hpp"
+
 
 namespace io_blair {
 using std::shared_ptr;
@@ -43,6 +44,10 @@ void Session::run() {
 void Session::async_send(shared_ptr<const string> msg) {
   net::post(write_strand_,
             beast::bind_front_handler(&Session::on_send, shared_from_this(), std::move(msg)));
+}
+
+void Session::async_send(std::string msg) {
+  async_send(std::make_shared<const string>(std::move(msg)));
 }
 
 bool Session::is_fatal(error_code ec) {

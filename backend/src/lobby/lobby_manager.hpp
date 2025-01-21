@@ -1,3 +1,6 @@
+/**
+ * @file lobby_manager.hpp
+ */
 #pragma once
 
 #include <functional>
@@ -20,6 +23,8 @@ class LobbyManager : public ILobbyManager {
   LobbyContext create(std::weak_ptr<ISession> session) override;
 
   std::optional<LobbyContext> join(std::weak_ptr<ISession> session, std::string_view code) override;
+
+  void leave(const std::weak_ptr<ISession>& session, std::string_view code) override;
 
  private:
   std::string generate_code();

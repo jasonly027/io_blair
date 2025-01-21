@@ -34,7 +34,7 @@ void Prelobby::operator()(IGame& game, SessionContext& ctx, const json::in::Lobb
 void Prelobby::operator()(IGame& game, SessionContext& ctx, const json::in::LobbyJoin& ev) {
   auto opt = ctx.lobby_manager.join(ctx.session, ev.code);
   if (!opt.has_value()) {
-    ctx.send(jout::lobby_join(nullopt));
+    ctx.session.lock()->async_send(jout::lobby_join(nullopt));
     return;
   }
 
@@ -44,7 +44,7 @@ void Prelobby::operator()(IGame& game, SessionContext& ctx, const json::in::Lobb
 void Prelobby::transition_to_lobby(IGame& game, SessionContext& ctx, LobbyContext lob_ctx) {
   auto code = lob_ctx.code;
   game.transition_to(std::make_unique<Lobby>(std::move(lob_ctx)));
-  ctx.send(jout::lobby_join(code));
+  ctx.session.lock()->async_send(jout::lobby_join(code));
 }
 
 Lobby::Lobby(LobbyContext ctx)
@@ -52,6 +52,11 @@ Lobby::Lobby(LobbyContext ctx)
 
 void Lobby::transition_to(std::unique_ptr<ILobbyHandler> handler) {
   state_ = std::move(handler);
+}
+
+
+void Lobby::operator()(IGame& game, SessionContext& ctx, const json::in::LobbyLeave&) {
+
 }
 
 }  // namespace io_blair

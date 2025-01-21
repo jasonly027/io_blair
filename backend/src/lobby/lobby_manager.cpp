@@ -33,10 +33,19 @@ LobbyContext LobbyManager::create(weak_ptr<ISession> session) {
 optional<LobbyContext> LobbyManager::join(weak_ptr<ISession> session, string_view code) {
   guard lock(mutex_);
 
-  if (auto it = lobbies_.find(code); it != lobbies_.end()) {
+  if (const auto it = lobbies_.find(code); it != lobbies_.end()) {
     return it->second.join(std::move(session));
   }
   return nullopt;
+}
+
+
+void LobbyManager::leave(const std::weak_ptr<ISession>& session, std::string_view code) {
+  guard lock(mutex_);
+
+  if (const auto it = lobbies_.find(code); it != lobbies_.end()) {
+    it->second.leave(session);
+  }
 }
 
 string LobbyManager::generate_code() {
@@ -46,6 +55,7 @@ string LobbyManager::generate_code() {
   thread_local mt19937 gen{random_device{}()};
   thread_local uniform_int_distribution<string::size_type> pick(0, strlen(kCharacters) - 1);
 
+  // Keep generating until the code is unique.
   string res(kCodeLength, '#');
   do {
     std::generate_n(res.begin(), res.size(), [&] { return kCharacters[pick(gen)]; });

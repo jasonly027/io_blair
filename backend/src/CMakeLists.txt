@@ -5,6 +5,7 @@ add_library(${PROJECT_NAME}_lib STATIC
 
     session/session.cpp
     session/session_context.cpp
+    session/session_view.cpp
 
     handler/ihandler.cpp
     handler/handler.cpp
