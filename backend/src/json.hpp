@@ -81,7 +81,7 @@ struct CharacterConfirm {
 /**
  * @brief A union of all possible structs.
  */
-using AllJsonTypes = rfl::TaggedUnion<"type", LobbyCreate, LobbyJoin>;
+using AllJsonTypes = rfl::TaggedUnion<"type", LobbyCreate, LobbyJoin, LobbyLeave>;
 
 }  // namespace in
 

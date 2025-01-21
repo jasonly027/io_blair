@@ -8,15 +8,17 @@
 
 
 namespace io_blair {
+using std::make_unique;
 using std::nullopt;
 using std::string_view;
+using std::unique_ptr;
 
 namespace jout = json::out;
 
 Game::Game(SessionContext ctx)
-    : ctx_(std::move(ctx)), state_(std::make_unique<Prelobby>()) {}
+    : ctx_(std::move(ctx)), state_(make_unique<Prelobby>()) {}
 
-void Game::transition_to(std::unique_ptr<IGameHandler> handler) {
+void Game::transition_to(unique_ptr<IGameHandler> handler) {
   state_ = std::move(handler);
 }
 
@@ -54,9 +56,9 @@ void Lobby::transition_to(std::unique_ptr<ILobbyHandler> handler) {
   state_ = std::move(handler);
 }
 
-
 void Lobby::operator()(IGame& game, SessionContext& ctx, const json::in::LobbyLeave&) {
-
+  ctx.lobby_manager.leave(ctx.session, ctx_.code);
+  game.transition_to(make_unique<Prelobby>());
 }
 
 }  // namespace io_blair
