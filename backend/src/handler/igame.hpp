@@ -37,6 +37,7 @@ class IGameHandler {
   virtual void operator()(IGame&, SessionContext&, const json::in::LobbyCreate&);
   virtual void operator()(IGame&, SessionContext&, const json::in::LobbyJoin&);
   virtual void operator()(IGame&, SessionContext&, const json::in::LobbyLeave&);
+  virtual void operator()(IGame&, SessionContext&, const json::in::Chat&);
 };
 
 }  // namespace io_blair

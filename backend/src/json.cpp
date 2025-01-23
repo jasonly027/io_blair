@@ -4,8 +4,10 @@
 
 #include "ihandler.hpp"
 
-
 namespace io_blair::json {
+using rfl::AddStructName;
+using rfl::Processors;
+using rfl::SnakeCaseToCamelCase;
 using std::optional;
 using std::string;
 using std::string_view;
@@ -18,8 +20,7 @@ void decode(const string& data, IHandler& handler) {
 
 namespace {
 string encode(const auto& obj) {
-  using Processors = rfl::
-      Processors<rfl::AddStructName<"type">, rfl::SnakeCaseToCamelCase, rfl::UnderlyingEnums>;
+  using Processors = Processors<AddStructName<"type">, SnakeCaseToCamelCase>;
   return rfl::json::write<Processors>(obj);
 }
 
@@ -37,6 +38,11 @@ string lobby_other_join() {
 string lobby_other_leave() {
   return encode(lobbyOtherLeave{});
 }
+
+string chat_msg(string_view msg) {
+  return encode(chat{msg});
+}
+
 }  // namespace out
 
 }  // namespace io_blair::json

@@ -15,8 +15,8 @@ using ::testing::StrictMock;
 
 TEST(SessionViewShould, ForwardSendStrToRealSession) {
   auto sess = make_shared<MockSession>();
+  const string str = "arbitrary";
 
-  const string str;
   EXPECT_CALL(*sess, async_send(str));
 
   SessionView view(sess);
@@ -25,8 +25,8 @@ TEST(SessionViewShould, ForwardSendStrToRealSession) {
 
 TEST(SessionViewShould, ForwardSendSharedStrToRealSession) {
   auto sess = make_shared<MockSession>();
+  const auto str = make_shared<const string>("arbitrary");
 
-  const auto str = make_shared<const string>();
   EXPECT_CALL(*sess, async_send(str));
 
   SessionView view(sess);
@@ -35,9 +35,9 @@ TEST(SessionViewShould, ForwardSendSharedStrToRealSession) {
 
 TEST(SessionViewShould, NotForwardSendWhenReset) {
   auto sess = make_shared<StrictMock<MockSession>>();
-
   SessionView view(sess);
   view.reset();
+
   view.async_send("");
   view.async_send(make_shared<const string>());
 }
@@ -57,46 +57,41 @@ TEST(SessionViewShould, NotSetWhenNotExpired) {
 
 TEST(SessionViewEqualityShould, BeFalseWhenExpired) {
   SessionView view;
-
   auto ptr = make_shared<MockSession>();
-  EXPECT_FALSE(view == ptr);
 
-  EXPECT_FALSE(view == nullptr);
+  EXPECT_NE(view , ptr);
+  EXPECT_NE(view , nullptr);
 }
 
 TEST(SessionViewEqualityShould, BeFalseWhenPtrIsNull) {
   SessionView v1;
-  EXPECT_FALSE(v1 == nullptr);
+  EXPECT_NE(v1, nullptr);
 
   auto sess = make_shared<MockSession>();
   SessionView v2(sess);
-  EXPECT_FALSE(v2 == nullptr);
+  EXPECT_NE(v2, nullptr);
 }
-
 
 TEST(SessionViewEqualityShould, BeFalseWhenDiffSessions) {
   auto s1 = make_shared<MockSession>();
+  auto s2 = make_shared<MockSession>();
   SessionView view(s1);
 
-  auto s2 = make_shared<MockSession>();
-  
-  EXPECT_FALSE(view == s2);
+  EXPECT_NE(view, s2);
 }
 
 TEST(SessionViewEqualityShould, BeTrueWhenSameSession) {
   auto sess = make_shared<MockSession>();
   SessionView view(sess);
-  
-  EXPECT_TRUE(view == sess);
+
+  EXPECT_EQ(view, sess);
 }
 
-TEST(SessionViewEqualityShould, BeTrueWhenViewOfItself) {
+TEST(SessionViewEqualityShould, BeTrueWhenViewingItself) {
   auto view = make_shared<SessionView>();
   view->try_set(view);
 
-  EXPECT_TRUE(*view == view);
+  EXPECT_EQ(*view, view);
 }
 
-
-
-}  // namespace io_blair::testing
+} // namespace io_blair::testing

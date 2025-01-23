@@ -35,7 +35,7 @@ void SessionView::reset() {
   session_.reset();
 }
 
-bool operator==(SessionView& lhs, const std::shared_ptr<ISession>& rhs) {
+bool operator==(const SessionView& lhs, const std::shared_ptr<ISession>& rhs) {
   guard lock(lhs.mutex_);
 
   if (lhs.session_.expired() || rhs == nullptr) {

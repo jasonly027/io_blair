@@ -23,11 +23,15 @@ class LobbyData {
 
   /**
    * @brief Attempts to place \p session into the lobby.
+   * Operation will succeed if the lobby isn't full or
+   * at least one of the sessions already in the lobby
+   * has expired.
    * 
    * @param session The session trying to join.
-   * @return std::optional<LobbyContext>. A LobbyContext is returned if
-   * there was space for the session. A nullopt is returned when the
-   * lobby is full.
+   * @return LobbyContext. The session was
+   * successfully placed into the lobby.
+   * @return nullopt. The session couldn't be placed
+   * into the lobby, indicating it was full.
    */
   std::optional<LobbyContext> join(std::weak_ptr<ISession> session);
 

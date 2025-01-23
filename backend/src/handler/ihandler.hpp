@@ -16,6 +16,8 @@ class IHandler {
   virtual void operator()(const json::in::LobbyCreate&);
   virtual void operator()(const json::in::LobbyJoin&);
   virtual void operator()(const json::in::LobbyLeave&);
+  virtual void operator()(const json::in::Chat&);
+  virtual void operator()(const json::in::CharacterHover&);
 };
 
 }  // namespace io_blair

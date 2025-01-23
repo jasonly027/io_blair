@@ -69,7 +69,7 @@ class Server : public std::enable_shared_from_this<Server> {
   uint8_t threads_;
 
   // The pool of threads the server will use to perform async tasks.
-  std::vector<std::jthread> pool_;
+  std::vector<std::thread> pool_;
 
   // Each client session is given a reference to this manager to create/join lobbies.
   LobbyManager manager_;

@@ -6,6 +6,7 @@
 #include <optional>
 #include <rfl/json.hpp>
 #include <string>
+#include <string_view>
 
 #include "character.hpp"
 
@@ -30,14 +31,14 @@ namespace in {
  * @brief Indicates the client wants to create a new lobby.
  */
 struct LobbyCreate {
-  using Tag = rfl::Literal<"lobby_create">;
+  using Tag = rfl::Literal<"lobbyCreate">;
 };
 
 /**
  * @brief Indicates the client wants to join a lobby.
  */
 struct LobbyJoin {
-  using Tag = rfl::Literal<"lobby_join">;
+  using Tag = rfl::Literal<"lobbyJoin">;
   /**
    * @brief The code for the lobby the client wants to join.
    */
@@ -48,7 +49,7 @@ struct LobbyJoin {
  * @brief Indicates the client wants to leave their lobby.
  */
 struct LobbyLeave {
-  using Tag = rfl::Literal<"lobby_leave">;
+  using Tag = rfl::Literal<"lobbyLeave">;
 };
 
 /**
@@ -66,7 +67,7 @@ struct Chat {
  * @brief Indicates the champion the client is hovering.
  */
 struct CharacterHover {
-  using Tag = rfl::Literal<"character_hover">;
+  using Tag = rfl::Literal<"characterHover">;
   Character character;
 };
 
@@ -74,14 +75,15 @@ struct CharacterHover {
  * @brief Indicates the champion the client is confirming.
  */
 struct CharacterConfirm {
-  using Tag = rfl::Literal<"character_confirm">;
+  using Tag = rfl::Literal<"characterConfirm">;
   Character character;
 };
 
 /**
  * @brief A union of all possible structs.
  */
-using AllJsonTypes = rfl::TaggedUnion<"type", LobbyCreate, LobbyJoin, LobbyLeave>;
+using AllJsonTypes
+    = rfl::TaggedUnion<"type", LobbyCreate, LobbyJoin, LobbyLeave, Chat, CharacterHover>;
 
 }  // namespace in
 
@@ -132,6 +134,12 @@ struct lobbyOtherLeave {};
  * @return std::string 
  */
 std::string lobby_other_leave();
+
+struct chat {
+  std::string_view msg;
+};
+
+std::string chat_msg(std::string_view msg);
 
 //NOLINTEND(readability-identifier-naming)
 }  // namespace out

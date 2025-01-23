@@ -28,6 +28,9 @@ void Game::operator()(const json::in::LobbyCreate& ev) {
 void Game::operator()(const json::in::LobbyJoin& ev) {
   (*state_)(*this, ctx_, ev);
 }
+void Game::operator()(const json::in::Chat& ev) {
+  (*state_)(*this, ctx_, ev);
+}
 
 void Prelobby::operator()(IGame& game, SessionContext& ctx, const json::in::LobbyCreate&) {
   transition_to_lobby(game, ctx, ctx.lobby_manager.create(ctx.session));
@@ -59,6 +62,10 @@ void Lobby::transition_to(std::unique_ptr<ILobbyHandler> handler) {
 void Lobby::operator()(IGame& game, SessionContext& ctx, const json::in::LobbyLeave&) {
   ctx.lobby_manager.leave(ctx.session, ctx_.code);
   game.transition_to(make_unique<Prelobby>());
+}
+
+void Lobby::operator()(IGame&, SessionContext&, const json::in::Chat& ev) {
+  ctx_.other.async_send(jout::chat_msg(ev.msg));
 }
 
 }  // namespace io_blair

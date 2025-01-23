@@ -45,6 +45,7 @@ void LobbyData::leave(const weak_ptr<ISession>& session) {
 
 bool LobbyData::leave(const weak_ptr<ISession>& session, SessionView& a, SessionView& b) {
   if (session.lock() == a) {
+    a.reset();
     b.async_send(jout::lobby_other_leave());
     return true;
   }

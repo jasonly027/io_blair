@@ -30,6 +30,7 @@ class Game : public IGame {
 
   void operator()(const json::in::LobbyCreate&) override;
   void operator()(const json::in::LobbyJoin&) override;
+  void operator()(const json::in::Chat&) override;
 
  private:
   // Session::make() creates a Session that uses Game. That Game
@@ -72,6 +73,7 @@ class Lobby : public ILobby {
   void transition_to(std::unique_ptr<ILobbyHandler>) override;
 
   void operator()(IGame&, SessionContext&, const json::in::LobbyLeave&) override;
+  void operator()(IGame&, SessionContext&, const json::in::Chat&) override;
 
  private:
   LobbyContext ctx_;

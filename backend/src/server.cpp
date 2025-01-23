@@ -69,6 +69,12 @@ void Server::prepare_exit() {
     if (acceptor_.is_open()) {
       acceptor_.close();
     }
+
+    for (auto& thread : pool_) {
+      if (thread.joinable()) {
+        thread.join();
+      }
+    }
   });
 }
 

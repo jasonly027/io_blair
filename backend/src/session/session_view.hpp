@@ -19,7 +19,8 @@ class SessionView : public ISession {
   /**
    * @brief Construct a new Session View object.
    * 
-   * @param session The session to view.
+   * @param session The session to view. If no session is passed, view
+   * is considered expired.
    */
   explicit SessionView(std::weak_ptr<ISession> session = {});
 
@@ -64,11 +65,11 @@ class SessionView : public ISession {
    * @param rhs. The pointer to an ISession.
    * @return bool 
    */
-  friend bool operator==(SessionView& lhs, const std::shared_ptr<ISession>& rhs);
+  friend bool operator==(const SessionView& lhs, const std::shared_ptr<ISession>& rhs);
 
  private:
   std::weak_ptr<ISession> session_;
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
 };
 
 }  // namespace io_blair
