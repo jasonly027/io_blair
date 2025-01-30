@@ -1,5 +1,5 @@
 #include "lobby_data.hpp"
-#include "mock_session.hpp"
+#include "mock/mock_session.hpp"
 #include "gmock/gmock.h"
 #include <gtest/gtest.h>
 #include <memory>

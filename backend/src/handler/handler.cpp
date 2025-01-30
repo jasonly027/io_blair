@@ -3,7 +3,6 @@
 #include <memory>
 #include <utility>
 
-#include "json.hpp"
 #include "lobby_context.hpp"
 
 
@@ -28,7 +27,16 @@ void Game::operator()(const json::in::LobbyCreate& ev) {
 void Game::operator()(const json::in::LobbyJoin& ev) {
   (*state_)(*this, ctx_, ev);
 }
+void Game::operator()(const json::in::LobbyLeave& ev) {
+  (*state_)(*this, ctx_, ev);
+}
 void Game::operator()(const json::in::Chat& ev) {
+  (*state_)(*this, ctx_, ev);
+}
+void Game::operator()(const json::in::CharacterHover& ev) {
+  (*state_)(*this, ctx_, ev);
+}
+void Game::operator()(const json::in::CharacterConfirm& ev) {
   (*state_)(*this, ctx_, ev);
 }
 
@@ -59,13 +67,29 @@ void Lobby::transition_to(std::unique_ptr<ILobbyHandler> handler) {
   state_ = std::move(handler);
 }
 
-void Lobby::operator()(IGame& game, SessionContext& ctx, const json::in::LobbyLeave&) {
-  ctx.lobby_manager.leave(ctx.session, ctx_.code);
+void Lobby::operator()(IGame& game, SessionContext& sess_ctx, const json::in::LobbyLeave&) {
+  sess_ctx.lobby_manager.leave(sess_ctx.session, ctx_.code);
   game.transition_to(make_unique<Prelobby>());
 }
 
 void Lobby::operator()(IGame&, SessionContext&, const json::in::Chat& ev) {
   ctx_.other.async_send(jout::chat_msg(ev.msg));
 }
+
+void Lobby::operator()(IGame&, SessionContext& sess_ctx, const json::in::CharacterHover& ev) {
+  (*state_)(*this, sess_ctx, ctx_, ev);
+}
+void Lobby::operator()(IGame&, SessionContext& sess_ctx, const json::in::CharacterConfirm& ev) {
+  (*state_)(*this, sess_ctx, ctx_, ev);
+}
+
+void CharacterSelect::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx,
+                                 const json::in::CharacterHover& ev) {
+  lob_ctx.other.async_send(jout::character_hover(ev.character));
+}
+
+void CharacterSelect::operator()(ILobby&, SessionContext&, LobbyContext&,
+                                 const json::in::CharacterConfirm&) {}
+
 
 }  // namespace io_blair

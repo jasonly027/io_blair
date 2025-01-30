@@ -22,33 +22,29 @@ LobbyData::LobbyData(string code)
     : code_(std::move(code)) {}
 
 optional<LobbyContext> LobbyData::join(weak_ptr<ISession> session) {
-  if (auto opt = join(session, p1_, p2_)) {
-    return std::move(opt);
+  if (p1_.try_set(session)) {
+    p2_.async_send(jout::lobby_other_join());
+    return LobbyContext{code_, p2_};
   }
-  return join(std::move(session), p2_, p1_);
-}
 
-optional<LobbyContext> LobbyData::join(weak_ptr<ISession> session, SessionView& a, SessionView& b) {
-  if (a.try_set(std::move(session))) {
-    b.async_send(jout::lobby_other_join());
-    return LobbyContext{code_, b};
+  if (p2_.try_set(std::move(session))) {
+    p1_.async_send(jout::lobby_other_join());
+    return LobbyContext{code_, p1_};
   }
+
   return nullopt;
 }
 
 void LobbyData::leave(const weak_ptr<ISession>& session) {
-  if (leave(session, p1_, p2_)) {
-    return;
+  auto sess = session.lock();
+
+  if (sess == p1_) {
+    p1_.reset();
+    p2_.async_send(jout::lobby_other_leave());
+  } else if (sess == p2_) {
+    p2_.reset();
+    p1_.async_send(jout::lobby_other_leave());
   }
-  leave(session, p2_, p1_);
 }
 
-bool LobbyData::leave(const weak_ptr<ISession>& session, SessionView& a, SessionView& b) {
-  if (session.lock() == a) {
-    a.reset();
-    b.async_send(jout::lobby_other_leave());
-    return true;
-  }
-  return false;
-}
 }  // namespace io_blair

@@ -6,6 +6,9 @@
 #include <memory>
 
 #include "igame.hpp"
+#include "json.hpp"
+#include "lobby_context.hpp"
+#include "session_context.hpp"
 
 
 namespace io_blair {
@@ -32,5 +35,8 @@ class ILobby : public IGameHandler {
 class ILobbyHandler {
  public:
   virtual ~ILobbyHandler() = default;
+  virtual void operator()(ILobby&, SessionContext&, LobbyContext&, const json::in::CharacterHover&);
+  virtual void operator()(ILobby&, SessionContext&, LobbyContext&,
+                          const json::in::CharacterConfirm&);
 };
 }  // namespace io_blair

@@ -119,8 +119,16 @@ struct lobbyJoin {
  */
 std::string lobby_join(const std::optional<std::string_view>& code);
 
+/**
+ * @brief Indicates another session has joined the lobby.
+ */
 struct lobbyOtherJoin {};
 
+/**
+ * @brief Encodes lobbyOtherJoin as a string.
+ *
+ * @return std::string 
+ */
 std::string lobby_other_join();
 
 /**
@@ -135,11 +143,35 @@ struct lobbyOtherLeave {};
  */
 std::string lobby_other_leave();
 
+/**
+ * @brief Contains a message for the other client.
+ */
 struct chat {
   std::string_view msg;
 };
 
+/**
+ * @brief Encodes chat as a string.
+ * 
+ * @param msg The chat message to send.
+ * @return std::string 
+ */
 std::string chat_msg(std::string_view msg);
+
+/**
+ * @brief Indicates the character hovered by the other client.
+ */
+struct characterHover {
+  Character character;
+};
+
+/**
+ * @brief Encodes characterHover as a string.
+ * 
+ * @param character The character hovered.
+ * @return std::string 
+ */
+std::string character_hover(Character character);
 
 //NOLINTEND(readability-identifier-naming)
 }  // namespace out

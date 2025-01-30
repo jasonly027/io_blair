@@ -5,5 +5,7 @@ void IGameHandler::operator()(IGame&, SessionContext&, const json::in::LobbyCrea
 void IGameHandler::operator()(IGame&, SessionContext&, const json::in::LobbyJoin&) {}
 void IGameHandler::operator()(IGame&, SessionContext&, const json::in::LobbyLeave&) {}
 void IGameHandler::operator()(IGame&, SessionContext&, const json::in::Chat&) {}
+void IGameHandler::operator()(IGame&, SessionContext&, const json::in::CharacterHover&) {}
+void IGameHandler::operator()(IGame&, SessionContext&, const json::in::CharacterConfirm&) {}
 
 }  // namespace io_blair

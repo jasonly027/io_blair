@@ -43,6 +43,10 @@ string chat_msg(string_view msg) {
   return encode(chat{msg});
 }
 
+string character_hover(Character character) {
+  return encode(characterHover{character});
+}
+
 }  // namespace out
 
 }  // namespace io_blair::json

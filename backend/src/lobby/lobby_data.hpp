@@ -12,6 +12,10 @@
 #include "session_view.hpp"
 
 namespace io_blair {
+/**
+ * @brief Stores the two sessions in the lobby in SessionView's 
+ * and the lobby's LobbyController.
+ */
 class LobbyData {
  public:
   /**
@@ -49,10 +53,6 @@ class LobbyData {
   const std::string code_;
 
  private:
-  std::optional<LobbyContext> join(std::weak_ptr<ISession> session, SessionView& a, SessionView& b);
-
-  static bool leave(const std::weak_ptr<ISession>& session, SessionView& a, SessionView& b);
-
   // Represent the two possible sessions in the lobby.
   SessionView p1_;
   SessionView p2_;

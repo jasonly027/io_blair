@@ -26,8 +26,8 @@ LobbyContext LobbyManager::create(weak_ptr<ISession> session) {
 
   string code = generate_code();
 
-  lobbies_.try_emplace(code, code);
-  return *lobbies_.find(code)->second.join(std::move(session));
+  auto [it, _] = lobbies_.try_emplace(code, code);
+  return *it->second.join(std::move(session));
 }
 
 optional<LobbyContext> LobbyManager::join(weak_ptr<ISession> session, string_view code) {

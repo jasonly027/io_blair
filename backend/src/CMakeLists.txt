@@ -10,10 +10,12 @@ add_library(${PROJECT_NAME}_lib STATIC
     handler/ihandler.cpp
     handler/handler.cpp
     handler/igame.cpp
+    handler/ilobby.cpp
 
     lobby/lobby_data.cpp
     lobby/lobby_manager.cpp
     lobby/lobby_context.cpp
+    lobby/lobby_controller.cpp
 )
 target_include_directories(${PROJECT_NAME}_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

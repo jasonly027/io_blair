@@ -6,5 +6,6 @@ void IHandler::operator()(const json::in::LobbyJoin&) {}
 void IHandler::operator()(const json::in::LobbyLeave&) {}
 void IHandler::operator()(const json::in::Chat&) {}
 void IHandler::operator()(const json::in::CharacterHover&) {}
+void IHandler::operator()(const json::in::CharacterConfirm&) {}
 
 }  // namespace io_blair

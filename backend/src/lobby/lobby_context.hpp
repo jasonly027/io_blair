@@ -5,7 +5,7 @@
 
 #include <string_view>
 
-#include "session_view.hpp"
+#include "isession.hpp"
 
 namespace io_blair {
 /**
@@ -19,7 +19,7 @@ struct LobbyContext {
   /**
    * @brief A reference to the other session in the lobby.
    */
-  SessionView& other;
+  ISession& other;
 };
 
 }  // namespace io_blair
