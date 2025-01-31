@@ -6,13 +6,14 @@
 #include <memory>
 #include <mutex>
 
+#include "event.hpp"
 #include "isession.hpp"
 
 
 namespace io_blair {
 /**
  * @brief A thread-safe view of an ISession. SessionView holds a weak_ptr to
- * an actual ISession. Sending a message to an expired ISession is safely aborted.
+ * an actual ISession. Overrides safely abort if the weak_ptr has expired.
  */
 class SessionView : public ISession {
  public:
@@ -24,21 +25,11 @@ class SessionView : public ISession {
    */
   explicit SessionView(std::weak_ptr<ISession> session = {});
 
-  /**
-   * @brief Queues a message to be sent to the client and immediately return.
-   * If the ISession has expired, nothing occurs.
-   * 
-   * @param msg The message to send.
-   */
   void async_send(std::shared_ptr<const std::string> msg) override;
 
-  /**
-   * @brief Convenience method for async_send() that automatically wraps the string
-   * in a shared_ptr. If the ISession has expired, nothing occurs.
-   * 
-   * @param msg The message to send.
-   */
   void async_send(std::string msg) override;
+
+  void async_handle(SessionEvent ev) override;
 
   /**
    * @brief Attempt to reassign an expired session with a new session.

@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "ihandler.hpp"
+#include "event.hpp"
 #include "json.hpp"
 #include "session_context.hpp"
 
@@ -14,11 +14,9 @@ namespace io_blair {
 class IGameHandler;
 
 /**
- * @brief An interface for a state context of IGameHandler. Implementations
- * should look to forward the event handlers of IHandler to the current
- * IGameHandler state of IGame.
+ * @brief An interface for a state context of IGameHandler.
  */
-class IGame : public IHandler {
+class IGame {
  public:
   /**
    * @brief Transitions the current state to \p handler.
@@ -40,6 +38,7 @@ class IGameHandler {
   virtual void operator()(IGame&, SessionContext&, const json::in::Chat&);
   virtual void operator()(IGame&, SessionContext&, const json::in::CharacterHover&);
   virtual void operator()(IGame&, SessionContext&, const json::in::CharacterConfirm&);
+  virtual void operator()(IGame&, SessionContext&, SessionEvent);
 };
 
 }  // namespace io_blair

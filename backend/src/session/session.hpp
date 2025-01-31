@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+#include "event.hpp"
 #include "ihandler.hpp"
 #include "isession.hpp"
 #include "lobby_manager.hpp"
@@ -57,6 +58,8 @@ class Session : public ISession, public std::enable_shared_from_this<Session> {
   void async_send(std::shared_ptr<const std::string> msg) override;
 
   void async_send(std::string msg) override;
+
+  void async_handle(SessionEvent) override;
 
  private:
   // Checks if the error code is fatal, meaning the session should terminate.

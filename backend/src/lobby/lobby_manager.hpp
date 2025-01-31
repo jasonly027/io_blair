@@ -14,7 +14,7 @@
 #include "ilobby_manager.hpp"
 #include "isession.hpp"
 #include "lobby_context.hpp"
-#include "lobby_data.hpp"
+#include "lobby_controller.hpp"
 #include "string_hash.hpp"
 
 namespace io_blair {
@@ -30,7 +30,7 @@ class LobbyManager : public ILobbyManager {
   std::string generate_code();
 
   std::recursive_mutex mutex_;
-  std::unordered_map<std::string, LobbyData, StringHash, std::equal_to<>> lobbies_;
+  std::unordered_map<std::string, LobbyController, StringHash, std::equal_to<>> lobbies_;
 };
 
 }  // namespace io_blair

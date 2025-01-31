@@ -3,9 +3,11 @@
  */
 #pragma once
 
+#include <memory>
 #include <string_view>
 
 #include "isession.hpp"
+#include "isession_controller.hpp"
 
 namespace io_blair {
 /**
@@ -20,6 +22,8 @@ struct LobbyContext {
    * @brief A reference to the other session in the lobby.
    */
   ISession& other;
+
+  std::unique_ptr<ISessionController> controller;
 };
 
 }  // namespace io_blair

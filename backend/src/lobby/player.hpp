@@ -1,8 +1,16 @@
+/**
+ * @file player.hpp
+ */
 #pragma once
 
+#include "character.hpp"
+#include "session_view.hpp"
+
+
 namespace io_blair {
-class Player {
- public:
- private:
+struct Player {
+  SessionView session;
+  Character character;
 };
+
 }  // namespace io_blair

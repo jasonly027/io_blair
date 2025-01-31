@@ -37,7 +37,7 @@ class LobbyShould : public ::testing::Test {
 };
 
 TEST_F(LobbyShould, TransitionOnLeave) {
-  Lobby lobby(lob_ctx_);
+  Lobby lobby(std::move(lob_ctx_));
 
   EXPECT_CALL(manager_, leave);
   EXPECT_CALL(game_, transition_to);
@@ -46,7 +46,7 @@ TEST_F(LobbyShould, TransitionOnLeave) {
 }
 
 TEST_F(LobbyShould, SendOnMsg) {
-  Lobby lobby(lob_ctx_);
+  Lobby lobby(std::move(lob_ctx_));
   const string msg = "arbitrary";
 
   EXPECT_CALL(*other_, async_send(jout::chat_msg(msg)));

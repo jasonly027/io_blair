@@ -6,6 +6,9 @@
 #include <memory>
 #include <string>
 
+#include "event.hpp"
+
+
 namespace io_blair {
 /**
  * @brief An interface for sessions that communicate with a client.
@@ -13,6 +16,7 @@ namespace io_blair {
 class ISession {
  public:
   virtual ~ISession() = default;
+
   /**
    * @brief Queues a message to be sent to the client and immediately return.
    * 
@@ -27,6 +31,13 @@ class ISession {
    * @param msg The message to send.
    */
   virtual void async_send(std::string msg) = 0;
+
+  /**
+   * @brief Queues an event to be handled by the session.
+   * 
+   * @param ev The event to be handled.
+   */
+  virtual void async_handle(SessionEvent ev) = 0;
 };
 
 }  // namespace io_blair

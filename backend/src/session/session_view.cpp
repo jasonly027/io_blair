@@ -1,5 +1,8 @@
 #include "session_view.hpp"
 
+#include "event.hpp"
+
+
 namespace io_blair {
 using guard = std::lock_guard<std::mutex>;
 
@@ -17,6 +20,13 @@ void SessionView::async_send(std::string msg) {
   guard lock(mutex_);
   if (auto sess = session_.lock()) {
     sess->async_send(std::move(msg));
+  }
+}
+
+void SessionView::async_handle(SessionEvent ev) {
+  guard lock(mutex_);
+  if (auto sess = session_.lock()) {
+    sess->async_handle(ev);
   }
 }
 

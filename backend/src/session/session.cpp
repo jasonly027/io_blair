@@ -50,6 +50,13 @@ void Session::async_send(std::string msg) {
   async_send(std::make_shared<const string>(std::move(msg)));
 }
 
+
+void Session::async_handle(SessionEvent ev) {
+  net::post(read_strand_, [self = shared_from_this(), ev] {
+    (*self->handler_)(ev);
+  });
+}
+
 bool Session::is_fatal(error_code ec) {
 #ifndef NDEBUG
   std::cerr << "Websocket read err: " << ec << '\n';

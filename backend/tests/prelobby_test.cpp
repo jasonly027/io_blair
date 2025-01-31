@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "handler.hpp"
 #include "json.hpp"
@@ -41,7 +42,7 @@ class PrelobbyShould : public ::testing::Test {
 TEST_F(PrelobbyShould, CreateLobby) {
   Prelobby prelobby;
 
-  EXPECT_CALL(manager_, create).WillOnce(Return(lob_ctx_));
+  EXPECT_CALL(manager_, create).WillOnce(Return(std::move(lob_ctx_)));
   EXPECT_CALL(game_, transition_to);
   EXPECT_CALL(*sess_, async_send(jout::lobby_join(code_)));
 
@@ -51,7 +52,7 @@ TEST_F(PrelobbyShould, CreateLobby) {
 TEST_F(PrelobbyShould, TransitionOnLobbyCtx) {
   Prelobby prelobby;
 
-  EXPECT_CALL(manager_, join).WillOnce(Return(lob_ctx_));
+  EXPECT_CALL(manager_, join).WillOnce(Return(std::move(lob_ctx_)));
   EXPECT_CALL(game_, transition_to);
   EXPECT_CALL(*sess_, async_send(jout::lobby_join(code_)));
 

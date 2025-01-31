@@ -1,7 +1,7 @@
 add_executable(${PROJECT_NAME}_test
   json_test.cpp
   session_view_test.cpp
-  lobby_data_test.cpp
+  lobby_controller_test.cpp
   prelobby_test.cpp
   lobby_test.cpp
 )

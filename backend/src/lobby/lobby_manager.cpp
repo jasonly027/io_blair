@@ -2,11 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
-#include <memory>
 #include <random>
-
-#include "isession.hpp"
-#include "lobby_context.hpp"
 
 
 namespace io_blair {

@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "igame.hpp"
+#include "event.hpp"
 #include "json.hpp"
 #include "lobby_context.hpp"
 #include "session_context.hpp"
@@ -15,11 +15,9 @@ namespace io_blair {
 class ILobbyHandler;
 
 /**
- * @brief An interface for a state context of ILobbyHandler. Implementations
- * should look to forward the event handlers of IGameHandler to the current
- * ILobbyHandler state of ILobby.
+ * @brief An interface for a state context of ILobbyHandler.
  */
-class ILobby : public IGameHandler {
+class ILobby {
  public:
   /**
    * @brief Transitions the current state to \p handler.
@@ -38,5 +36,6 @@ class ILobbyHandler {
   virtual void operator()(ILobby&, SessionContext&, LobbyContext&, const json::in::CharacterHover&);
   virtual void operator()(ILobby&, SessionContext&, LobbyContext&,
                           const json::in::CharacterConfirm&);
+  virtual void operator()(ILobby&, SessionContext&, LobbyContext&, SessionEvent);
 };
 }  // namespace io_blair

@@ -3,11 +3,12 @@
  */
 #pragma once
 
+#include "event.hpp"
 #include "json.hpp"
 
 namespace io_blair {
 /**
- * @brief An interface for handlers usable with JsonDecoder. The default
+ * @brief An interface for an event handler. The default
  * implementation for the event handlers is to do nothing.
  */
 class IHandler {
@@ -19,6 +20,7 @@ class IHandler {
   virtual void operator()(const json::in::Chat&);
   virtual void operator()(const json::in::CharacterHover&);
   virtual void operator()(const json::in::CharacterConfirm&);
+  virtual void operator()(SessionEvent);
 };
 
 }  // namespace io_blair
