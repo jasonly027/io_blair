@@ -16,6 +16,7 @@ add_library(${PROJECT_NAME}_lib STATIC
     lobby/lobby_context.cpp
     lobby/lobby_controller.cpp
     lobby/session_controller.cpp
+    lobby/player.cpp
 )
 target_include_directories(${PROJECT_NAME}_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

@@ -3,11 +3,14 @@
 #include <memory>
 #include <mutex>
 
+#include "character.hpp"
+#include "event.hpp"
 #include "json.hpp"
 #include "session_controller.hpp"
 
 
 namespace io_blair {
+using std::make_shared;
 using std::make_unique;
 using std::nullopt;
 using std::optional;
@@ -37,16 +40,53 @@ optional<LobbyContext> LobbyController::join(weak_ptr<ISession> session) {
 
 void LobbyController::leave(const weak_ptr<ISession>& session) {
   guard lock(mutex_);
-
   auto sess = session.lock();
+
   if (sess == p1_.session) {
-    p1_.session.reset();
+    p1_.reset();
     p2_.session.async_send(jout::lobby_other_leave());
-  } else if (sess == p2_.session) {
-    p2_.session.reset();
+    return;
+  }
+
+  if (sess == p2_.session) {
+    p2_.reset();
     p1_.session.async_send(jout::lobby_other_leave());
+    return;
   }
 }
 
-void LobbyController::set_character(Player& self, Player& other, Character character) {}
+bool LobbyController::empty() const {
+  guard lock(mutex_);
+  return p1_.session.expired() && p2_.session.expired();
+}
+
+void LobbyController::set_character(Player& self, Player& other, Character character) {
+  guard lock(mutex_);
+
+  // Self is already character
+  if (character == self.character) {
+    return;
+  }
+  // Other is already character
+  if (character != Character::unknown && character == other.character) {
+    return;
+  }
+
+  self.character = character;
+  other.session.async_send(jout::character_confirm(character));
+
+  // If either hasn't chosen a character, don't transition to game yet.
+  if (self.character == Character::unknown || other.character == Character::unknown) {
+    return;
+  }
+
+  auto msg = make_shared<const string>(jout::transition_to_ingame());
+
+  self.session.async_handle(SessionEvent::kTransitionToInGame);
+  self.session.async_send(msg);
+
+  other.session.async_handle(SessionEvent::kTransitionToInGame);
+  other.session.async_send(std::move(msg));
+}
+
 }  // namespace io_blair

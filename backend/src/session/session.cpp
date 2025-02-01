@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 
+#include "event.hpp"
 #include "handler.hpp"
 #include "json.hpp"
 #include "session_context.hpp"
@@ -52,9 +53,7 @@ void Session::async_send(std::string msg) {
 
 
 void Session::async_handle(SessionEvent ev) {
-  net::post(read_strand_, [self = shared_from_this(), ev] {
-    (*self->handler_)(ev);
-  });
+  net::post(read_strand_, [self = shared_from_this(), ev] { (*self->handler_)(ev); });
 }
 
 bool Session::is_fatal(error_code ec) {
@@ -80,6 +79,8 @@ void Session::on_read(error_code ec, size_t) {
   if (ec) {
     if (!is_fatal(ec)) {
       async_read();
+    } else {
+      async_handle(SessionEvent::kCloseSession);
     }
     return;
   }

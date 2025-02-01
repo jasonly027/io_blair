@@ -29,6 +29,8 @@ class LobbyController : public ILobbyController {
 
   void leave(const std::weak_ptr<ISession>& session) override;
 
+  bool empty() const override;
+
   void set_character(Player& self, Player& other, Character character) override;
 
   /**
@@ -37,7 +39,7 @@ class LobbyController : public ILobbyController {
   const std::string code_;
 
  private:
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
 
   Player p1_;
   Player p2_;

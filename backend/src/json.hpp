@@ -173,6 +173,28 @@ struct characterHover {
  */
 std::string character_hover(Character character);
 
+/**
+ * @brief Indicates the character confirmed by the other client.
+ */
+struct characterConfirm {
+  Character character;
+};
+
+/**
+ * @brief Encodes characterConfirm as a string.
+ * 
+ * @param character The character confirmed.
+ * @return std::string 
+ */
+std::string character_confirm(Character character);
+
+/**
+ * @brief Indicates transition to in-game state.
+ */
+struct transitionToInGame {};
+
+std::string transition_to_ingame();
+
 //NOLINTEND(readability-identifier-naming)
 }  // namespace out
 

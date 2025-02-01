@@ -10,6 +10,10 @@ namespace io_blair {
  */
 enum class SessionEvent {
   /**
+   * @brief Indicates the session is closing.
+   */
+  kCloseSession,
+  /**
    * @brief Indicates Lobby should transition to InGame.
    */
   kTransitionToInGame

@@ -52,6 +52,14 @@ class ILobbyController {
    * @param session The session leaving the lobby.
    */
   virtual void leave(const std::weak_ptr<ISession>& session) = 0;
+
+  /**
+   * @brief Determines whether the lobby has no sessions in it.
+   * 
+   * @return true The lobby is empty.
+   * @return false The lobby isn't empty.
+   */
+  virtual bool empty() const = 0;
 };
 
 }  // namespace io_blair

@@ -47,6 +47,14 @@ string character_hover(Character character) {
   return encode(characterHover{character});
 }
 
+string character_confirm(Character character) {
+  return encode(characterConfirm{character});
+}
+
+string transition_to_ingame() {
+  return encode(transitionToInGame{});
+}
+
 }  // namespace out
 
 }  // namespace io_blair::json

@@ -46,6 +46,14 @@ class SessionView : public ISession {
   void reset();
 
   /**
+   * @brief Determines whether the underlying weak_ptr is expired.
+   * 
+   * @return true The session is expired.
+   * @return false The session isn't expired.
+   */
+  bool expired() const;
+
+  /**
    * @brief Checks whether the SessionView is a view of the same ISession
    * pointed to by the shared_ptr.
    *

@@ -4,19 +4,23 @@
 
 
 namespace io_blair {
+using std::shared_ptr;
+using std::string;
+using std::weak_ptr;
+
 using guard = std::lock_guard<std::mutex>;
 
-SessionView::SessionView(std::weak_ptr<ISession> session)
+SessionView::SessionView(weak_ptr<ISession> session)
     : session_(std::move(session)) {}
 
-void SessionView::async_send(std::shared_ptr<const std::string> msg) {
+void SessionView::async_send(shared_ptr<const string> msg) {
   guard lock(mutex_);
   if (auto sess = session_.lock()) {
     sess->async_send(std::move(msg));
   }
 }
 
-void SessionView::async_send(std::string msg) {
+void SessionView::async_send(string msg) {
   guard lock(mutex_);
   if (auto sess = session_.lock()) {
     sess->async_send(std::move(msg));
@@ -30,7 +34,7 @@ void SessionView::async_handle(SessionEvent ev) {
   }
 }
 
-bool SessionView::try_set(std::weak_ptr<ISession> session) {
+bool SessionView::try_set(weak_ptr<ISession> session) {
   guard lock(mutex_);
 
   if (session_.expired()) {
@@ -45,7 +49,12 @@ void SessionView::reset() {
   session_.reset();
 }
 
-bool operator==(const SessionView& lhs, const std::shared_ptr<ISession>& rhs) {
+bool SessionView::expired() const {
+  guard lock(mutex_);
+  return session_.expired();
+}
+
+bool operator==(const SessionView& lhs, const shared_ptr<ISession>& rhs) {
   guard lock(lhs.mutex_);
 
   if (lhs.session_.expired() || rhs == nullptr) {

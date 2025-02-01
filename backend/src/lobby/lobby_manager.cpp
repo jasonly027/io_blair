@@ -41,6 +41,10 @@ void LobbyManager::leave(const std::weak_ptr<ISession>& session, std::string_vie
 
   if (const auto it = lobbies_.find(code); it != lobbies_.end()) {
     it->second.leave(session);
+
+    if (it->second.empty()) {
+      lobbies_.erase(it);
+    }
   }
 }
 
