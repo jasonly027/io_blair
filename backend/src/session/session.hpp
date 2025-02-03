@@ -49,6 +49,10 @@ class Session : public ISession, public std::enable_shared_from_this<Session> {
    */
   Session(net::io_context& ctx, tcp::socket&& socket);
 
+#ifndef NDEBUG
+  ~Session() override;
+#endif
+
   /**
    * @brief Starts the session and immediately returns. Operations are done
    * on the io_context thread(s).

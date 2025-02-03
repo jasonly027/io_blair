@@ -1,5 +1,6 @@
 #include "session.hpp"
 
+#include <format>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -21,6 +22,12 @@ Session::Session(net::io_context& ctx, tcp::socket&& socket)
       handler_(nullptr) {
   ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::server));
 }
+
+#ifndef NDEBUG
+Session::~Session() {
+  std::cout << "Session d'tor\n";
+}
+#endif
 
 std::shared_ptr<Session> Session::make(net::io_context& ctx, tcp::socket&& socket,
                                        LobbyManager& manager) {
@@ -58,10 +65,14 @@ void Session::async_handle(SessionEvent ev) {
 
 bool Session::is_fatal(error_code ec) {
 #ifndef NDEBUG
-  std::cerr << "Websocket read err: " << ec << '\n';
+  std::cerr << std::format(
+      "Websocket read err ({}) [Fatal={}]\n",
+      ec.what(),
+      (ec == websocket::error::closed || ec == net::error::connection_aborted
+       || ec == net::error::connection_reset || ec == net::error::operation_aborted));
 #endif
   return ec == websocket::error::closed || ec == net::error::connection_aborted
-         || ec == net::error::operation_aborted;
+         || ec == net::error::connection_reset || ec == net::error::operation_aborted;
 }
 
 void Session::async_read() {
@@ -77,10 +88,10 @@ void Session::async_write() {
 
 void Session::on_read(error_code ec, size_t) {
   if (ec) {
-    if (!is_fatal(ec)) {
-      async_read();
-    } else {
+    if (is_fatal(ec)) {
       async_handle(SessionEvent::kCloseSession);
+    } else {
+      async_read();
     }
     return;
   }

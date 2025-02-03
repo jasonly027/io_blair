@@ -80,6 +80,9 @@ void Server::prepare_exit() {
 
 void Server::on_accept(error_code ec, tcp::socket socket) {
   if (!ec) {
+#ifndef NDEBUG
+    std::cerr << "Connection join\n";
+#endif
     Session::make(ctx_, std::move(socket), manager_)->run();
   }
   acceptor_.async_accept(ctx_, beast::bind_front_handler(&Server::on_accept, shared_from_this()));
