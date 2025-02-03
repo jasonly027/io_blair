@@ -1,0 +1,13 @@
+---
+
+---
+
+<canvas id="gameCanvas" class="w-[80%] h-[80%]"></canvas>
+<script>
+  import Game from "../scripts/Game"
+
+  const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+  const game = new Game(canvas);
+
+  game.run();
+</script>
