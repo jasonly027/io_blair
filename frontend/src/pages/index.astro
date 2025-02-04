@@ -1,5 +1,5 @@
 ---
-import Scene from "../components/Scene.astro";
+import Game from "../components/Game";
 ---
 
 <html lang="en">
@@ -10,7 +10,8 @@ import Scene from "../components/Scene.astro";
     <meta name="generator" content={Astro.generator} />
     <title>Astro</title>
   </head>
-  <body class="flex justify-center items-center h-screen">
-    <Scene />
+  <body>
+    <Game client:load />
+    <h1>Howdy</h1>
   </body>
 </html>
