@@ -1,3 +1,3 @@
 export default function Lobby() {
-  return <></>;
+  return <>Lobby!</>;
 }

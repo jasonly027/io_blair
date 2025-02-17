@@ -12,6 +12,8 @@ export default function Game() {
 }
 
 function State() {
+  console.log("State render");
+  
   const { gameStatus } = useSession();
 
   return (

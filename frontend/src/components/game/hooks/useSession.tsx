@@ -1,6 +1,13 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
 import Maze, { type Coordinates, cellFromNumber } from "../lib/Maze";
-import useSocket, { type SocketValues } from "./useSocket";
+import useConnection, { type ConnectionValues } from "./useConnection";
 
 const SessionContext = createContext<SessionValue | undefined>(undefined);
 
@@ -10,8 +17,9 @@ export enum GameStatus {
   InGame,
 }
 
-export interface SessionValue extends SocketValues {
+export interface SessionValue extends ConnectionValues {
   gameStatus: GameStatus;
+  setGameStatus: React.Dispatch<SetStateAction<GameStatus>>;
   maze: Maze;
   startCoords: Coordinates;
 }
@@ -19,28 +27,24 @@ export interface SessionValue extends SocketValues {
 export function SessionProvider({ children }: { children?: ReactNode }) {
   console.log("SessionProvider render");
 
-  const [gameStatus] = useState(GameStatus.Prelobby);
+  const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
 
-  const [maze] = useState<Maze>(
-    new Maze(
-      [
-        [0b0011, 0b1111, 0b1101],
-        [0b0110, 0b1101, 0b0101],
-        [0b0011, 0b1011, 0b1001],
-      ].map((row) => row.map(cellFromNumber)),
-    ),
-  );
+  const [maze] = useState<Maze>(getDefaultMaze);
 
   const [startCoords] = useState<Coordinates>([0, 0]);
 
-  const socketValues = useSocket();
+  const connection = useConnection();
 
-  const sessionValue: SessionValue = {
-    gameStatus,
-    maze,
-    startCoords,
-    ...socketValues,
-  };
+  const sessionValue: SessionValue = useMemo(
+    () => ({
+      gameStatus,
+      setGameStatus,
+      maze,
+      startCoords,
+      ...connection,
+    }),
+    [gameStatus, maze, startCoords, connection],
+  );
 
   return (
     <SessionContext.Provider value={sessionValue}>
@@ -55,4 +59,14 @@ export function useSession() {
     throw new Error("useSession must be used within a SessionProvider");
   }
   return context;
+}
+
+function getDefaultMaze(): Maze {
+  return new Maze(
+    [
+      [0b0011, 0b1111, 0b1101],
+      [0b0110, 0b1101, 0b0101],
+      [0b0011, 0b1011, 0b1001],
+    ].map((row) => row.map(cellFromNumber)),
+  );
 }
