@@ -4,7 +4,7 @@ import { QueuedSocket, SocketState } from "./QueuedSocket";
 export type GameEventMap = {
   open: [];
   close: [];
-  lobbyJoin: [{ success: boolean; code: string }];
+  lobbyJoin: [{ success: boolean; code: string; playerCount: number }];
 };
 
 export type GameEventKey = keyof GameEventMap;
@@ -61,7 +61,10 @@ export class GameConnection {
 
   close(): void {
     this.cleanupActions.forEach((action) => action());
-    this.socket.close();
+
+    if (this.socket.state === SocketState.OPEN) {
+      this.socket.close();
+    }
   }
 
   get state(): SocketState {
@@ -91,7 +94,7 @@ export class GameConnection {
 const gameEventMapSchema: GameEventMap = {
   open: [],
   close: [],
-  lobbyJoin: [{ success: false, code: "" }],
+  lobbyJoin: [{ success: false, code: "", playerCount: 0 }],
 };
 
 function toGameEvent(

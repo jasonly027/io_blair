@@ -1,9 +1,9 @@
-/// <reference path="../.astro/types.d.ts" />
+/// <reference types="vite/client" />
 import { ThreeElements } from "@react-three/fiber";
 
 declare global {
   interface ImportMetaEnv {
-    readonly PUBLIC_SERVER_ENDPOINT: string;
+    readonly VITE_SERVER_ENDPOINT: string;
   }
 
   interface ImportMeta {

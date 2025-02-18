@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@layer base {
+  @font-face {
+    font-family: "Monsterrat";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("../../public/fonts/Montserrat-VariableFont_wght.ttf");
+  }
+
+  @font-face {
+    font-family: "Monsterrat";
+    font-style: italic;
+    font-weight: 200 900;
+    font-display: swap;
+    src: url("../../public/fonts/Montserrat-Italic-VariableFont_wght.ttf");
+  }
+}
+
+@theme {
+  --font-sans: Monsterrat, sans-serif;
+}
+
+body {
+  font-weight: 650;
+
+  font-size: 1.5rem;
+  line-height: 2rem;
+
+  color: white;
+  background-color: black;
+}

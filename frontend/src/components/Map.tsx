@@ -1,6 +1,7 @@
 import * as TH from "three";
 import { useSession } from "../hooks/useSession";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
+import type { MapUserData } from "../lib/Map";
 
 export const TILE_WIDTH = 1;
 export const GAP_WIDTH = 0.75;
@@ -34,22 +35,6 @@ function Gap({ x, y }: CoordinatesProps) {
         <meshStandardMaterial color="lightblue" side={TH.DoubleSide} />
       </mesh>
     </RigidBody>
-  );
-}
-
-const mapUserDataTypes = ["oobSensor"] as const;
-type MapUserDataType = (typeof mapUserDataTypes)[number];
-
-export interface MapUserData {
-  type: MapUserDataType;
-}
-
-export function isMapUserData(value: unknown): value is MapUserData {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "type" in value &&
-    mapUserDataTypes.includes(value.type as MapUserDataType)
   );
 }
 

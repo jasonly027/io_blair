@@ -14,7 +14,7 @@ export default function useConnection(): ConnectionValues {
   const connection = useRef<GameConnection>(null!);
   if (connection.current === null) {
     connection.current = new GameConnection(
-      `ws://${import.meta.env.PUBLIC_SERVER_ENDPOINT}`,
+      `ws://${import.meta.env.VITE_SERVER_ENDPOINT}`,
     );
   }
 
@@ -43,7 +43,7 @@ export default function useConnection(): ConnectionValues {
       state,
       ...createActions(connection.current),
     };
-  }, []);
+  }, [state]);
 
   return connectionValues;
 }
