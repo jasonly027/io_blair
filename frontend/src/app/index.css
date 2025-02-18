@@ -6,7 +6,7 @@
     font-style: normal;
     font-weight: 100 900;
     font-display: swap;
-    src: url("../../public/fonts/Montserrat-VariableFont_wght.ttf");
+    src: url("/fonts/Montserrat-VariableFont_wght.ttf");
   }
 
   @font-face {
@@ -14,12 +14,19 @@
     font-style: italic;
     font-weight: 200 900;
     font-display: swap;
-    src: url("../../public/fonts/Montserrat-Italic-VariableFont_wght.ttf");
+    src: url("/fonts/Montserrat-Italic-VariableFont_wght.ttf");
   }
 }
 
 @theme {
   --font-sans: Monsterrat, sans-serif;
+}
+
+:root {
+  --toastify-toast-padding: 0px;
+  --toastify-toast-width: fit-content;
+  --toastify-toast-height: fit-content;
+  --toastify-toast-min-height: 0px;
 }
 
 body {
@@ -31,3 +38,4 @@ body {
   color: white;
   background-color: black;
 }
+
