@@ -62,6 +62,8 @@ export interface ConnectionActions {
   createLobby: () => void;
 
   joinLobby: (code: string) => void;
+
+  message: (msg: string) => void;
 }
 
 function createActions(connection: GameConnection): ConnectionActions {
@@ -80,6 +82,10 @@ function createActions(connection: GameConnection): ConnectionActions {
 
     joinLobby(code) {
       connection.send("lobbyJoin", { code });
+    },
+
+    message(msg) {
+      connection.send("chat", { msg });
     },
   };
 }

@@ -1,6 +1,8 @@
 import { Slide, toast, ToastContainer } from "react-toastify";
 import { useSession } from "../hooks/useSession";
 import Pregame from "./Pregame";
+import { useSpring } from "@react-spring/three";
+import { a } from "@react-spring/web";
 
 export default function Lobby() {
   return (
@@ -11,37 +13,62 @@ export default function Lobby() {
 }
 
 function StatusBar() {
-  const { lobbyCode, playerCount } = useSession();
+  return (
+    <div className="flex w-full max-w-3xl flex-col space-y-4 text-center select-none min-lg:flex-row min-lg:justify-between">
+      <PlayerCount />
+      <LobbyCode />
+    </div>
+  );
+}
 
-  const onLobbyCodeClick = () => {
+function PlayerCount() {
+  const { playerCount } = useSession();
+
+  return (
+    <h2>
+      Players:{" "}
+      <span className="rounded-md border-2 border-white bg-emerald-500 px-1">
+        {`${playerCount}`} out of 2
+      </span>
+    </h2>
+  );
+}
+
+function LobbyCode() {
+  const { lobbyCode } = useSession();
+
+  const saveToClipboard = () => {
     clipboardToast();
     navigator.clipboard.writeText(lobbyCode);
   };
 
+  const [springs, api] = useSpring(() => ({
+    from: {
+      fontSize: 24,
+    },
+  }));
+  const increaseScale = () => api.start({ to: { fontSize: 25 } });
+  const decreaseScale = () => api.start({ to: { fontSize: 24 } });
+
   return (
-    <div className="flex w-full max-w-3xl flex-col space-y-4 text-center select-none min-lg:flex-row min-lg:justify-between">
-      <h2>
-        Players:{" "}
-        <span className="rounded-md border-2 border-white bg-emerald-500 px-1">
-          {`${playerCount}`} out of 2
-        </span>
-      </h2>
-      <h2>
-        Lobby Code:{" "}
-        <span
-          onClick={onLobbyCodeClick}
-          className="cursor-pointer rounded-md border-2 border-white bg-cyan-600 px-1"
-        >
-          {lobbyCode}
-        </span>
-      </h2>
+    <div className="flex h-fit flex-row items-center justify-center space-x-2">
+      <h2>Lobby Code:</h2>
+      <a.span
+        onClick={saveToClipboard}
+        onMouseEnter={increaseScale}
+        onMouseLeave={decreaseScale}
+        style={springs}
+        className="cursor-pointer rounded-md border-2 border-white bg-cyan-600 px-1"
+      >
+        {lobbyCode}
+      </a.span>
       <ToastContainer newestOnTop />
     </div>
   );
 }
 
 function clipboardToast() {
-  toast(<ClipboardToast />, {
+  toast(<ClipboardToastComponent />, {
     position: "bottom-center",
     autoClose: 500,
     closeOnClick: true,
@@ -54,7 +81,7 @@ function clipboardToast() {
   });
 }
 
-function ClipboardToast() {
+function ClipboardToastComponent() {
   return (
     <div className="flex flex-row items-center space-x-2 p-2">
       <h1 className="text-center text-lg">Copied to clipboard</h1>

@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-spring/three": "^9.7.5",
+    "@react-spring/web": "^9.7.5",
     "@react-three/drei": "^9.121.5",
     "@react-three/fiber": "^8.17.14",
     "@react-three/rapier": "^1.5.0",
@@ -23,8 +25,8 @@
   "devDependencies": {
     "@eslint-react/eslint-plugin": "^1.26.2",
     "@eslint/js": "^9.19.0",
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.3",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "eslint": "^9.19.0",
     "eslint-plugin-react-hooks": "^5.0.0",

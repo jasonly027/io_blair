@@ -10,7 +10,7 @@ import {
 export function SessionProvider({ children }: { children?: ReactNode }) {
   console.log("SessionProvider render");
 
-  const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
+  const [gameStatus, setGameStatus] = useState(GameStatus.Lobby);
 
   const [lobbyCode, setLobbyCode] = useState("00000000");
 

@@ -5,6 +5,7 @@ export type GameEventMap = {
   open: [];
   close: [];
   lobbyJoin: [{ success: boolean; code: string; playerCount: number }];
+  chat: [{ msg: string }];
 };
 
 export type GameEventKey = keyof GameEventMap;
@@ -12,6 +13,7 @@ export type GameEventKey = keyof GameEventMap;
 export type GameSendMap = {
   lobbyCreate: [];
   lobbyJoin: [{ code: string }];
+  chat: [{ msg: string }];
 };
 
 export type GameSendKey = keyof GameSendMap;
@@ -95,6 +97,7 @@ const gameEventMapSchema: GameEventMap = {
   open: [],
   close: [],
   lobbyJoin: [{ success: false, code: "", playerCount: 0 }],
+  chat: [{ msg: "" }],
 };
 
 function toGameEvent(
