@@ -7,6 +7,17 @@ import {
   type SessionValue,
 } from "../hooks/useSession";
 
+/**
+ * A provider for useSession.
+ *
+ * If gameStatus is not Lobby or InGame:
+ * - lobbyCode will be "00000000"
+ * - playerCount will be 1
+ *
+ * If gameStatus is not InGame:
+ * - maze will be a 3x3
+ * - startCoords will be [0, 0]
+ */
 export function SessionProvider({ children }: { children?: ReactNode }) {
   console.log("SessionProvider render");
 

@@ -10,6 +10,11 @@ export interface ConnectionValues extends ConnectionActions {
   state: SocketState;
 }
 
+/**
+ * Initializes a GameConnection and exposes actions on it.
+ * @returns The state of the connection, event listening capabilities,
+ * and possible send actions.
+ */
 export default function useConnection(): ConnectionValues {
   const connection = useRef<GameConnection>(null!);
   if (connection.current === null) {

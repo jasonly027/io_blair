@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import { useSession } from "../hooks/useSession";
 import type { GameConnectionListener } from "../lib/GameConnection";
+import type { GamePlayer } from "../types/character";
 
 interface MessageData {
-  who: "You" | "Teammate";
+  who: GamePlayer;
   content: string;
 }
 
@@ -28,7 +29,7 @@ export default function Chat() {
   }, [addConnectionEventListener, removeConnectionEventListener]);
 
   return (
-    <div className="absolute bottom-12 size-full max-h-72 max-w-lg px-8 sm:left-12">
+    <div className="fixed bottom-12 size-full max-h-72 max-w-lg px-8 sm:left-12">
       <div className="flex size-full flex-col rounded-sm bg-black/20">
         <History history={history} />
         <Input setHistory={setHistory} />

@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GameConnectionListener } from "../lib/GameConnection";
 import { GameStatus, useSession } from "./useSession";
 
+/** The current status of the prelobby */
 export enum PrelobbyStatus {
   Fresh,
   Loading,
   JoinFailed,
 }
 
+/** Minimum time to spend on the loading screen */
 const MINIMUM_LOADING_TIME = 1500;
 
 export interface PrelobbyStatusValues {
@@ -15,6 +17,11 @@ export interface PrelobbyStatusValues {
   setToLoading: () => void;
 }
 
+/**
+ * Returns the status of the prelobby. Must be used within a SessionProvider
+ * component. Listens for the "lobbyJoin" event from the server and updates
+ * the prelobby status to JoinFailed or the game status to Lobby accordingly.
+ */
 export default function usePrelobbyStatus(): PrelobbyStatusValues {
   const [status, setStatus] = useState<PrelobbyStatus>(PrelobbyStatus.Fresh);
 

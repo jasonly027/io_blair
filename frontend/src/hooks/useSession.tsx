@@ -6,12 +6,14 @@ export const SessionContext = createContext<SessionValue | undefined>(
   undefined,
 );
 
+/** The current status of the game */
 export enum GameStatus {
   Prelobby,
   Lobby,
   InGame,
 }
 
+/** Values in available in the Session context */
 export interface SessionValue extends ConnectionValues {
   gameStatus: GameStatus;
   setGameStatus: React.Dispatch<SetStateAction<GameStatus>>;
@@ -26,6 +28,10 @@ export interface SessionValue extends ConnectionValues {
   startCoords: Coordinates;
 }
 
+/**
+ * Returns the Session context. Must be used at the top level of a component that
+ * is a child of a SessionProvider.
+ */
 export function useSession() {
   const context = useContext(SessionContext);
   if (context === undefined) {

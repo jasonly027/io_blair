@@ -1,19 +1,57 @@
 import { EventEmitter } from "./EventListener";
 import { QueuedSocket, SocketState } from "./QueuedSocket";
 
+/**
+ * Maps event types of GameConnection with the corresponding data received.
+ */
 export type GameEventMap = {
+  /** Indicates the WebSocket connection was established. */
   open: [];
+  /** Indiactes the WebSocket connectionw was terminated. */
   close: [];
-  lobbyJoin: [{ success: boolean; code: string; playerCount: number }];
-  chat: [{ msg: string }];
+  /** Indicates the server responded to a lobby request. */
+  lobbyJoin: [
+    {
+      /** Whether the request was successful. If false, code will be "". */
+      success: boolean;
+      /** The lobby code. */
+      code: string;
+      /** The current number of players, including the player. */
+      playerCount: number;
+    },
+  ];
+  /** Indicates the server forwarded a message from another player. */
+  chat: [
+    {
+      /** The message from the other player. */
+      msg: string;
+    },
+  ];
 };
 
 export type GameEventKey = keyof GameEventMap;
 
+/**
+ * Maps types of messages that can be sent to the server and
+ * the corresponding data required with them.
+ */
 export type GameSendMap = {
+  /** Request to create a lobby */
   lobbyCreate: [];
-  lobbyJoin: [{ code: string }];
-  chat: [{ msg: string }];
+  /** Request to join a lobby */
+  lobbyJoin: [
+    {
+      /** The lobby code of the lobby the player wants to join. */
+      code: string;
+    },
+  ];
+  /** Send a message to the lobby chat. */
+  chat: [
+    {
+      /** The message to be sent to the chat. */
+      msg: string;
+    },
+  ];
 };
 
 export type GameSendKey = keyof GameSendMap;
@@ -22,6 +60,11 @@ export type GameConnectionListener<K extends GameEventKey> = (
   ...args: GameEventMap[K]
 ) => void;
 
+/**
+ * A connection to the game server that allows sending messages
+ * and listening to events. close() should be called when connection
+ * usage is finished.
+ */
 export class GameConnection {
   private socket: QueuedSocket;
   private eventEmitter: EventEmitter<GameEventMap>;
@@ -35,11 +78,15 @@ export class GameConnection {
     this.setupEventEmitter();
   }
 
+  /** Forward WebSocket open/close events to the emitter */
   private setupSocket(): void {
     this.addSocketListener("open", () => this.eventEmitter.emit("open"));
     this.addSocketListener("close", () => this.eventEmitter.emit("close"));
   }
 
+  /** Add an event listener to the WebSocket. The unsubscribe
+   * function is stored in cleanupActions.
+   */
   private addSocketListener<K extends keyof WebSocketEventMap>(
     eventName: K,
     listener: (ev: WebSocketEventMap[K]) => void,
@@ -50,6 +97,7 @@ export class GameConnection {
     );
   }
 
+  /** Forward WebSocket onmessage events to the emitter */
   private setupEventEmitter(): void {
     this.addSocketListener("message", ({ data }) => {
       const obj = JSON.parse(data);
@@ -61,6 +109,7 @@ export class GameConnection {
     });
   }
 
+  /** Close the connection to the game server. */
   close(): void {
     this.cleanupActions.forEach((action) => action());
 
@@ -73,6 +122,11 @@ export class GameConnection {
     return this.socket.state;
   }
 
+  /**
+   * Listen to a game event.
+   * @param eventName The event to listen to.
+   * @param listener The callback function when the event is emitted.
+   */
   addEventListener<K extends GameEventKey>(
     eventName: K,
     listener: GameConnectionListener<K>,
@@ -80,6 +134,12 @@ export class GameConnection {
     this.eventEmitter.addListener(eventName, listener);
   }
 
+  /**
+   * Unsubscribe a listener from a game event. Does something if the
+   * listener isn't subscribed to the event.
+   * @param eventName The event to unsubscribe from.
+   * @param listener The listener to unsubscribe.
+   */
   removeEventListener<K extends GameEventKey>(
     eventName: K,
     listener: GameConnectionListener<K>,
@@ -87,19 +147,27 @@ export class GameConnection {
     this.eventEmitter.removeListener(eventName, listener);
   }
 
+  /**
+   * Send a message to the game server.
+   * @param messageType The type of message to send.
+   * @param args The associated data with that message.
+   */
   send<K extends GameSendKey>(messageType: K, ...args: GameSendMap[K]): void {
     const msg = Object.assign({ type: messageType }, ...args);
     this.socket.send(JSON.stringify(msg));
   }
 }
 
-const gameEventMapSchema: GameEventMap = {
+// Necessary for toGameEvent() to check if the "type" key
+// in a server reply is one of the types in the GameEventMap.
+const gameEventMapSchema = {
   open: [],
   close: [],
   lobbyJoin: [{ success: false, code: "", playerCount: 0 }],
   chat: [{ msg: "" }],
-};
+} as const satisfies GameEventMap;
 
+/** Convert a raw message from the server to a GameEvent */
 function toGameEvent(
   data: unknown,
 ): [type: GameEventKey, data: GameEventMap[GameEventKey]] | null {

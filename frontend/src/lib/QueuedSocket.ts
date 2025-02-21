@@ -1,3 +1,4 @@
+/** The current state of the WebSocket */
 export const enum SocketState {
   CONNECTING = 0,
   OPEN = 1,
@@ -7,6 +8,10 @@ export const enum SocketState {
 
 type Message = string | ArrayBufferLike | Blob | ArrayBufferView;
 
+/**
+ * A WebSocket that allows immediate message sending on instantiation.
+ * If the underlying WebSocket is still connecting, messages will be queued.
+ */
 export class QueuedSocket extends WebSocket {
   private msgQueue: Message[];
 
@@ -21,6 +26,11 @@ export class QueuedSocket extends WebSocket {
     });
   }
 
+  /**
+   * Sends a message through the WebSocket. The message will be queued
+   * if the WebSocket is still connecting.
+   * @param data The message to be sent.
+   */
   override send(data: Message): void {
     if (this.readyState === SocketState.CONNECTING) {
       this.msgQueue.push(data);
@@ -29,6 +39,7 @@ export class QueuedSocket extends WebSocket {
     super.send(data);
   }
 
+  /** The current state of the WebSocket */
   public get state(): SocketState {
     return this.readyState;
   }

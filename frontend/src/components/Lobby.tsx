@@ -3,7 +3,16 @@ import { useSession } from "../hooks/useSession";
 import Pregame from "./Pregame";
 import { useSpring } from "@react-spring/three";
 import { a } from "@react-spring/web";
-import type { ReactNode } from "react";
+import { Canvas } from "@react-three/fiber";
+import { Helper, PerspectiveCamera } from "@react-three/drei";
+import CatWaffle from "./CatWaffle";
+import { PointLightHelper } from "three";
+import { useReducer, useRef, type ReactNode } from "react";
+import {
+  playerColorMap,
+  type GameCharacter,
+  type GamePlayer,
+} from "../types/character";
 
 export default function Lobby() {
   return (
@@ -102,21 +111,179 @@ function ClipboardToastComponent() {
   );
 }
 
+type ContainerAction = "none" | "hover" | "confirm";
+
+const borderStyleMap = {
+  none: "none",
+  hover: "dashed",
+  confirm: "full",
+} as const satisfies Record<ContainerAction, StrokeKind>;
+
+type PlayerIntent = {
+  [key in GamePlayer]: ContainerAction;
+};
+
+interface CharCardStyle extends PlayerIntent {
+  character: GameCharacter;
+  stroke: StrokeKind;
+  strokeColor: string;
+}
+
+type CharCardStyles = CharCardStyle[];
+
+interface CharCardStylesAction {
+  intent: ContainerAction;
+  caller: GamePlayer;
+  character: GameCharacter;
+}
+
+function characterReducer(
+  state: CharCardStyles,
+  action: CharCardStylesAction,
+): CharCardStyles {
+  return state.map((s) => {
+    const style = { ...s };
+
+    // If this is the character the caller directly
+    // wanted to update the intent on, change it to the new intent.
+    // Otherwise, clear that caller's intent on this card because
+    // each caller can only have up to one non-"none" intent on a
+    // card.
+    if (action.character === s.character) {
+      style[action.caller] = action.intent;
+    } else {
+      style[action.caller] = "none";
+    }
+
+    // Determine whether to show the user's intent visualization
+    // (dashed border for hover / full border for confirm) or their
+    // teammates. Will show the user's unless theirs is "none".
+    const dominantPlayer: GamePlayer =
+      style.You !== "none" ? "You" : "Teammate";
+    style.stroke = borderStyleMap[style[dominantPlayer]];
+    style.strokeColor = playerColorMap[dominantPlayer];
+
+    return style;
+  });
+}
+
+const gameCharacters = ["Io", "Blair"] as const satisfies GameCharacter[];
+
+function createDefaultCharacterStyles(
+  characters: GameCharacter[],
+): CharCardStyles {
+  return characters.map((name) => ({
+    character: name,
+    stroke: "none",
+    strokeColor: "",
+    You: "none",
+    Teammate: "none",
+  }));
+}
+
 function CharacterSelect() {
+  const [characterStyles, changeCharacterStyles] = useReducer(
+    characterReducer,
+    gameCharacters,
+    createDefaultCharacterStyles,
+  );
+
   return (
     <>
-      <div className="m-4 flex flex-row place-content-center space-x-2 bg-red-400">
-        <CharacterCard>Io</CharacterCard>
-        <CharacterCard>Blair</CharacterCard>
+      <div className="m-4 flex flex-col max-lg:space-y-8 lg:flex-row lg:space-x-16">
+        {characterStyles.map(({ character, stroke, strokeColor }) => (
+          <CharacterCard
+            key={character}
+            name={character}
+            stroke={stroke}
+            strokeColor={strokeColor}
+            onClick={(character) =>
+              changeCharacterStyles({
+                caller: "You",
+                character,
+                intent: "hover",
+              })
+            }
+          />
+        ))}
       </div>
     </>
   );
 }
 
-function CharacterCard({ children }: { children?: ReactNode }) {
+interface CharacterCardProps {
+  name: GameCharacter;
+  stroke: StrokeKind;
+  strokeColor: string;
+  onClick?: (name: GameCharacter) => void;
+}
+
+const noOpOnClick = () => {};
+
+function CharacterCard({
+  name,
+  stroke,
+  strokeColor,
+  onClick = noOpOnClick,
+}: CharacterCardProps) {
   return (
-    <div className="flex size-50 items-center justify-center rounded-md border-2">
+    <DashedContainer stroke={stroke} strokeColor={strokeColor}>
+      <div
+        onClick={() => onClick(name)}
+        className="flex size-[20rem] flex-col rounded-md bg-orange-400"
+      >
+        <h2 className="m-2 text-center select-none">{name}</h2>
+        <CharacterScene />
+      </div>
+    </DashedContainer>
+  );
+}
+
+type StrokeKind = "none" | "dashed" | "full";
+
+interface DashedBorderProps {
+  stroke?: StrokeKind;
+  strokeColor?: string;
+  children: ReactNode;
+}
+
+function DashedContainer({
+  stroke = "dashed",
+  strokeColor = "white",
+  children,
+}: DashedBorderProps) {
+  const divRef = useRef<HTMLDivElement>(null!);
+
+  const dashedBorderSvg = `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='${strokeColor}' stroke-width='15' stroke-dasharray='30' stroke-dashoffset='12' stroke-linecap='square'/%3e%3c/svg%3e")`;
+  const outlineClasses = stroke === "full" ? "outline-8 -outline-offset-8" : "";
+
+  return (
+    <div
+      ref={divRef}
+      style={{
+        backgroundImage: stroke === "dashed" ? dashedBorderSvg : "",
+        outlineColor: strokeColor,
+      }}
+      className={`rounded-md p-2 ${outlineClasses}`}
+    >
       {children}
+    </div>
+  );
+}
+
+function CharacterScene() {
+  return (
+    <div className="size-full">
+      <Canvas>
+        <ambientLight intensity={0.3} />
+        <pointLight intensity={3} position={[20, 40, 100]} decay={0}>
+          <Helper type={PointLightHelper} />
+        </pointLight>
+        <PerspectiveCamera makeDefault position={[11, 30, 100]} fov={100} />
+        {/* <OrbitControls /> */}
+        {/* <axesHelper args={[500]} /> */}
+        <CatWaffle />
+      </Canvas>
     </div>
   );
 }
