@@ -101,7 +101,7 @@ class LobbyControllerFShould : public ::testing::Test {
 
 TEST_F(LobbyControllerFShould, NotSetCharacterWhenAlreadyCharacter) {
   p1_.session.try_set(s1_);
-  p1_.character = Character::io;
+  p1_.character = Character::Io;
   p2_.session.try_set(s2_);
   LobbyController controller("");
 
@@ -111,9 +111,9 @@ TEST_F(LobbyControllerFShould, NotSetCharacterWhenAlreadyCharacter) {
 
 TEST_F(LobbyControllerFShould, NotSetCharacterWhenOtherIsAlreadyCharacter) {
   p1_.session.try_set(s1_);
-  p1_.character = Character::io;
+  p1_.character = Character::Io;
   p2_.session.try_set(s2_);
-  p2_.character = Character::blair;
+  p2_.character = Character::Blair;
   LobbyController controller("");
 
   controller.set_character(p1_, p2_, p2_.character);
@@ -122,7 +122,7 @@ TEST_F(LobbyControllerFShould, NotSetCharacterWhenOtherIsAlreadyCharacter) {
 }
 
 TEST_F(LobbyControllerFShould, SetCharacterAndSendOther) {
-  constexpr Character kCharacter = Character::io;
+  constexpr Character kCharacter = Character::Io;
   EXPECT_CALL(*s2_, async_send(jout::character_confirm(kCharacter)));
 
   p1_.session.try_set(s1_);
@@ -138,7 +138,7 @@ TEST_F(LobbyControllerFShould, SetCharacterToUnknown) {
   EXPECT_CALL(*s2_, async_send(jout::character_confirm(Character::unknown)));
 
   p1_.session.try_set(s1_);
-  p1_.character = Character::io;
+  p1_.character = Character::Io;
   p2_.session.try_set(s2_);
   LobbyController controller("");
 
@@ -150,11 +150,11 @@ TEST_F(LobbyControllerFShould, SetCharacterToUnknown) {
 TEST_F(LobbyControllerFShould, SetCharactersAndTransitionToInGame) {
   using MatcherSharedStr = Matcher<shared_ptr<const string>>;
 
-  EXPECT_CALL(*s1_, async_send(jout::character_confirm(Character::blair)));
+  EXPECT_CALL(*s1_, async_send(jout::character_confirm(Character::Blair)));
   EXPECT_CALL(*s1_, async_handle(SessionEvent::kTransitionToInGame));
   EXPECT_CALL(*s1_, async_send(MatcherSharedStr(Pointee(jout::transition_to_ingame()))));
 
-  EXPECT_CALL(*s2_, async_send(jout::character_confirm(Character::io)));
+  EXPECT_CALL(*s2_, async_send(jout::character_confirm(Character::Io)));
   EXPECT_CALL(*s2_, async_handle(SessionEvent::kTransitionToInGame));
   EXPECT_CALL(*s2_, async_send(MatcherSharedStr(Pointee(jout::transition_to_ingame()))));
 
@@ -162,8 +162,8 @@ TEST_F(LobbyControllerFShould, SetCharactersAndTransitionToInGame) {
   p2_.session.try_set(s2_);
   LobbyController controller("");
 
-  controller.set_character(p1_, p2_, Character::io);
-  controller.set_character(p2_, p1_, Character::blair);
+  controller.set_character(p1_, p2_, Character::Io);
+  controller.set_character(p2_, p1_, Character::Blair);
 }
 
 }  // namespace io_blair::testing

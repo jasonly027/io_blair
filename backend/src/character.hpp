@@ -9,7 +9,7 @@ namespace io_blair {
  */
 enum class Character { // NOLINTBEGIN(readability-identifier-naming)
   unknown,
-  io,
-  blair,
+  Io,
+  Blair,
 }; // NOLINTEND(readability-identifier-naming)
 } // namespace io_blair

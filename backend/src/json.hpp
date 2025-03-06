@@ -82,8 +82,8 @@ struct CharacterConfirm {
 /**
  * @brief A union of all possible structs.
  */
-using AllJsonTypes
-    = rfl::TaggedUnion<"type", LobbyCreate, LobbyJoin, LobbyLeave, Chat, CharacterHover>;
+using AllJsonTypes = rfl::TaggedUnion<"type", LobbyCreate, LobbyJoin, LobbyLeave, Chat,
+                                      CharacterHover, CharacterConfirm>;
 
 }  // namespace in
 
@@ -177,7 +177,7 @@ std::string character_hover(Character character);
  * @brief Indicates the character confirmed by the other client.
  */
 struct characterConfirm {
-  Character character;
+  std::optional<Character> character;
 };
 
 /**

@@ -21,6 +21,9 @@ Session::Session(net::io_context& ctx, tcp::socket&& socket)
       write_strand_(net::make_strand(ctx)),
       handler_(nullptr) {
   ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::server));
+#ifndef NDEBUG
+  std::cout << "Session c'tor\n";
+#endif
 }
 
 #ifndef NDEBUG

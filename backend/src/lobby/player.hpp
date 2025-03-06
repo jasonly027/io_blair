@@ -13,7 +13,7 @@ namespace io_blair {
  */
 struct Player {
   SessionView session;
-  Character character;
+  Character character = Character::unknown;
 
   /**
    * @brief Resets data members.
