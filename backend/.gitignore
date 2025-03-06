@@ -51,3 +51,6 @@ _deps
 
 build/
 .cache/
+
+/docs/*
+!/docs/CMakeLists.txt

@@ -14,9 +14,9 @@ int main(int argc, char** argv) {
 
   // auto* address = argv[1];
   // auto port = static_cast<uint16_t>(std::atoi(argv[2]));
-  constexpr auto* kAddress   = "0.0.0.0";
-  constexpr uint16_t kPort   = 8'080;
-  constexpr uint8_t kThreads = 4;
+  constexpr const char* kAddress = "0.0.0.0";
+  constexpr uint16_t kPort       = 8'080;
+  constexpr uint8_t kThreads     = 4;
 
-  return std::make_shared<io_blair::Server>(kAddress, kPort)->run(kThreads);
+  std::make_shared<io_blair::Server>(kAddress, kPort, kThreads)->run();
 }

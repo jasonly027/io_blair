@@ -1,112 +1,87 @@
 #include "server.hpp"
 
 #include <csignal>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 
-#include "lobby.hpp"
-#include "net_common.hpp"
 #include "session.hpp"
 
 namespace io_blair {
-Server::Server(std::string_view address, uint16_t port)
-    : socket_(ctx_), acceptor_(ctx_), signals_(ctx_, SIGINT, SIGTERM), manager_(ctx_) {
+
+using std::cerr;
+using std::string_view;
+
+namespace ip = net::ip;
+
+Server::Server(string_view address, uint16_t port, uint8_t threads)
+    : acceptor_(ctx_), exit_signals_(ctx_, SIGINT, SIGTERM), threads_(threads) {
   prepare_acceptor(address, port);
-  prepare_for_termination();
+  prepare_exit();
 }
 
-int Server::run(int8_t threads) {
-  if (threads <= 0) {
-    std::cerr << "Thread count should be greater than 0\n";
-    return EXIT_FAILURE;
+void Server::run() {
+  acceptor_.async_accept(ctx_, beast::bind_front_handler(&Server::on_accept, shared_from_this()));
+
+  if (threads_ > 1) {
+    for (uint8_t i = 0; i < threads_ - 1; ++i) {
+      pool_.emplace_back([self = shared_from_this()] { self->ctx_.run(); });
+    }
   }
-
-  prepare_for_next_connection();
-  start_threads(threads);
-
-  return EXIT_SUCCESS;
+  ctx_.run();
 }
 
-void Server::log_err(error_code ec, const char* const what) {
-  if (ec == net::error::operation_aborted) return;
-  std::cerr << what << ": " << ec.what() << '\n';
+void Server::log_fatal(error_code ec, const char* what) {
+  cerr << what << ": " << ec << '\n';
+  exit(EXIT_FAILURE);
 }
 
 void Server::prepare_acceptor(std::string_view address, uint16_t port) {
-  tcp::endpoint endpoint(net::ip::make_address(address), port);
+  tcp::endpoint endpoint(ip::make_address(address), port);
   error_code ec;
 
   acceptor_.open(endpoint.protocol(), ec);
   if (ec) {
-    log_err(ec, "acceptor open");
-    return;
+    log_fatal(ec, "Failed to open acceptor");
   }
 
   acceptor_.set_option(tcp::acceptor::reuse_address(true), ec);
   if (ec) {
-    log_err(ec, "acceptor set_option reuse_address");
-    return;
+    log_fatal(ec, "Failed to set option to reuse address");
   }
 
   acceptor_.bind(endpoint, ec);
   if (ec) {
-    log_err(ec, "acceptor bind");
-    return;
+    log_fatal(ec, "Failed to bind to endpoint");
   }
 
   acceptor_.listen(net::socket_base::max_listen_connections, ec);
   if (ec) {
-    log_err(ec, "acceptor listen");
-    return;
+    log_fatal(ec, "Failed to set acceptor to listen state");
   }
 }
 
-void Server::prepare_for_next_connection() {
-  acceptor_.async_accept(socket_,
-                         [self = shared_from_this()](error_code ec) { self->on_accept(ec); });
-}
-
-void Server::start_threads(int8_t threads) {
-  if (threads > 1) {
-    for (int8_t i = 0; i < threads - 1; ++i) {
-      pool_.emplace_back([self = shared_from_this()] {
-        error_code ec;
-        self->ctx_.run(ec);
-
-        if (ec) self->log_err(ec, "ctx_ run");
-      });
-    }
-  }
-  // This thread itself will relinquish control and take async work too
-  error_code ec;
-  ctx_.run(ec);
-  if (ec) log_err(ec, "ctx_ run");
-}
-
-void Server::prepare_for_termination() {
-  signals_.async_wait([this](error_code, int) {
+void Server::prepare_exit() {
+  exit_signals_.async_wait([this](error_code, int) {
     ctx_.stop();
 
-    if (acceptor_.is_open()) acceptor_.close();
+    if (acceptor_.is_open()) {
+      acceptor_.close();
+    }
 
     for (auto& thread : pool_) {
-      if (thread.joinable()) thread.join();
+      if (thread.joinable()) {
+        thread.join();
+      }
     }
   });
 }
 
-void Server::on_accept(error_code ec) {
-  if (ec) return log_err(ec, "on_accept handler");
-
-  std::cout << "Server accepted\n";
-
-  // When this handler is invoked, socket_ will contain a TCP connection.
-  // We construct a new Session instance with the socket.
-  std::make_shared<WebSocketSession>(ctx_, std::move(socket_), manager_)->run();
-
-  // Because we moved socket_ on the previous line,
-  // socket_ is reset to a state ready to contain a new TCP connection.
-  prepare_for_next_connection();
+void Server::on_accept(error_code ec, tcp::socket socket) {
+  if (!ec) {
+    Session::make(ctx_, std::move(socket), manager_)->run();
+  }
+  acceptor_.async_accept(ctx_, beast::bind_front_handler(&Server::on_accept, shared_from_this()));
 }
-
 }  // namespace io_blair
