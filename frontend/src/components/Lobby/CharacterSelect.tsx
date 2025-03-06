@@ -7,7 +7,7 @@ import {
   type Dispatch,
 } from "react";
 import type { GameCharacter, GamePlayer } from "../../types/character";
-import CharacterCard from "../CharacterCard";
+import CharacterCard from "./CharacterCard";
 import { useSession } from "../../hooks/useSession";
 import { a } from "@react-spring/web";
 import useDynamicScale from "../../hooks/useDynamicScale";

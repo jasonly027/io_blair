@@ -5,10 +5,10 @@ import {
   easings,
 } from "@react-spring/three";
 import { useEffect, useRef, type RefObject } from "react";
-import { useSession } from "../hooks/useSession";
-import type Maze from "../lib/Maze";
+import { useSession } from "../../hooks/useSession";
+import type Maze from "../../lib/Maze";
 import { DIST_TO_NEXT_GAP, DIST_TO_NEXT_TILE, GROUND_Y, OOB_Y } from "./Map";
-import type { CellKey, Coordinates } from "../lib/Maze";
+import type { CellKey, Coordinates } from "../../lib/Maze";
 import {
   CoefficientCombineRule,
   RapierRigidBody,
@@ -16,7 +16,7 @@ import {
   type CollisionPayload,
 } from "@react-three/rapier";
 import { Mesh } from "three";
-import { isMapUserData } from "../lib/Map";
+import { isMapUserData } from "../../lib/Map";
 
 export const PLAYER_HEIGHT = 0.5;
 
