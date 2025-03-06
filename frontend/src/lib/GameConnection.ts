@@ -1,3 +1,4 @@
+import type { GameCharacter } from "../types/character";
 import { EventEmitter } from "./EventListener";
 import { QueuedSocket, SocketState } from "./QueuedSocket";
 
@@ -27,6 +28,18 @@ export type GameEventMap = {
       msg: string;
     },
   ];
+  /** Indicates the character hovered by the other player */
+  characterHover: [
+    {
+      character: GameCharacter;
+    },
+  ];
+  /** Indicates the character confirmed by the other player */
+  characterConfirm: [
+    {
+      character: GameCharacter | null;
+    },
+  ];
 };
 
 export type GameEventKey = keyof GameEventMap;
@@ -50,6 +63,18 @@ export type GameSendMap = {
     {
       /** The message to be sent to the chat. */
       msg: string;
+    },
+  ];
+  /** Send the character being hovered */
+  characterHover: [
+    {
+      character: GameCharacter;
+    },
+  ];
+  /** Send the character confirmed */
+  characterConfirm: [
+    {
+      character: GameCharacter | "unknown";
     },
   ];
 };
@@ -101,6 +126,7 @@ export class GameConnection {
   private setupEventEmitter(): void {
     this.addSocketListener("message", ({ data }) => {
       const obj = JSON.parse(data);
+      console.log(obj);
       const gameEvent = toGameEvent(obj);
       if (gameEvent === null) return;
 
@@ -165,6 +191,8 @@ const gameEventMapSchema = {
   close: [],
   lobbyJoin: [{ success: false, code: "", playerCount: 0 }],
   chat: [{ msg: "" }],
+  characterHover: [{ character: "Io" }],
+  characterConfirm: [{ character: null }],
 } as const satisfies GameEventMap;
 
 /** Convert a raw message from the server to a GameEvent */

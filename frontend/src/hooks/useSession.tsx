@@ -1,6 +1,7 @@
 import { createContext, useContext, type SetStateAction } from "react";
 import Maze, { type Coordinates } from "../lib/Maze";
 import { type ConnectionValues } from "./useConnection";
+import type { GameCharacter } from "../types/character";
 
 export const SessionContext = createContext<SessionValue | undefined>(
   undefined,
@@ -23,6 +24,12 @@ export interface SessionValue extends ConnectionValues {
 
   playerCount: number;
   setPlayerCount: React.Dispatch<SetStateAction<number>>;
+
+  you: GameCharacter | null;
+  setYou: React.Dispatch<SetStateAction<GameCharacter | null>>;
+
+  teammate: GameCharacter | null;
+  setTeammate: React.Dispatch<SetStateAction<GameCharacter | null>>;
 
   maze: Maze;
   startCoords: Coordinates;

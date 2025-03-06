@@ -29,7 +29,7 @@ export default function Chat() {
   }, [addConnectionEventListener, removeConnectionEventListener]);
 
   return (
-    <div className="fixed bottom-12 size-full max-h-72 max-w-lg px-8 sm:left-12">
+    <div className="fixed bottom-12 z-10 size-full max-h-72 max-w-104 sm:left-12">
       <div className="flex size-full flex-col rounded-sm bg-black/20">
         <History history={history} />
         <Input setHistory={setHistory} />
@@ -39,8 +39,20 @@ export default function Chat() {
 }
 
 function History({ history }: { history: MessageData[] }) {
+  const divRef = useRef<HTMLDivElement>(null!);
+
+  useEffect(() => {
+    divRef.current.scrollTo({
+      top: divRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  });
+
   return (
-    <div className="mt-1 mr-2 h-full overflow-scroll overflow-x-hidden overflow-y-auto px-3 py-2 text-lg text-white">
+    <div
+      ref={divRef}
+      className="mt-1 mr-2 h-full overflow-scroll overflow-x-hidden overflow-y-auto px-3 pt-2 text-lg text-white"
+    >
       {history.map((msg, i) => (
         <Message key={i} messageData={msg} />
       ))}
@@ -54,11 +66,11 @@ function Message({
   messageData: MessageData;
 }) {
   return (
-    <div>
+    <div className="text-wrap break-all">
       <span className={who === "You" ? "text-emerald-400" : "text-cyan-400"}>
         {who}:{" "}
       </span>
-      <span>{content}</span>
+      {content}
     </div>
   );
 }
@@ -107,7 +119,7 @@ function Input({ setHistory }: InputProps) {
     <input
       ref={inputRef}
       placeholder="Send Message (Enter)"
-      className="m-2 rounded-sm border-2 border-black/25 px-2 text-lg font-semibold placeholder:text-white/65 placeholder:select-none focus:outline-0"
+      className="m-1 rounded-sm border-2 border-black/25 px-2 text-lg font-semibold placeholder:text-white/65 placeholder:select-none focus:outline-0"
     />
   );
 }

@@ -13,18 +13,20 @@ import Player from "./Player";
 
 export default function InGame() {
   return (
-    <Canvas className="bg-red-200">
-      <Background />
-      <Camera />
-      <Lights />
+    <div className="h-screen w-screen">
+      <Canvas className="bg-red-200">
+        <Background />
+        <Camera />
+        <Lights />
 
-      <axesHelper />
+        <axesHelper />
 
-      <GamePhysics>
-        <Map />
-        <Player />
-      </GamePhysics>
-    </Canvas>
+        <GamePhysics>
+          <Map />
+          <Player />
+        </GamePhysics>
+      </Canvas>
+    </div>
   );
 }
 

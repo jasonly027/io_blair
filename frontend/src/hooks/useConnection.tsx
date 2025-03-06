@@ -5,6 +5,7 @@ import {
   type GameConnectionListener,
   type GameEventKey,
 } from "../lib/GameConnection";
+import type { GameCharacter } from "../types/character";
 
 export interface ConnectionValues extends ConnectionActions {
   state: SocketState;
@@ -69,6 +70,10 @@ export interface ConnectionActions {
   joinLobby: (code: string) => void;
 
   message: (msg: string) => void;
+
+  hoverCharacter: (character: GameCharacter) => void;
+
+  confirmCharacter: (character: GameCharacter | null) => void;
 }
 
 function createActions(connection: GameConnection): ConnectionActions {
@@ -91,6 +96,17 @@ function createActions(connection: GameConnection): ConnectionActions {
 
     message(msg) {
       connection.send("chat", { msg });
+    },
+
+    hoverCharacter(character) {
+      connection.send("characterHover", { character });
+    },
+
+    confirmCharacter(character) {
+      console.log("sent confirm");
+      connection.send("characterConfirm", {
+        character: character ?? "unknown",
+      });
     },
   };
 }

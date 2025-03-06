@@ -6,6 +6,7 @@ import {
   SessionContext,
   type SessionValue,
 } from "../hooks/useSession";
+import { type GameCharacter } from "../types/character";
 
 /**
  * A provider for useSession.
@@ -21,14 +22,16 @@ import {
 export function SessionProvider({ children }: { children?: ReactNode }) {
   console.log("SessionProvider render");
 
-  const [gameStatus, setGameStatus] = useState(GameStatus.Lobby);
+  const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
 
   const [lobbyCode, setLobbyCode] = useState("00000000");
 
   const [playerCount, setPlayerCount] = useState(1);
 
-  const [maze] = useState<Maze>(getDefaultMaze);
+  const [you, setYou] = useState<GameCharacter | null>(null);
+  const [teammate, setTeammate] = useState<GameCharacter | null>(null);
 
+  const [maze] = useState<Maze>(getDefaultMaze);
   const [startCoords] = useState<Coordinates>([0, 0]);
 
   const connection = useConnection();
@@ -44,11 +47,25 @@ export function SessionProvider({ children }: { children?: ReactNode }) {
       playerCount,
       setPlayerCount,
 
+      you,
+      setYou,
+      teammate,
+      setTeammate,
+
       maze,
       startCoords,
       ...connection,
     }),
-    [gameStatus, lobbyCode, playerCount, maze, startCoords, connection],
+    [
+      gameStatus,
+      lobbyCode,
+      playerCount,
+      you,
+      teammate,
+      maze,
+      startCoords,
+      connection,
+    ],
   );
 
   return (

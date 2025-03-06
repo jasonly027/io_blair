@@ -6,8 +6,9 @@
 
 namespace io_blair::json {
 using rfl::AddStructName;
-using rfl::Processors;
+using rfl::NoOptionals;
 using rfl::SnakeCaseToCamelCase;
+using std::nullopt;
 using std::optional;
 using std::string;
 using std::string_view;
@@ -20,8 +21,7 @@ void decode(const string& data, IHandler& handler) {
 
 namespace {
 string encode(const auto& obj) {
-  using Processors = Processors<AddStructName<"type">, SnakeCaseToCamelCase>;
-  return rfl::json::write<Processors>(obj);
+  return rfl::json::write<AddStructName<"type">, SnakeCaseToCamelCase, NoOptionals>(obj);
 }
 
 }  // namespace
@@ -48,7 +48,8 @@ string character_hover(Character character) {
 }
 
 string character_confirm(Character character) {
-  return encode(characterConfirm{character});
+  optional<Character> opt = character == Character::unknown ? nullopt : optional(character);
+  return encode(characterConfirm{opt});
 }
 
 string transition_to_ingame() {

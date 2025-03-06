@@ -10,7 +10,7 @@ export default function GameState() {
   const { gameStatus } = useSession();
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-blue-400">
+    <div className="flex min-h-screen flex-col items-center bg-linear-to-b from-blue-400 from-70% to-blue-500">
       {gameStatus === GameStatus.Prelobby && <Prelobby />}
 
       {(gameStatus === GameStatus.Lobby ||
