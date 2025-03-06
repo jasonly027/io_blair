@@ -1,7 +1,7 @@
 import * as TH from "three";
-import { useSession } from "../hooks/useSession";
+import { useSession } from "../../hooks/useSession";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
-import type { MapUserData } from "../lib/Map";
+import type { MapUserData } from "../../lib/Map";
 
 export const TILE_WIDTH = 1;
 export const GAP_WIDTH = 0.75;

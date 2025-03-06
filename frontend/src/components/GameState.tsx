@@ -1,7 +1,7 @@
 import { GameStatus, useSession } from "../hooks/useSession";
 import Chat from "./Chat";
-import InGame from "./InGame";
-import Lobby from "./Lobby";
+import InGame from "./InGame/InGame";
+import Lobby from "./Lobby/Lobby";
 import Prelobby from "./Prelobby";
 
 export default function GameState() {

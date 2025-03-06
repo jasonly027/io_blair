@@ -2,7 +2,7 @@ import { Helper, PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { type ReactNode, useRef } from "react";
 import { PointLightHelper } from "three";
-import type { GameCharacter } from "../types/character";
+import type { GameCharacter } from "../../types/character";
 import CatWaffle from "./CatWaffle";
 import { a, useSpring } from "@react-spring/web";
 

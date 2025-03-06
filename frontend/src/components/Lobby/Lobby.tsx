@@ -1,8 +1,8 @@
 import { Slide, toast, ToastContainer } from "react-toastify";
-import { useSession } from "../hooks/useSession";
-import Pregame from "./Pregame";
+import { useSession } from "../../hooks/useSession";
+import Pregame from "../Pregame";
 import { a } from "@react-spring/web";
-import useDynamicScale from "../hooks/useDynamicScale";
+import useDynamicScale from "../../hooks/useDynamicScale";
 import CharacterSelect from "./CharacterSelect";
 
 export default function Lobby() {

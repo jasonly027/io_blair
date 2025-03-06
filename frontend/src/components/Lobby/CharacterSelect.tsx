@@ -6,12 +6,12 @@ import {
   useState,
   type Dispatch,
 } from "react";
-import type { GameCharacter, GamePlayer } from "../types/character";
-import CharacterCard from "./CharacterCard";
-import { useSession } from "../hooks/useSession";
+import type { GameCharacter, GamePlayer } from "../../types/character";
+import CharacterCard from "../CharacterCard";
+import { useSession } from "../../hooks/useSession";
 import { a } from "@react-spring/web";
-import useDynamicScale from "../hooks/useDynamicScale";
-import type { GameConnectionListener } from "../lib/GameConnection";
+import useDynamicScale from "../../hooks/useDynamicScale";
+import type { GameConnectionListener } from "../../lib/GameConnection";
 
 const characters = ["Io", "Blair"] as const satisfies GameCharacter[];
 
