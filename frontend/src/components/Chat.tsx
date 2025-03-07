@@ -30,11 +30,9 @@ export default function Chat() {
   );
 
   return (
-    <div className="fixed bottom-12 z-10 size-full max-h-72 max-w-104 sm:left-12">
-      <div className="flex size-full flex-col rounded-sm bg-black/20">
-        <History history={history} />
-        <Input setHistory={setHistory} />
-      </div>
+    <div className="flex size-full flex-col rounded-sm bg-black/20">
+      <History history={history} />
+      <Input setHistory={setHistory} />
     </div>
   );
 }

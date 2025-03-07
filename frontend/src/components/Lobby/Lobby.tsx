@@ -4,14 +4,15 @@ import Pregame from "../Pregame";
 import { a } from "@react-spring/web";
 import useDynamicScale from "../../hooks/useDynamicScale";
 import CharacterSelect from "./CharacterSelect";
+import Chat from "../Chat";
 
 export default function Lobby() {
   return (
     <Pregame>
-      <div className="space-y-8 rounded-lg p-8">
+      <div className="flex w-full flex-col items-center justify-center space-y-8 rounded-lg p-8">
         <StatusBar />
         <CharacterSelect />
-        <ChatSpaceOffset />
+        <ChatContainer />
       </div>
     </Pregame>
   );
@@ -19,7 +20,7 @@ export default function Lobby() {
 
 function StatusBar() {
   return (
-    <div className="flex w-full max-w-3xl flex-col items-center space-x-4 text-center select-none max-lg:space-y-4 min-lg:flex-row min-lg:justify-between">
+    <div className="flex w-full max-w-2xl flex-col items-center space-x-4 text-center select-none max-lg:space-y-4 min-lg:flex-row min-lg:justify-between">
       <PlayerCount />
       <LobbyCode />
     </div>
@@ -99,6 +100,10 @@ function ClipboardToastComponent() {
   );
 }
 
-function ChatSpaceOffset() {
-  return <div className="h-72 min-lg:h-0"></div>;
+function ChatContainer() {
+  return (
+    <div className="bottom-5 left-5 flex h-72 w-full max-w-[25rem] items-center justify-center min-2xl:fixed">
+      <Chat />
+    </div>
+  );
 }
