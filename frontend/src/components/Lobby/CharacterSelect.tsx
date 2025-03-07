@@ -1,17 +1,11 @@
 import {
-  useCallback,
-  useEffect,
-  useMemo,
   useReducer,
-  useState,
   type Dispatch,
 } from "react";
 import type { GameCharacter, GamePlayer } from "../../types/character";
 import CharacterCard from "./CharacterCard";
-import { useSession } from "../../hooks/useSession";
 import { a } from "@react-spring/web";
 import useDynamicScale from "../../hooks/useDynamicScale";
-import type { GameConnectionListener } from "../../lib/GameConnection";
 
 const characters = ["Io", "Blair"] as const satisfies GameCharacter[];
 
@@ -57,7 +51,9 @@ function styleReducer(styles: CardStyle[], action: StyleAction): CardStyle[] {
       newStyle.Teammate = isTarget ? action.Teammate : "none";
     }
 
-    if (newStyle.You !== "none") {
+    const showYouStyle =
+      newStyle.Teammate !== "full" && newStyle.You !== "none";
+    if (showYouStyle) {
       newStyle.stroke = newStyle.You;
       newStyle.strokeColor = "rgba(255, 255, 255, 1)";
     } else {
@@ -76,26 +72,6 @@ export default function CharacterSelect() {
     createCardStyles,
   );
 
-  const { hover, confirm, unConfirm } = useYouCharacterSelecter(changeStyles);
-
-  useTeammateCharacterSelecter(changeStyles);
-
-  const [confirmed, setConfirmed] = useState(false);
-
-  const onCardClick = (character: GameCharacter) => {
-    if (confirmed) return;
-    hover(character);
-  };
-
-  const onConfirmClick = () => {
-    if (!confirmed) {
-      confirm();
-    } else {
-      unConfirm();
-    }
-    setConfirmed((prev) => !prev);
-  };
-
   return (
     <div className="flex flex-col items-center justify-center space-y-12">
       <div className="flex flex-col max-lg:space-y-8 min-lg:flex-row min-lg:space-x-16">
@@ -103,128 +79,14 @@ export default function CharacterSelect() {
           <CharacterCard
             key={character}
             name={character}
-            locked={confirmed}
+            locked={false}
             stroke={stroke}
             strokeColor={strokeColor}
-            onClick={onCardClick}
           />
         ))}
       </div>
-      <ConfirmCharacter confirmed={confirmed} onClick={onConfirmClick} />
+      <ConfirmCharacter confirmed={false} />
     </div>
-  );
-}
-
-interface youCharacterSelecterValues {
-  hover: Dispatch<GameCharacter>;
-  confirm: Dispatch<void>;
-  unConfirm: Dispatch<void>;
-}
-
-function useYouCharacterSelecter(
-  changeStyles: Dispatch<StyleAction>,
-): youCharacterSelecterValues {
-  const [hovered, setHovered] = useState<GameCharacter | null>(null);
-
-  const { you, setYou, teammate, hoverCharacter, confirmCharacter } =
-    useSession();
-
-  const hover = useCallback(
-    (character: GameCharacter) => {
-      if (character === teammate) return;
-
-      hoverCharacter(character);
-      setHovered(character);
-      changeStyles({ character, You: "dashed" });
-    },
-    [teammate, hoverCharacter, changeStyles],
-  );
-
-  const confirm = useCallback(() => {
-    if (hovered === null) return;
-
-    confirmCharacter(hovered);
-    setYou(hovered);
-    changeStyles({ character: hovered, You: "full" });
-  }, [hovered, confirmCharacter, setYou, changeStyles]);
-
-  const unConfirm = useCallback(() => {
-    if (you === null) return;
-
-    confirmCharacter(null);
-    changeStyles({ character: you, You: "dashed" });
-    setYou(null);
-  }, [you, confirmCharacter, changeStyles, setYou]);
-
-  return useMemo(
-    () => ({
-      hover,
-      confirm,
-      unConfirm,
-    }),
-    [hover, confirm, unConfirm],
-  );
-}
-
-function useTeammateCharacterSelecter(changeStyles: Dispatch<StyleAction>) {
-  const {
-    you,
-    setYou,
-    setTeammate,
-    addConnectionEventListener,
-    removeConnectionEventListener,
-  } = useSession();
-
-  useEffect(
-    function listenForHover() {
-      const onHover: GameConnectionListener<"characterHover"> = ({
-        character,
-      }) => {
-        console.log("heard other hover");
-        
-        changeStyles({ character, Teammate: "dashed" });
-      };
-      addConnectionEventListener("characterHover", onHover);
-
-      return () => {
-        removeConnectionEventListener("characterHover", onHover);
-      };
-    },
-    [addConnectionEventListener, removeConnectionEventListener, changeStyles],
-  );
-
-  useEffect(
-    function listenForConfirm() {
-      const onConfirm: GameConnectionListener<"characterConfirm"> = ({
-        character,
-      }) => {
-        setTeammate(character);
-        console.log("heard confirm");
-
-        changeStyles({
-          character: character ?? "Io",
-          ...(character === you ? { You: "none" } : {}),
-          Teammate: character === null ? "none" : "full",
-        });
-
-        if (character === you) {
-          setYou(null);
-        }
-      };
-      addConnectionEventListener("characterConfirm", onConfirm);
-
-      return () => {
-        removeConnectionEventListener("characterConfirm", onConfirm);
-      };
-    },
-    [
-      addConnectionEventListener,
-      changeStyles,
-      removeConnectionEventListener,
-      setTeammate,
-      setYou,
-      you,
-    ],
   );
 }
 

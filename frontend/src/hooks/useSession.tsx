@@ -26,10 +26,7 @@ export interface SessionValue extends ConnectionValues {
   setPlayerCount: React.Dispatch<SetStateAction<number>>;
 
   you: GameCharacter | null;
-  setYou: React.Dispatch<SetStateAction<GameCharacter | null>>;
-
   teammate: GameCharacter | null;
-  setTeammate: React.Dispatch<SetStateAction<GameCharacter | null>>;
 
   maze: Maze;
   startCoords: Coordinates;

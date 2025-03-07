@@ -14,19 +14,20 @@ export default function Chat() {
   const { addConnectionEventListener, removeConnectionEventListener } =
     useSession();
 
-  useEffect(() => {
-    const updateHistory: GameConnectionListener<"chat"> = ({
-      msg: content,
-    }) => {
-      setHistory((prev) => [...prev, { who: "Teammate", content }]);
-    };
+  useEffect(
+    function listenForChatMessages() {
+      const updateHistory: GameConnectionListener<"chat"> = ({
+        msg: content,
+      }) => {
+        setHistory((prev) => [...prev, { who: "Teammate", content }]);
+      };
 
-    addConnectionEventListener("chat", updateHistory);
+      addConnectionEventListener("chat", updateHistory);
 
-    return () => {
-      removeConnectionEventListener("chat", updateHistory);
-    };
-  }, [addConnectionEventListener, removeConnectionEventListener]);
+      return () => removeConnectionEventListener("chat", updateHistory);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
 
   return (
     <div className="fixed bottom-12 z-10 size-full max-h-72 max-w-104 sm:left-12">
@@ -41,7 +42,7 @@ export default function Chat() {
 function History({ history }: { history: MessageData[] }) {
   const divRef = useRef<HTMLDivElement>(null!);
 
-  useEffect(() => {
+  useEffect(function scrollToBottomOnUpdate() {
     divRef.current.scrollTo({
       top: divRef.current.scrollHeight,
       behavior: "smooth",

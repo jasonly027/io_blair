@@ -48,9 +48,7 @@ export function SessionProvider({ children }: { children?: ReactNode }) {
       setPlayerCount,
 
       you,
-      setYou,
       teammate,
-      setTeammate,
 
       maze,
       startCoords,
