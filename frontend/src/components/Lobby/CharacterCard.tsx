@@ -6,11 +6,14 @@ import type { GameCharacter } from "../../types/character";
 import CatWaffle from "./CatWaffle";
 import { a, useSpring } from "@react-spring/web";
 
-interface CharacterCardProps {
+export interface CharacterCardProps {
   name: GameCharacter;
   stroke: StrokeKind;
   strokeColor: string;
   locked: boolean;
+  /**
+   * Does not call handler if card is locked.
+   */
   onClick?: (name: GameCharacter) => void;
 }
 
@@ -26,7 +29,9 @@ export default function CharacterCard({
   return (
     <DashedContainer stroke={stroke} strokeColor={strokeColor}>
       <div
-        onClick={() => onClick(name)}
+        onClick={() => {
+          if (!locked) onClick(name);
+        }}
         style={{
           cursor: locked ? "not-allowed" : "pointer",
         }}
@@ -39,9 +44,9 @@ export default function CharacterCard({
   );
 }
 
-type StrokeKind = "none" | "dashed" | "full";
+export type StrokeKind = "none" | "dashed" | "full";
 
-interface DashedBorderProps {
+export interface DashedBorderProps {
   stroke?: StrokeKind;
   strokeColor?: string;
   children: ReactNode;

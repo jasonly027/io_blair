@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GameStatus, useSession } from "../hooks/useSession";
+import useGame, { GameStatus } from "../hooks/useGame";
 import Pregame from "./Pregame";
 import { a } from "@react-spring/web";
 import Loading from "./Loading";
 import useDynamicScale from "../hooks/useDynamicScale";
 import type { GameConnectionListener } from "../lib/GameConnection";
+import useConnection from "../hooks/useConnection";
 
 export default function Prelobby() {
   const { status, setToLoading } = usePrelobbyStatus();
@@ -29,7 +30,7 @@ interface CreateProps {
 }
 
 function Create({ setToLoading }: CreateProps) {
-  const { createLobby } = useSession();
+  const { createLobby } = useConnection();
 
   const tryCreateLobby = () => {
     setToLoading();
@@ -88,7 +89,7 @@ interface JoinProps {
 }
 
 function Join({ status, setToLoading }: JoinProps) {
-  const { joinLobby } = useSession();
+  const { joinLobby } = useConnection();
 
   const inputRef = useRef<HTMLInputElement>(null!);
 
@@ -192,13 +193,10 @@ interface PrelobbyStatusValues {
 function usePrelobbyStatus(): PrelobbyStatusValues {
   const [status, setStatus] = useState<PrelobbyStatus>(PrelobbyStatus.Fresh);
 
-  const {
-    setGameStatus,
-    setLobbyCode,
-    setPlayerCount,
-    addConnectionEventListener,
-    removeConnectionEventListener,
-  } = useSession();
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  const { setGameStatus, setLobbyCode, setPlayerCount } = useGame();
 
   const timeoutRef = useRef<number | null>(null);
 

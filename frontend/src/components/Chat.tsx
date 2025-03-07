@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type SetStateAction } from "react";
-import { useSession } from "../hooks/useSession";
 import type { GameConnectionListener } from "../lib/GameConnection";
 import type { GamePlayer } from "../types/character";
+import useConnection from "../hooks/useConnection";
 
 interface MessageData {
   who: GamePlayer;
@@ -12,7 +12,7 @@ export default function Chat() {
   const [history, setHistory] = useState<MessageData[]>([]);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
-    useSession();
+    useConnection();
 
   useEffect(
     function listenForChatMessages() {
@@ -81,7 +81,7 @@ interface InputProps {
 }
 
 function Input({ setHistory }: InputProps) {
-  const { message } = useSession();
+  const { message } = useConnection();
 
   const inputRef = useRef<HTMLInputElement>(null!);
 

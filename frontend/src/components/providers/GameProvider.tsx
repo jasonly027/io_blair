@@ -1,15 +1,14 @@
 import { useMemo, useState, type ReactNode } from "react";
-import Maze, { type Coordinates, cellFromNumber } from "../lib/Maze";
-import useConnection from "../hooks/useConnection";
+import Maze, { type Coordinates, cellFromNumber } from "../../lib/Maze";
 import {
   GameStatus,
-  SessionContext,
-  type SessionValue,
-} from "../hooks/useSession";
-import { type GameCharacter } from "../types/character";
+  GameContext,
+  type GameValue as GameValues,
+} from "../../hooks/useGame";
+import usePlayers from "../../hooks/usePlayers";
 
 /**
- * A provider for useSession.
+ * A provider for useGame.
  *
  * If gameStatus is not Lobby or InGame:
  * - lobbyCode will be "00000000"
@@ -19,8 +18,8 @@ import { type GameCharacter } from "../types/character";
  * - maze will be a 3x3
  * - startCoords will be [0, 0]
  */
-export function SessionProvider({ children }: { children?: ReactNode }) {
-  console.log("SessionProvider render");
+export function GameProvider({ children }: { children?: ReactNode }) {
+  console.log("GameProvider render");
 
   const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
 
@@ -28,15 +27,12 @@ export function SessionProvider({ children }: { children?: ReactNode }) {
 
   const [playerCount, setPlayerCount] = useState(1);
 
-  const [you, setYou] = useState<GameCharacter | null>(null);
-  const [teammate, setTeammate] = useState<GameCharacter | null>(null);
+  const { you, setYou, teammate } = usePlayers();
 
   const [maze] = useState<Maze>(getDefaultMaze);
   const [startCoords] = useState<Coordinates>([0, 0]);
 
-  const connection = useConnection();
-
-  const sessionValue: SessionValue = useMemo(
+  const gameValues: GameValues = useMemo(
     () => ({
       gameStatus,
       setGameStatus,
@@ -48,28 +44,27 @@ export function SessionProvider({ children }: { children?: ReactNode }) {
       setPlayerCount,
 
       you,
+      setYou,
+
       teammate,
 
       maze,
       startCoords,
-      ...connection,
     }),
     [
       gameStatus,
       lobbyCode,
       playerCount,
       you,
+      setYou,
       teammate,
       maze,
       startCoords,
-      connection,
     ],
   );
 
   return (
-    <SessionContext.Provider value={sessionValue}>
-      {children}
-    </SessionContext.Provider>
+    <GameContext.Provider value={gameValues}>{children}</GameContext.Provider>
   );
 }
 

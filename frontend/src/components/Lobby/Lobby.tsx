@@ -1,5 +1,5 @@
 import { Slide, toast, ToastContainer } from "react-toastify";
-import { useSession } from "../../hooks/useSession";
+import useGame from "../../hooks/useGame";
 import Pregame from "../Pregame";
 import { a } from "@react-spring/web";
 import useDynamicScale from "../../hooks/useDynamicScale";
@@ -27,7 +27,7 @@ function StatusBar() {
 }
 
 function PlayerCount() {
-  const { playerCount } = useSession();
+  const { playerCount } = useGame();
 
   return (
     <h2>
@@ -40,7 +40,7 @@ function PlayerCount() {
 }
 
 function LobbyCode() {
-  const { lobbyCode } = useSession();
+  const { lobbyCode } = useGame();
 
   const saveToClipboard = () => {
     clipboardToast();

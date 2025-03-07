@@ -1,5 +1,5 @@
 import * as TH from "three";
-import { useSession } from "../../hooks/useSession";
+import useGame from "../../hooks/useGame";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import type { MapUserData } from "../../lib/Map";
 
@@ -48,7 +48,7 @@ function OobSensor() {
 
 export default function Map() {
   console.log("Map render");
-  const { maze } = useSession();
+  const { maze } = useGame();
 
   return (
     <group position={[0, GROUND_Y - TILE_WIDTH / 2, 0]}>

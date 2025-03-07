@@ -5,7 +5,7 @@ import {
   easings,
 } from "@react-spring/three";
 import { useEffect, useRef, type RefObject } from "react";
-import { useSession } from "../../hooks/useSession";
+import useGame from "../../hooks/useGame";
 import type Maze from "../../lib/Maze";
 import { DIST_TO_NEXT_GAP, DIST_TO_NEXT_TILE, GROUND_Y, OOB_Y } from "./Map";
 import type { CellKey, Coordinates } from "../../lib/Maze";
@@ -69,7 +69,7 @@ const isControlKey = (v: unknown): v is ControlKey =>
 
 export default function Player() {
   console.log("Player render");
-  const { startCoords } = useSession();
+  const { startCoords } = useGame();
   const startPos = toMapPosition(startCoords);
 
   const body = useRef<RapierRigidBody>(null!);
@@ -182,7 +182,7 @@ function useControls(
     player.ctrl = spring[1];
   }, [body, mesh, spring]);
 
-  const { maze } = useSession();
+  const { maze } = useGame();
 
   return (direction: CellKey) => moveBody(body, maze, direction);
 }
