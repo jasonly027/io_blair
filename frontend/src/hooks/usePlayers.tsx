@@ -26,7 +26,7 @@ export type ChangePlayerAction =
 
 export interface usePlayersValues {
   you: Player;
-  setYou: Dispatch<ChangePlayerAction>;
+  setYou: (action: ChangePlayerAction) => boolean;
   teammate: Player;
 }
 

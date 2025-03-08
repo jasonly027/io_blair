@@ -40,6 +40,8 @@ export type GameEventMap = {
       character: GameCharacter | null;
     },
   ];
+  /** Indicates transition to ingame */
+  transitionToInGame: [];
 };
 
 export type GameEventKey = keyof GameEventMap;
@@ -193,6 +195,7 @@ const gameEventMapSchema = {
   chat: [{ msg: "" }],
   characterHover: [{ character: "Io" }],
   characterConfirm: [{ character: null }],
+  transitionToInGame: [],
 } as const satisfies GameEventMap;
 
 /** Convert a raw message from the server to a GameEvent */

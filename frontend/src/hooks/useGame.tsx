@@ -1,7 +1,6 @@
 import {
   createContext,
   useContext,
-  type SetStateAction,
 } from "react";
 import Maze, { type Coordinates } from "../lib/Maze";
 import type { ChangePlayerAction, Player } from "./usePlayers";
@@ -18,13 +17,10 @@ export enum GameStatus {
 /** Values available in the Game context */
 export interface GameValue {
   gameStatus: GameStatus;
-  setGameStatus: React.Dispatch<SetStateAction<GameStatus>>;
 
   lobbyCode: string;
-  setLobbyCode: React.Dispatch<SetStateAction<string>>;
 
   playerCount: number;
-  setPlayerCount: React.Dispatch<SetStateAction<number>>;
 
   you: Player;
   setYou: (action: ChangePlayerAction) => boolean;

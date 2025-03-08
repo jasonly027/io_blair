@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Maze, { type Coordinates, cellFromNumber } from "../../lib/Maze";
 import {
   GameStatus,
@@ -6,6 +6,8 @@ import {
   type GameValue as GameValues,
 } from "../../hooks/useGame";
 import usePlayers from "../../hooks/usePlayers";
+import useConnection from "../../hooks/useConnection";
+import type { GameConnectionListener } from "../../lib/GameConnection";
 
 /**
  * A provider for useGame.
@@ -21,11 +23,11 @@ import usePlayers from "../../hooks/usePlayers";
 export function GameProvider({ children }: { children?: ReactNode }) {
   console.log("GameProvider render");
 
-  const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
+  const gameStatus = useGameStatus();
 
-  const [lobbyCode, setLobbyCode] = useState("00000000");
+  const lobbyCode = useLobbyCode();
 
-  const [playerCount, setPlayerCount] = useState(1);
+  const playerCount = usePlayerCount();
 
   const { you, setYou, teammate } = usePlayers();
 
@@ -35,13 +37,10 @@ export function GameProvider({ children }: { children?: ReactNode }) {
   const gameValues: GameValues = useMemo(
     () => ({
       gameStatus,
-      setGameStatus,
 
       lobbyCode,
-      setLobbyCode,
 
       playerCount,
-      setPlayerCount,
 
       you,
       setYou,
@@ -66,6 +65,100 @@ export function GameProvider({ children }: { children?: ReactNode }) {
   return (
     <GameContext.Provider value={gameValues}>{children}</GameContext.Provider>
   );
+}
+
+const MINIMUM_LOADING_TIME = 1000;
+
+function useGameStatus(): GameStatus {
+  const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
+
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  const timeoutRef = useRef<number | null>(null);
+
+  useEffect(
+    function listenForLobbyJoin() {
+      const onLobbyJoin: GameConnectionListener<"lobbyJoin"> = ({
+        success,
+      }) => {
+        if (!success) return;
+
+        timeoutRef.current = setTimeout(() => {
+          setGameStatus(GameStatus.Lobby);
+        }, MINIMUM_LOADING_TIME);
+      };
+
+      addConnectionEventListener("lobbyJoin", onLobbyJoin);
+      return () => {
+        if (timeoutRef.current !== null) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        removeConnectionEventListener("lobbyJoin", onLobbyJoin);
+      };
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  useEffect(
+    function listenForTransitionToInGame() {
+      const onTransition: GameConnectionListener<"transitionToInGame"> = () => {
+        setGameStatus(GameStatus.InGame);
+      };
+
+      addConnectionEventListener("transitionToInGame", onTransition);
+      return () =>
+        removeConnectionEventListener("transitionToInGame", onTransition);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  return gameStatus;
+}
+
+function useLobbyCode(): string {
+  const [lobbyCode, setLobbyCode] = useState("00000000");
+
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  const onLobbyJoin: GameConnectionListener<"lobbyJoin"> = ({ code }) => {
+    setLobbyCode(code);
+  };
+
+  useEffect(
+    function listenForLobbyJoin() {
+      addConnectionEventListener("lobbyJoin", onLobbyJoin);
+      return () => removeConnectionEventListener("lobbyJoin", onLobbyJoin);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  return lobbyCode;
+}
+
+function usePlayerCount(): number {
+  const [playerCount, setPlayerCount] = useState(0);
+
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  const onLobbyJoin: GameConnectionListener<"lobbyJoin"> = ({
+    playerCount,
+  }) => {
+    setPlayerCount(playerCount);
+  };
+
+  useEffect(
+    function listenForLobbyJoin() {
+      addConnectionEventListener("lobbyJoin", onLobbyJoin);
+      return () => removeConnectionEventListener("lobbyJoin", onLobbyJoin);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  return playerCount;
 }
 
 function getDefaultMaze(): Maze {

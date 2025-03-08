@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import useGame, { GameStatus } from "../hooks/useGame";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Pregame from "./Pregame";
 import { a } from "@react-spring/web";
 import Loading from "./Loading";
@@ -178,7 +177,7 @@ enum PrelobbyStatus {
 }
 
 /** Minimum time to spend on the loading screen */
-const MINIMUM_LOADING_TIME = 1500;
+const MINIMUM_LOADING_TIME = 1000;
 
 interface PrelobbyStatusValues {
   status: PrelobbyStatus;
@@ -196,46 +195,37 @@ function usePrelobbyStatus(): PrelobbyStatusValues {
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
 
-  const { setGameStatus, setLobbyCode, setPlayerCount } = useGame();
-
   const timeoutRef = useRef<number | null>(null);
 
-  const onLobbyJoin: GameConnectionListener<"lobbyJoin"> = useCallback(
-    ({ success, code, playerCount }) => {
-      timeoutRef.current = setTimeout(() => {
-        if (!success) {
-          setStatus(PrelobbyStatus.JoinFailed);
-          return;
-        }
-        setLobbyCode(code);
-        setPlayerCount(playerCount);
-        setGameStatus(GameStatus.Lobby);
-      }, MINIMUM_LOADING_TIME);
-    },
-    [setGameStatus, setLobbyCode, setPlayerCount],
-  );
-
   useEffect(
-    function registerJoinListener() {
+    function listenForLobbyJoin() {
+      const onLobbyJoin: GameConnectionListener<"lobbyJoin"> = ({
+        success,
+      }) => {
+        if (success) return;
+
+        timeoutRef.current = setTimeout(() => {
+          setStatus(PrelobbyStatus.JoinFailed);
+        }, MINIMUM_LOADING_TIME);
+      };
+
       addConnectionEventListener("lobbyJoin", onLobbyJoin);
       return () => {
-        if (timeoutRef.current) {
+        if (timeoutRef.current !== null) {
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
         }
         removeConnectionEventListener("lobbyJoin", onLobbyJoin);
       };
     },
-    [addConnectionEventListener, removeConnectionEventListener, onLobbyJoin],
+    [addConnectionEventListener, removeConnectionEventListener],
   );
 
-  const values: PrelobbyStatusValues = useMemo(
+  return useMemo(
     () => ({
       status,
       setToLoading: () => setStatus(PrelobbyStatus.Loading),
     }),
     [status],
   );
-
-  return values;
 }
