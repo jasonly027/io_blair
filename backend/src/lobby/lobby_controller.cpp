@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 
 #include "character.hpp"
 #include "event.hpp"
@@ -26,15 +27,20 @@ optional<LobbyContext> LobbyController::join(weak_ptr<ISession> session) {
   guard lock(mutex_);
 
   if (p1_.session.try_set(session)) {
+    p1_.session.async_send(
+        jout::lobby_join(code_, static_cast<int>(p1_.exists()) + static_cast<int>(p2_.exists())));
     p2_.session.async_send(jout::lobby_other_join());
     return LobbyContext{code_, p2_.session, make_unique<SessionController>(p1_, p2_, *this)};
   }
 
-  if (p2_.session.try_set(std::move(session))) {
+  if (p2_.session.try_set(session)) {
+    p2_.session.async_send(
+        jout::lobby_join(code_, static_cast<int>(p1_.exists()) + static_cast<int>(p2_.exists())));
     p1_.session.async_send(jout::lobby_other_join());
     return LobbyContext{code_, p1_.session, make_unique<SessionController>(p2_, p1_, *this)};
   }
 
+  session.lock()->async_send(jout::lobby_join(nullopt, nullopt));
   return nullopt;
 }
 

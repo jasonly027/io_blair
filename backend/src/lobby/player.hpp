@@ -19,6 +19,14 @@ struct Player {
    * @brief Resets data members.
    */
   void reset();
+
+  /**
+   * @brief Determines if session hasn't expired.
+   * 
+   * @return true The session hasn't expired.
+   * @return false The session expired.
+   */
+  bool exists() const;
 };
 
 }  // namespace io_blair

@@ -109,6 +109,7 @@ namespace out {
 struct lobbyJoin {
   bool success;
   std::string_view code;
+  int player_count;
 };
 
 /**
@@ -117,7 +118,7 @@ struct lobbyJoin {
  * @param code The lobby code. Passing nullopt means lobby joining failed.
  * @return std::string
  */
-std::string lobby_join(const std::optional<std::string_view>& code);
+std::string lobby_join(const std::optional<std::string_view>& code, std::optional<int> player_count);
 
 /**
  * @brief Indicates another session has joined the lobby.

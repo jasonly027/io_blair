@@ -24,11 +24,14 @@ string encode(const auto& obj) {
   return rfl::json::write<AddStructName<"type">, SnakeCaseToCamelCase, NoOptionals>(obj);
 }
 
+constexpr const char* kEmptyStr = "abc";
 }  // namespace
 
 namespace out {
-string lobby_join(const optional<string_view>& code) {
-  return encode(lobbyJoin{.success = code.has_value(), .code = code.value_or("")});
+string lobby_join(const optional<string_view>& code, optional<int> player_count) {
+  return encode(lobbyJoin{.success      = code.has_value(),
+                          .code         = code.value_or(kEmptyStr),
+                          .player_count = player_count.value_or(0)});
 }
 
 string lobby_other_join() {

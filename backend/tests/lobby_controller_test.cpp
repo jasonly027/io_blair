@@ -17,7 +17,7 @@ using std::make_shared;
 using std::nullopt;
 using std::shared_ptr;
 using std::string;
-using ::testing::_;
+using ::testing::HasSubstr;
 using ::testing::Matcher;
 using ::testing::NiceMock;
 using ::testing::Pointee;
@@ -44,7 +44,9 @@ TEST(LobbyControllerShould, SendOnOtherSessionJoining) {
   auto s1 = make_shared<MockSession>();
   auto s2 = make_shared<MockSession>();
 
-  EXPECT_CALL(*s1, async_send(Matcher<string>(_)));
+  EXPECT_CALL(*s1, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
+  EXPECT_CALL(*s1, async_send(Matcher<string>(HasSubstr("lobbyOtherJoin"))));
+  EXPECT_CALL(*s2, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
 
   controller.join(s1);
   controller.join(s2);
@@ -83,6 +85,21 @@ TEST(LobbyControllerShould, ReplaceSecondSessionWhenExpired) {
   EXPECT_NE(controller.join(s2), nullopt);
   s2.reset();
   EXPECT_NE(controller.join(s3), nullopt);
+}
+
+TEST(LobbyControllerShould, SendOnOtherSessionLeaving) {
+  LobbyController controller("");
+  auto s1 = make_shared<NiceMock<MockSession>>();
+  auto s2 = make_shared<NiceMock<MockSession>>();
+
+  EXPECT_CALL(*s1, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
+  EXPECT_CALL(*s1, async_send(Matcher<string>(HasSubstr("lobbyOtherJoin"))));
+  EXPECT_CALL(*s2, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
+  EXPECT_CALL(*s2, async_send(jout::lobby_other_leave()));
+
+  controller.join(s1);
+  controller.join(s2);
+  controller.leave(s1);
 }
 
 class LobbyControllerFShould : public ::testing::Test {

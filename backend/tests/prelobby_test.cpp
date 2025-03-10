@@ -44,7 +44,6 @@ TEST_F(PrelobbyShould, CreateLobby) {
 
   EXPECT_CALL(manager_, create).WillOnce(Return(std::move(lob_ctx_)));
   EXPECT_CALL(game_, transition_to);
-  EXPECT_CALL(*sess_, async_send(jout::lobby_join(code_)));
 
   prelobby(game_, sess_ctx_, jin::LobbyCreate{});
 }
@@ -54,7 +53,6 @@ TEST_F(PrelobbyShould, TransitionOnLobbyCtx) {
 
   EXPECT_CALL(manager_, join).WillOnce(Return(std::move(lob_ctx_)));
   EXPECT_CALL(game_, transition_to);
-  EXPECT_CALL(*sess_, async_send(jout::lobby_join(code_)));
 
   prelobby(game_, sess_ctx_, jin::LobbyJoin{code_});
 }
@@ -63,7 +61,6 @@ TEST_F(PrelobbyShould, NotTransitionOnNulloptLobbyCtx) {
   Prelobby prelobby;
 
   EXPECT_CALL(manager_, join).WillOnce(Return(nullopt));
-  EXPECT_CALL(*sess_, async_send(jout::lobby_join(nullopt)));
 
   prelobby(game_, sess_ctx_, jin::LobbyJoin{code_});
 }

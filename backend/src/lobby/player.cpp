@@ -9,4 +9,8 @@ void Player::reset() {
   character = Character::unknown;
 }
 
+bool Player::exists() const {
+  return !session.expired();
+}
+
 }  // namespace io_blair

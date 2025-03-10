@@ -26,7 +26,7 @@ class Prelobby : public IGameHandler {
 
  private:
   // Transitions the IGame to the Lobby state.
-  static void transition_to_lobby(IGame&, SessionContext&, LobbyContext);
+  static void transition_to_lobby(IGame&, LobbyContext);
 };
 
 /**
