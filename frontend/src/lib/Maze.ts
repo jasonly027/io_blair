@@ -24,11 +24,11 @@ export default class Maze {
   readonly moves: Cell[][];
 
   constructor(moves: Cell[][]) {
-    if (moves.length <= 0 || moves[0]!.length <= 0) {
+    if (moves.length <= 0 || moves[0] === undefined || moves[0].length <= 0) {
       throw new Error("rows and columns must be greater than 0");
     }
     this.rows = moves.length;
-    this.cols = moves[0]!.length;
+    this.cols = moves[0].length;
     this.moves = moves;
   }
 

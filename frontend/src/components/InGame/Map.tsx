@@ -48,7 +48,7 @@ function OobSensor() {
 
 export default function Map() {
   console.log("Map render");
-  const { maze } = useGame();
+  const { map: maze } = useGame();
 
   return (
     <group position={[0, GROUND_Y - TILE_WIDTH / 2, 0]}>

@@ -27,7 +27,7 @@ export interface GameValue {
 
   teammate: Player;
 
-  maze: Maze;
+  map: Maze;
   startCoords: Coordinates;
 }
 

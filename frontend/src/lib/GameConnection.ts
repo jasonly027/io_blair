@@ -21,6 +21,10 @@ export type GameEventMap = {
       playerCount: number;
     },
   ];
+  /** Indicates teammate has joined the lobby */
+  lobbyOtherJoin: [],
+  /** Indicates teammate has left the lobby */
+  lobbyOtherLeave: [],
   /** Indicates the server forwarded a message from another player. */
   chat: [
     {
@@ -192,6 +196,8 @@ const gameEventMapSchema = {
   open: [],
   close: [],
   lobbyJoin: [{ success: false, code: "", playerCount: 0 }],
+  lobbyOtherJoin: [],
+  lobbyOtherLeave: [],
   chat: [{ msg: "" }],
   characterHover: [{ character: "Io" }],
   characterConfirm: [{ character: null }],

@@ -31,7 +31,8 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 
   const { you, setYou, teammate } = usePlayers();
 
-  const [maze] = useState<Maze>(getDefaultMaze);
+  const { map } = useMap();
+
   const [startCoords] = useState<Coordinates>([0, 0]);
 
   const gameValues: GameValues = useMemo(
@@ -47,7 +48,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 
       teammate,
 
-      maze,
+      map,
       startCoords,
     }),
     [
@@ -57,7 +58,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
       you,
       setYou,
       teammate,
-      maze,
+      map,
       startCoords,
     ],
   );
@@ -100,6 +101,15 @@ function useGameStatus(): GameStatus {
     },
     [addConnectionEventListener, removeConnectionEventListener],
   );
+
+  useEffect(function listenForLobbyOtherLeave() {
+    const onLobbyOtherLeave: GameConnectionListener<"lobbyOtherLeave"> = () => {
+      setGameStatus(GameStatus.Lobby);
+    }
+
+    addConnectionEventListener("lobbyOtherLeave", onLobbyOtherLeave);
+    return () => removeConnectionEventListener("lobbyOtherLeave", onLobbyOtherLeave);
+  })
 
   useEffect(
     function listenForTransitionToInGame() {
@@ -150,15 +160,45 @@ function usePlayerCount(): number {
     setPlayerCount(playerCount);
   };
 
+  const onLobbyOtherJoin: GameConnectionListener<"lobbyOtherJoin"> = () => {
+    setPlayerCount((prev) => prev + 1);
+  };
+
+  const onLobbyOtherLeave: GameConnectionListener<"lobbyOtherLeave"> = () => {
+    setPlayerCount((prev) => prev - 1);
+  };
+
   useEffect(
     function listenForLobbyJoin() {
       addConnectionEventListener("lobbyJoin", onLobbyJoin);
-      return () => removeConnectionEventListener("lobbyJoin", onLobbyJoin);
+      addConnectionEventListener("lobbyOtherJoin", onLobbyOtherJoin);
+      addConnectionEventListener("lobbyOtherLeave", onLobbyOtherLeave);
+
+      return () => {
+        removeConnectionEventListener("lobbyJoin", onLobbyJoin);
+        removeConnectionEventListener("lobbyOtherJoin", onLobbyOtherJoin)
+        removeConnectionEventListener("lobbyOtherLeave", onLobbyOtherLeave);
+      }
     },
     [addConnectionEventListener, removeConnectionEventListener],
   );
 
   return playerCount;
+}
+
+interface useMapValues {
+  map: Maze;
+}
+
+function useMap(): useMapValues {
+  const [maze, setMaze] = useState<Maze>(getDefaultMaze);
+
+  return useMemo(
+    () => ({
+      map: maze,
+    }),
+    [maze],
+  );
 }
 
 function getDefaultMaze(): Maze {

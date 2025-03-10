@@ -182,7 +182,7 @@ function useControls(
     player.ctrl = spring[1];
   }, [body, mesh, spring]);
 
-  const { maze } = useGame();
+  const { map: maze } = useGame();
 
   return (direction: CellKey) => moveBody(body, maze, direction);
 }
