@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
-import { useSession } from "../hooks/useSession";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Pregame from "./Pregame";
 import { a } from "@react-spring/web";
-import usePrelobbyStatus, { PrelobbyStatus } from "../hooks/usePrelobbyStatus";
 import Loading from "./Loading";
 import useDynamicScale from "../hooks/useDynamicScale";
+import type { GameConnectionListener } from "../lib/GameConnection";
+import useConnection from "../hooks/useConnection";
 
 export default function Prelobby() {
   const { status, setToLoading } = usePrelobbyStatus();
@@ -29,7 +29,7 @@ interface CreateProps {
 }
 
 function Create({ setToLoading }: CreateProps) {
-  const { createLobby } = useSession();
+  const { createLobby } = useConnection();
 
   const tryCreateLobby = () => {
     setToLoading();
@@ -88,7 +88,7 @@ interface JoinProps {
 }
 
 function Join({ status, setToLoading }: JoinProps) {
-  const { joinLobby } = useSession();
+  const { joinLobby } = useConnection();
 
   const inputRef = useRef<HTMLInputElement>(null!);
 
@@ -166,5 +166,66 @@ function Join({ status, setToLoading }: JoinProps) {
         maxLength={8}
       />
     </a.div>
+  );
+}
+
+/** The current status of the prelobby */
+enum PrelobbyStatus {
+  Fresh,
+  Loading,
+  JoinFailed,
+}
+
+/** Minimum time to spend on the loading screen */
+const MINIMUM_LOADING_TIME = 1000;
+
+interface PrelobbyStatusValues {
+  status: PrelobbyStatus;
+  setToLoading: () => void;
+}
+
+/**
+ * Returns the status of the prelobby. Must be used within a SessionProvider
+ * component. Listens for the "lobbyJoin" event from the server and updates
+ * the prelobby status to JoinFailed or the game status to Lobby accordingly.
+ */
+function usePrelobbyStatus(): PrelobbyStatusValues {
+  const [status, setStatus] = useState<PrelobbyStatus>(PrelobbyStatus.Fresh);
+
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  const timeoutRef = useRef<number | null>(null);
+
+  useEffect(
+    function listenForLobbyJoin() {
+      const onLobbyJoin: GameConnectionListener<"lobbyJoin"> = ({
+        success,
+      }) => {
+        if (success) return;
+
+        timeoutRef.current = setTimeout(() => {
+          setStatus(PrelobbyStatus.JoinFailed);
+        }, MINIMUM_LOADING_TIME);
+      };
+
+      addConnectionEventListener("lobbyJoin", onLobbyJoin);
+      return () => {
+        if (timeoutRef.current !== null) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        removeConnectionEventListener("lobbyJoin", onLobbyJoin);
+      };
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  return useMemo(
+    () => ({
+      status,
+      setToLoading: () => setStatus(PrelobbyStatus.Loading),
+    }),
+    [status],
   );
 }
