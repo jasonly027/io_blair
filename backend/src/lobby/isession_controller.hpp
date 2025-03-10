@@ -18,6 +18,10 @@ class ISessionController {
  public:
   virtual ~ISessionController() = default;
 
+  /**
+   * @brief Set the character of this session.
+   * @param Character The character to set session as.
+   */
   virtual void set_character(Character) = 0;
 };
 

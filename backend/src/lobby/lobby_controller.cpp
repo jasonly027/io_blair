@@ -63,7 +63,7 @@ void LobbyController::leave(const weak_ptr<ISession>& session) {
 
 bool LobbyController::empty() const {
   guard lock(mutex_);
-  return p1_.session.expired() && p2_.session.expired();
+  return !p1_.exists() && !p2_.exists();
 }
 
 void LobbyController::set_character(Player& self, Player& other, Character character) {
