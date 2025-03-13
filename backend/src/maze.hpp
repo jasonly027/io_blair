@@ -1,10 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <bitset>
-#include <concepts>
 #include <cstdint>
 #include <cstdlib>
+#include <random>
 #include <utility>
 
 #include "character.hpp"
@@ -43,6 +44,14 @@ constexpr std::pair<Io, Blair> both(Both dir) {
     case Both::kDown:  return {Io::kDown, Blair::kDown};
     case Both::kLeft:  return {Io::kLeft, Blair::kLeft};
   }
+}
+
+extern thread_local std::mt19937 mt;
+
+inline std::array<General, 4> random_dirs() {
+  std::array<General, 4> res{kUp, kRight, kDown, kLeft};
+  std::ranges::shuffle(res, mt);
+  return res;
 }
 }  // namespace direction
 
@@ -138,8 +147,8 @@ class Maze {
   template <typename T>
   using matrix = std::array<std::array<T, Cols>, Rows>;
 
-  constexpr Maze(matrix<Cell> matrix, coordinate start, coordinate end)
-      : start(start), end(end), matrix_(matrix) {}
+  constexpr Maze(coordinate start, coordinate end, matrix<Cell> matrix = {})
+      : start(std::move(start)), end(std::move(end)), matrix_(std::move(matrix)) {}
 
   constexpr const Cell& at(int row, int col) const {
     return matrix_[row][col];
@@ -181,6 +190,12 @@ class Maze {
     }
 
     return res;
+  }
+
+  static Maze<Rows, Cols> random() {
+    Maze<Rows, Cols> maze;
+    direction::random_dirs();
+    return maze;
   }
 
   const coordinate start;

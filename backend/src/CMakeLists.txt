@@ -2,6 +2,7 @@ add_library(${PROJECT_NAME}_lib STATIC
     server.cpp
     json.cpp
     string_hash.cpp
+    maze.cpp
 
     session/session.cpp
     session/session_context.cpp
