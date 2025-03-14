@@ -101,14 +101,14 @@ void LobbyController::start_game() {
   guard lock(mutex_);
 
   auto msg = make_shared<const string>(jout::transition_to_ingame());
-
   p1_.send(SessionEvent::kTransitionToInGame);
   p1_.send(msg);
-
   p2_.send(SessionEvent::kTransitionToInGame);
   p2_.send(std::move(msg));
 
   maze_.randomize();
+  p1_.position = kMazeStart;
+  p2_.position = kMazeStart;
 
   p1_.send(jout::ingame_maze(maze_, p1_.character));
   p2_.send(jout::ingame_maze(maze_, p2_.character));

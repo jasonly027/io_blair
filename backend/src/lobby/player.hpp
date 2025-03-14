@@ -9,6 +9,7 @@
 #include "character.hpp"
 #include "event.hpp"
 #include "isession.hpp"
+#include "maze.hpp"
 #include "session_view.hpp"
 
 
@@ -83,6 +84,11 @@ class Player {
    * @brief The character of the player.
    */
   Character character = Character::unknown;
+
+  /**
+   * @brief The position of the player in the maze.
+   */
+  coordinate position;
 
  private:
   SessionView session_;

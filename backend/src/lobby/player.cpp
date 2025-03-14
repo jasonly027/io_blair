@@ -26,6 +26,7 @@ bool Player::try_set(std::weak_ptr<ISession> session) {
 void Player::reset() {
   session_.reset();
   character = Character::unknown;
+  position  = {0, 0};
 }
 
 bool Player::exists() const {
