@@ -9,19 +9,26 @@
 #include <cstdint>
 #include <cstdlib>
 #include <stack>
+#include <type_traits>
 #include <utility>
 
 #include "character.hpp"
 
 
 namespace io_blair {
-
 /**
  * @brief A pair of ints. The first is x and the second is y.
  */
 using coordinate = std::pair<int, int>;
 
 namespace direction {
+template <typename T>
+concept CardinalDirectionEnum = std::is_enum_v<T> && requires {
+  { T::kUp } -> std::convertible_to<T>;
+  { T::kRight } -> std::convertible_to<T>;
+  { T::kDown } -> std::convertible_to<T>;
+  { T::kLeft } -> std::convertible_to<T>;
+};
 
 /**
  * @brief The underlying type of the directional enums.
@@ -50,7 +57,7 @@ enum class Blair : UnderlyingDirectionT { kUp = 4, kRight = 5, kDown = 6, kLeft 
  * @brief Constrains \p T to be either io_blair::direction::Io or io_blair::direction::Blair.
  */
 template <typename T>
-concept CharacterDirection = std::same_as<T, Io> || std::same_as<T, Blair>;
+concept CharacterDirectionEnum = std::same_as<T, Io> || std::same_as<T, Blair>;
 
 /**
  * @brief Casts \p dir to its underlying type.
@@ -58,7 +65,7 @@ concept CharacterDirection = std::same_as<T, Io> || std::same_as<T, Blair>;
  * @param dir
  * @return UnderlyingDirectionT 
  */
-constexpr UnderlyingDirectionT to_underlying(CharacterDirection auto dir) {
+constexpr UnderlyingDirectionT to_underlying(CharacterDirectionEnum auto dir) {
   return static_cast<UnderlyingDirectionT>(dir);
 }
 
@@ -82,7 +89,7 @@ enum class Either : UnderlyingDirectionT { kUp, kRight, kDown, kLeft };
  * @param dir 
  * @return OutDir 
  */
-template <typename OutDir, typename InDir>
+template <CardinalDirectionEnum OutDir, CardinalDirectionEnum InDir>
 constexpr OutDir to(InDir dir) {
   switch (dir) {
     case InDir::kUp:    return OutDir::kUp;
@@ -99,7 +106,7 @@ constexpr OutDir to(InDir dir) {
  * @param dir 
  * @return Direction 
  */
-template <typename Direction>
+template <CardinalDirectionEnum Direction>
 constexpr Direction opposite(Direction dir) {
   switch (dir) {
     case Direction::kUp:    return Direction::kDown;
@@ -142,7 +149,7 @@ bool random_coin();
  * @param dir The direction to translate towards.
  * @return coordinate 
  */
-template <typename Direction>
+template <CardinalDirectionEnum Direction>
 constexpr coordinate translate(coordinate start, Direction dir) {
   const auto [x, y] = start;
   switch (dir) {
@@ -177,7 +184,7 @@ class Cell {
    * @return true This character can see a path.
    * @return false This character cannot see a path.
    */
-  constexpr bool operator[](direction::CharacterDirection auto dir) const {
+  constexpr bool operator[](direction::CharacterDirectionEnum auto dir) const {
     return bits_[direction::to_underlying(dir)];
   }
 
@@ -237,7 +244,7 @@ class Cell {
    * @param dir The direction and represented character.
    * @param value Whether the path towards \p dir can be seen or not.
    */
-  constexpr void set(direction::CharacterDirection auto dir, bool value) {
+  constexpr void set(direction::CharacterDirectionEnum auto dir, bool value) {
     bits_[direction::to_underlying(dir)] = value;
   }
 
@@ -296,7 +303,7 @@ class Cell {
   static constexpr size_t kCoinIdx = 8;
 
   // See serialize_for
-  template <direction::CharacterDirection Character, direction::CharacterDirection Other>
+  template <direction::CharacterDirectionEnum Character, direction::CharacterDirectionEnum Other>
   constexpr int16_t serialize_impl() const {
     const auto self = *this;
     using Both      = direction::Both;
@@ -478,18 +485,18 @@ class Maze {
       // a
       // ↓
       // b
-      if (y1 + 1 == y2) return at(y1, x1)[direction::Both::kDown];
+      if (y1 + 1 == y2) return at(y1, x1)[direction::Either::kDown];
       // b
       // ↑
       // a
-      if (y1 - 1 == y2) return at(y1, x1)[direction::Both::kUp];
+      if (y1 - 1 == y2) return at(y1, x1)[direction::Either::kUp];
     }
 
     if (y1 == y2) {
       // a → b
-      if (x1 + 1 == x2) return at(y1, x2)[direction::Both::kRight];
+      if (x1 + 1 == x2) return at(y1, x1)[direction::Either::kRight];
       // b ← a
-      if (x1 - 1 == x2) return at(y1, x2)[direction::Both::kLeft];
+      if (x1 - 1 == x2) return at(y1, x1)[direction::Either::kLeft];
     }
 
     return false;
@@ -507,7 +514,7 @@ class Maze {
     matrix<int16_t> res;
     for (int row = 0; row < Rows; ++row) {
       for (int col = 0; col < Cols; ++col) {
-        res[row][col] = at_mutable(row, col).serialize_for(character);
+        res[row][col] = at(row, col).serialize_for(character);
       }
     }
 
