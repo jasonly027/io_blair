@@ -117,9 +117,9 @@ class LobbyControllerFShould : public ::testing::Test {
 };
 
 TEST_F(LobbyControllerFShould, NotSetCharacterWhenAlreadyCharacter) {
-  p1_.session.try_set(s1_);
+  p1_.try_set(s1_);
   p1_.character = Character::Io;
-  p2_.session.try_set(s2_);
+  p2_.try_set(s2_);
   LobbyController controller("");
 
   // Shouldn't trigger StrictMock's
@@ -127,9 +127,9 @@ TEST_F(LobbyControllerFShould, NotSetCharacterWhenAlreadyCharacter) {
 }
 
 TEST_F(LobbyControllerFShould, NotSetCharacterWhenOtherIsAlreadyCharacter) {
-  p1_.session.try_set(s1_);
+  p1_.try_set(s1_);
   p1_.character = Character::Io;
-  p2_.session.try_set(s2_);
+  p2_.try_set(s2_);
   p2_.character = Character::Blair;
   LobbyController controller("");
 
@@ -142,8 +142,8 @@ TEST_F(LobbyControllerFShould, SetCharacterAndSendOther) {
   constexpr Character kCharacter = Character::Io;
   EXPECT_CALL(*s2_, async_send(jout::character_confirm(kCharacter)));
 
-  p1_.session.try_set(s1_);
-  p2_.session.try_set(s2_);
+  p1_.try_set(s1_);
+  p2_.try_set(s2_);
   LobbyController controller("");
 
   controller.set_character(p1_, p2_, kCharacter);
@@ -154,9 +154,9 @@ TEST_F(LobbyControllerFShould, SetCharacterAndSendOther) {
 TEST_F(LobbyControllerFShould, SetCharacterToUnknown) {
   EXPECT_CALL(*s2_, async_send(jout::character_confirm(Character::unknown)));
 
-  p1_.session.try_set(s1_);
+  p1_.try_set(s1_);
   p1_.character = Character::Io;
-  p2_.session.try_set(s2_);
+  p2_.try_set(s2_);
   LobbyController controller("");
 
   controller.set_character(p1_, p2_, Character::unknown);
@@ -175,8 +175,8 @@ TEST_F(LobbyControllerFShould, SetCharactersAndTransitionToInGame) {
   EXPECT_CALL(*s2_, async_handle(SessionEvent::kTransitionToInGame));
   EXPECT_CALL(*s2_, async_send(MatcherSharedStr(Pointee(jout::transition_to_ingame()))));
 
-  p1_.session.try_set(s1_);
-  p2_.session.try_set(s2_);
+  p1_.try_set(s1_);
+  p2_.try_set(s2_);
   LobbyController controller("");
 
   controller.set_character(p1_, p2_, Character::Io);

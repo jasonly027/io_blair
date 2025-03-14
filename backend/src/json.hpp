@@ -3,12 +3,15 @@
  */
 #pragma once
 
+#include <array>
+#include <cstdint>
 #include <optional>
 #include <rfl/json.hpp>
 #include <string>
 #include <string_view>
 
 #include "character.hpp"
+#include "lobby/lobby_controller.hpp"
 
 namespace io_blair {
 class IHandler;
@@ -118,7 +121,8 @@ struct lobbyJoin {
  * @param code The lobby code. Passing nullopt means lobby joining failed.
  * @return std::string
  */
-std::string lobby_join(const std::optional<std::string_view>& code, std::optional<int> player_count);
+std::string lobby_join(const std::optional<std::string_view>& code,
+                       std::optional<int> player_count);
 
 /**
  * @brief Indicates another session has joined the lobby.
@@ -194,7 +198,32 @@ std::string character_confirm(Character character);
  */
 struct transitionToInGame {};
 
+/**
+ * @brief Encodes transitionToInGame as a string.
+ * 
+ * @return std::string 
+ */
 std::string transition_to_ingame();
+
+/**
+ * @brief Contains the serialized maze and start/end coordinates.
+ */
+struct inGameMaze {
+  using M = LobbyController::Maze;
+
+  std::array<std::array<int16_t, M::cols()>, M::rows()> maze;
+  std::array<int, 2> start;
+  std::array<int, 2> end;
+};
+
+/**
+ * @brief Encodes inGameMaze as a string.
+ * 
+ * @param maze
+ * @param character The character to serialize maze for.
+ * @return std::string 
+ */
+std::string ingame_maze(LobbyController::Maze maze, Character character);
 
 //NOLINTEND(readability-identifier-naming)
 }  // namespace out

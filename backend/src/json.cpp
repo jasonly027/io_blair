@@ -59,6 +59,15 @@ string transition_to_ingame() {
   return encode(transitionToInGame{});
 }
 
+string ingame_maze(LobbyController::Maze maze, Character character) {
+  auto [startX, startY] = maze.start();
+  auto [endX, endY]     = maze.end();
+  return encode(inGameMaze{
+      .maze = maze.serialize_for(character), .start = {startX, startY},
+           .end = {endX,   endY  }
+  });
+}
+
 }  // namespace out
 
 }  // namespace io_blair::json

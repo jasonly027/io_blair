@@ -337,6 +337,24 @@ class Maze {
   using matrix = std::array<std::array<T, Cols>, Rows>;
 
   /**
+   * @brief Gets the number of rows in the maze.
+   * 
+   * @return int 
+   */
+  static constexpr int rows() {
+    return Rows;
+  }
+
+  /**
+   * @brief Gets the number of columns in the maze.
+   * 
+   * @return int 
+   */
+  static constexpr int cols() {
+    return Cols;
+  }
+
+  /**
    * @brief Determines whether or not \p coordinate is within
    * the bounds of the maze.
    * 
@@ -363,71 +381,17 @@ class Maze {
   }
 
   /**
-   * @brief Generates a random maze using recursive backtracking.
-   * \p start and \p end are not checked to see if they are within
-   * bounds of the maze.
+   * @brief Generates a random maze. \p start and \p end are
+   * not checked to see if they are within bounds of the maze.
    *
-   * @see https://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking
+   * @see Maze::randomize
    * 
    * @param start The start of the maze.
    * @param end The end of the maze.
    * @return Maze<Rows, Cols> 
    */
   static Maze<Rows, Cols> random(coordinate start, coordinate end) {
-    namespace dir = direction;
-    using dir::to;
-
-    Maze<Rows, Cols> maze(std::move(start), std::move(end));
-
-    struct TraversalHistory {
-      coordinate coord;                  // Identifies a cell in the maze for traversing
-      int current_dir;                   // The next idx to use when accessing dirs
-      std::array<dir::General, 4> dirs;  // Shuffled cardinal directions sequence
-    };
-
-    std::stack<TraversalHistory> stack;
-    stack.emplace(coordinate{0, 0}, 0, dir::random_dirs());
-
-    // Loops until every maze cell has been visited
-    while (!stack.empty()) {
-      auto [coord, i, dirs] = stack.top();
-      auto current_dir      = dirs[i];
-      stack.pop();
-
-      // Continue to return this cell to the stack until we've tried every direction from it
-      if (i + 1 < dirs.size()) {
-        stack.emplace(coord, i + 1, dirs);
-      }
-
-      // Identify and determine if neighboring cell is in bounds of the maze
-      // and has never been visited
-      auto neighbor = dir::translate(coord, current_dir);
-      if (!in_range(neighbor) || maze.at(neighbor).any()) {
-        continue;
-      }
-
-      // Create access from current cell to neighbor.
-      // Use randomizer to determine who can see the path
-      switch (dir::random_char()) {
-        case Character::unknown: {
-          maze.bridge(coord, to<dir::Both>(current_dir), true);
-        } break;
-        case Character::Io: {
-          maze.bridge(coord, to<dir::Io>(current_dir), true);
-        } break;
-        case Character::Blair: {
-          maze.bridge(coord, to<dir::Blair>(current_dir), true);
-        } break;
-      }
-
-      // Use randomizer to determine if cell should have coin
-      maze.at_mutable(neighbor).set_coin(dir::random_coin());
-
-      // Continue traversal from neighbor's cell
-      stack.emplace(neighbor, 0, dir::random_dirs());
-    }
-
-    return maze;
+    return Maze<Rows, Cols>(std::move(start), std::move(end)).randomize();
   }
 
   /**
@@ -439,7 +403,25 @@ class Maze {
    */
   constexpr Maze(coordinate start, coordinate end,
                  matrix<Cell> matrix = std::array<std::array<Cell, Cols>, Rows>())
-      : start(std::move(start)), end(std::move(end)), matrix_(std::move(matrix)) {}
+      : start_(std::move(start)), end_(std::move(end)), matrix_(std::move(matrix)) {}
+
+  /**
+   * @brief Gets the start of the maze.
+   * 
+   * @return const coordinate& 
+   */
+  constexpr const coordinate& start() const {
+    return start_;
+  }
+
+  /**
+   * @brief Gets the end of the maze.
+   * 
+   * @return const coordinate& 
+   */
+  constexpr const coordinate& end() const {
+    return end_;
+  }
 
   /**
    * @brief Accesses a cell in the maze.
@@ -503,6 +485,66 @@ class Maze {
   }
 
   /**
+   * @brief Randomizes the paths in the maze using recursive backtracking.
+   *
+   * @see https://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking
+   */
+  void randomize() {
+    clear();
+
+    namespace dir = direction;
+    using dir::to;
+
+    struct TraversalHistory {
+      coordinate coord;                  // Identifies a cell in the maze for traversing
+      int current_dir;                   // The next idx to use when accessing dirs
+      std::array<dir::General, 4> dirs;  // Shuffled cardinal directions sequence
+    };
+
+    std::stack<TraversalHistory> stack;
+    stack.emplace(coordinate{0, 0}, 0, dir::random_dirs());
+
+    // Loops until every maze cell has been visited
+    while (!stack.empty()) {
+      auto [coord, i, dirs] = stack.top();
+      auto current_dir      = dirs[i];
+      stack.pop();
+
+      // Continue to return this cell to the stack until we've tried every direction from it
+      if (i + 1 < dirs.size()) {
+        stack.emplace(coord, i + 1, dirs);
+      }
+
+      // Identify and determine if neighboring cell is in bounds of the maze
+      // and has never been visited
+      auto neighbor = dir::translate(coord, current_dir);
+      if (!in_range(neighbor) || at(neighbor).any()) {
+        continue;
+      }
+
+      // Create access from current cell to neighbor.
+      // Use randomizer to determine who can see the path
+      switch (dir::random_char()) {
+        case Character::unknown: {
+          bridge(coord, to<dir::Both>(current_dir), true);
+        } break;
+        case Character::Io: {
+          bridge(coord, to<dir::Io>(current_dir), true);
+        } break;
+        case Character::Blair: {
+          bridge(coord, to<dir::Blair>(current_dir), true);
+        } break;
+      }
+
+      // Use randomizer to determine if cell should have coin
+      at_mutable(neighbor).set_coin(dir::random_coin());
+
+      // Continue traversal from neighbor's cell
+      stack.emplace(neighbor, 0, dir::random_dirs());
+    }
+  }
+
+  /**
    * @brief Serializes the maze with respect to \p character in bit flags.
    * 
    * @see Cell::serialize_for
@@ -521,14 +563,13 @@ class Maze {
     return res;
   }
 
-  /**
-   * @brief The start of the maze.
-   */
-  const coordinate start;
-  /**
-   * @brief The end of the maze.
-   */
-  const coordinate end;
+  constexpr void clear() {
+    for (int row = 0; row < Rows; ++row) {
+      for (int col = 0; col < Cols; ++col) {
+        at_mutable(row, col).clear();
+      }
+    }
+  }
 
  private:
   // Undefined behavior if coordinate is out of bounds.
@@ -553,6 +594,9 @@ class Maze {
       at_mutable(neighbor).set(direction::opposite(dir), value);
     }
   }
+
+  coordinate start_;
+  coordinate end_;
 
   // Underlying matrix for the maze.
   matrix<Cell> matrix_;

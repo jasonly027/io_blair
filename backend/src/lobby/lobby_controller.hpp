@@ -12,6 +12,7 @@
 #include "ilobby_controller.hpp"
 #include "isession.hpp"
 #include "lobby_context.hpp"
+#include "maze.hpp"
 #include "player.hpp"
 
 
@@ -21,6 +22,8 @@ namespace io_blair {
  */
 class LobbyController : public ILobbyController {
  public:
+  using Maze = Maze<8, 8>;
+
   /**
    * @brief Construct a new Lobby Controller object.
    * 
@@ -58,12 +61,17 @@ class LobbyController : public ILobbyController {
   bool empty() const override;
 
   /**
-   * @brief Sets the character of \p self. Setting will not happen
-   * if \p self is already \p character or \p other is already \p character
-   * (unless \p character is unknown as both self and other can be unknown
-   * at the same time). The other player is sent a json::out::characterConfirm.
+   * @brief Sets the character of \p self.
+   *
+   * Setting will not happen if \p self is already \p character or
+   * \p other is already \p character (unless \p character is unknown
+   * as both self and other can be unknown at the same time).
+   *
+   * The other player is sent a json::out::characterConfirm.
+   *
    * If both players are no longer unknown after setting, SessionEvent::kTransitionToInGame
-   * and json::out::transitionToInGame are sent to both players.
+   * and json::out::transitionToInGame are sent to both players. json::out::inGameMaze
+   * is sent to both players.
    * 
    * @param self 
    * @param other 
@@ -77,10 +85,14 @@ class LobbyController : public ILobbyController {
   const std::string code_;
 
  private:
-  mutable std::mutex mutex_;
+  void start_game();
+
+  mutable std::recursive_mutex mutex_;
 
   Player p1_;
   Player p2_;
+
+  Maze maze_;
 };
 
 }  // namespace io_blair

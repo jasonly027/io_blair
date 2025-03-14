@@ -214,18 +214,18 @@ class MazeLeftRightShouldF : public ::testing::Test {
 };
 
 TEST_F(MazeLeftRightShouldF, BeTraversableFromBothDirections) {
-  EXPECT_TRUE(maze_.traversable(maze_.start, maze_.end));
-  EXPECT_TRUE(maze_.traversable(maze_.end, maze_.start));
+  EXPECT_TRUE(maze_.traversable(maze_.start(), maze_.end()));
+  EXPECT_TRUE(maze_.traversable(maze_.end(), maze_.start()));
 }
 
 TEST_F(MazeLeftRightShouldF, NotBeTraversableWhenStartIsOob) {
-  EXPECT_FALSE(maze_.traversable({INT_MIN, INT_MIN}, maze_.end));
-  EXPECT_FALSE(maze_.traversable({INT_MAX, INT_MAX}, maze_.end));
+  EXPECT_FALSE(maze_.traversable({INT_MIN, INT_MIN}, maze_.end()));
+  EXPECT_FALSE(maze_.traversable({INT_MAX, INT_MAX}, maze_.end()));
 }
 
 TEST_F(MazeLeftRightShouldF, NotBeTraversableWhenEndIsOob) {
-  EXPECT_FALSE(maze_.traversable(maze_.start, {INT_MIN, INT_MIN}));
-  EXPECT_FALSE(maze_.traversable(maze_.start, {INT_MAX, INT_MAX}));
+  EXPECT_FALSE(maze_.traversable(maze_.start(), {INT_MIN, INT_MIN}));
+  EXPECT_FALSE(maze_.traversable(maze_.start(), {INT_MAX, INT_MAX}));
 }
 
 TEST_F(MazeLeftRightShouldF, NotBeTraversableWhenBothAreOob) {
