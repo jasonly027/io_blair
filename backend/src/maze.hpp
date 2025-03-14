@@ -21,6 +21,11 @@ namespace io_blair {
  */
 using coordinate = std::pair<int, int>;
 
+/**
+ * @brief A tuple of ints. The first is x and the second is y.
+ */
+using coordinate_arr = std::array<int, 2>;
+
 namespace direction {
 template <typename T>
 concept CardinalDirectionEnum = std::is_enum_v<T> && requires {

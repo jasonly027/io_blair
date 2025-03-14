@@ -12,6 +12,7 @@
 
 #include "character.hpp"
 #include "lobby/lobby_controller.hpp"
+#include "maze.hpp"
 
 namespace io_blair {
 class IHandler;
@@ -220,8 +221,8 @@ struct inGameMaze {
   using M = LobbyController::Maze;
 
   std::array<std::array<int16_t, M::cols()>, M::rows()> maze;
-  std::array<int, 2> start;
-  std::array<int, 2> end;
+  coordinate_arr start;
+  coordinate_arr end;
 };
 
 /**
@@ -232,6 +233,63 @@ struct inGameMaze {
  * @return std::string 
  */
 std::string ingame_maze(LobbyController::Maze maze, Character character);
+
+enum class Direction { up, right, down, left };
+
+/**
+ * @brief Provides the client with possible paths
+ * from the other client's perspective, OR whether
+ * the client needs to reset.
+ */
+struct characterMove {
+  // [0, 0] if reset is true
+  coordinate_arr coordinate;
+  // 0 if reset is true
+  int16_t cell;
+  // The client moved to a bad position and needs to
+  // go to the start
+  bool reset;
+};
+
+/**
+ * @brief Encodes characterMove as a string.
+ * 
+ * @param coordinate 
+ * @param cell 
+ * @return std::string 
+ */
+std::string character_move(coordinate coordinate, int16_t cell);
+
+/**
+ * @brief Indicates the client needs to go back to
+ * the start of the maze.
+ * 
+ * @return std::string 
+ */
+std::string character_reset(); 
+
+/**
+ * @brief Indicates where the other client has moved.
+ */
+struct characterOtherMove {
+  /**
+   * @brief The direction they moved.
+   */
+  Direction direction;
+  /**
+   * @brief Whether they moved to their death.
+   */
+  bool reset;
+};
+
+/**
+ * @brief Encodes characterOtherMove as a string.
+ * 
+ * @param direction
+ * @param reset 
+ * @return std::string 
+ */
+std::string character_other_move(Direction direction, bool reset);
 
 //NOLINTEND(readability-identifier-naming)
 }  // namespace out

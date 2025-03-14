@@ -7,6 +7,7 @@
 #include "character.hpp"
 #include "event.hpp"
 #include "json.hpp"
+#include "maze.hpp"
 #include "session_controller.hpp"
 
 
@@ -23,6 +24,33 @@ namespace jout = json::out;
 namespace {
 constexpr coordinate kMazeStart = {1, 6};
 constexpr coordinate kMazeEnd   = {6, 1};
+
+// Gets the direction start needs to move to reach end.
+// Returns nullopt if coordinates aren't cardinal direction neighbors.
+constexpr optional<jout::Direction> to_dir(coordinate start, coordinate end) {
+  auto [x1, y1] = start;
+  auto [x2, y2] = end;
+
+  if (x1 == x2) {
+    // a
+    // ↓
+    // b
+    if (y1 + 1 == y2) return json::out::Direction::down;
+    // b
+    // ↑
+    // a
+    if (y1 - 1 == y2) return json::out::Direction::up;
+  }
+
+  if (y1 == y2) {
+    // a → b
+    if (x1 + 1 == x2) return json::out::Direction::right;
+    // b ← a
+    if (x1 - 1 == x2) return json::out::Direction::left;
+  }
+
+  return nullopt;
+}
 }  // namespace
 
 LobbyController::LobbyController(string code)
@@ -99,6 +127,20 @@ void LobbyController::set_character(Player& self, Player& other, Character chara
 
 void LobbyController::move_character(Player& self, Player& other, coordinate coordinate) {
   guard lock(mutex_);
+
+  bool traversable = maze_.traversable(self.position, coordinate);
+
+  self.send(traversable ? jout::character_move(coordinate,
+                                               maze_.at(coordinate).serialize_for(other.character))
+                        : jout::character_reset());
+  other.send(jout::character_other_move(*to_dir(self.position, coordinate), !traversable));
+  self.position = traversable ? coordinate : kMazeStart;
+
+  if (self.position != kMazeEnd || other.position != kMazeEnd) {
+    return;
+  }
+
+  // win
 }
 
 void LobbyController::start_game() {

@@ -68,6 +68,22 @@ string ingame_maze(LobbyController::Maze maze, Character character) {
   });
 }
 
+string character_move(coordinate coordinate, int16_t cell) {
+  auto [x, y] = coordinate;
+  return encode(characterMove{
+      .coordinate = {x, y},
+        .cell = cell, .reset = false
+  });
+}
+
+string character_reset() {
+  return encode(characterMove{.coordinate = {}, .cell = 0, .reset = true});
+}
+
+string character_other_move(Direction direction, bool reset) {
+  return encode(characterOtherMove{.direction = direction, .reset = reset});
+}
+
 }  // namespace out
 
 }  // namespace io_blair::json
