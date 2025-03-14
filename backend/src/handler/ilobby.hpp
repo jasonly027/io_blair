@@ -36,6 +36,8 @@ class ILobbyHandler {
   virtual void operator()(ILobby&, SessionContext&, LobbyContext&, const json::in::CharacterHover&);
   virtual void operator()(ILobby&, SessionContext&, LobbyContext&,
                           const json::in::CharacterConfirm&);
+  virtual void operator()(ILobby&, SessionContext&, LobbyContext&,
+                          const json::in::CharacterMove&);
   virtual void operator()(ILobby&, SessionContext&, LobbyContext&, SessionEvent);
 };
 }  // namespace io_blair

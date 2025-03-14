@@ -51,6 +51,7 @@ class Game : public IGame, public IHandler {
   void operator()(const json::in::Chat&) override;
   void operator()(const json::in::CharacterHover&) override;
   void operator()(const json::in::CharacterConfirm&) override;
+  void operator()(const json::in::CharacterMove&) override;
   void operator()(SessionEvent) override;
 
  private:
@@ -100,6 +101,7 @@ class Lobby : public ILobby, public IGameHandler {
   void operator()(IGame&, SessionContext&, const json::in::Chat&) override;
   void operator()(IGame&, SessionContext&, const json::in::CharacterHover&) override;
   void operator()(IGame&, SessionContext&, const json::in::CharacterConfirm&) override;
+  void operator()(IGame&, SessionContext&, const json::in::CharacterMove&) override;
   void operator()(IGame&, SessionContext&, SessionEvent) override;
 
  private:
@@ -115,6 +117,8 @@ class Lobby : public ILobby, public IGameHandler {
  */
 class InGame : public ILobbyHandler {
  public:
+  void operator()(ILobby&, SessionContext&, LobbyContext&, const json::in::CharacterMove&) override;
+
  private:
 };
 

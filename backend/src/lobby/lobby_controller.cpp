@@ -97,6 +97,10 @@ void LobbyController::set_character(Player& self, Player& other, Character chara
   start_game();
 }
 
+void LobbyController::move_character(Player& self, Player& other, coordinate coordinate) {
+  guard lock(mutex_);
+}
+
 void LobbyController::start_game() {
   guard lock(mutex_);
 

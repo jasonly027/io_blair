@@ -40,6 +40,9 @@ void Game::operator()(const jin::CharacterHover& ev) {
 void Game::operator()(const jin::CharacterConfirm& ev) {
   (*state_)(*this, ctx_, ev);
 }
+void Game::operator()(const jin::CharacterMove& ev) {
+  (*state_)(*this, ctx_, ev);
+}
 void Game::operator()(SessionEvent ev) {
   (*state_)(*this, ctx_, ev);
 }
@@ -83,6 +86,10 @@ void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CharacterHov
 void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CharacterConfirm& ev) {
   (*state_)(*this, sess_ctx, ctx_, ev);
 }
+void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CharacterMove& ev) {
+  (*state_)(*this, sess_ctx, ctx_, ev);
+}
+
 void Lobby::operator()(IGame& game, SessionContext& sess_ctx, SessionEvent ev) {
   switch (ev) {
     case SessionEvent::kCloseSession: (*this)(game, sess_ctx, jin::LobbyLeave{}); break;
@@ -105,6 +112,13 @@ void CharacterSelect::operator()(ILobby& lobby, SessionContext&, LobbyContext&, 
     case SessionEvent::kTransitionToInGame: lobby.transition_to(make_unique<InGame>()); break;
     default:                                break;
   }
+}
+
+void InGame::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx,
+                        const jin::CharacterMove& ev) {
+  int x = ev.coordinate[0];
+  int y = ev.coordinate[1];
+  lob_ctx.controller->move_character({x, y});
 }
 
 }  // namespace io_blair

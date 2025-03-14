@@ -4,6 +4,7 @@
 #pragma once
 
 #include "character.hpp"
+#include "maze.hpp"
 
 
 namespace io_blair {
@@ -23,6 +24,12 @@ class ISessionController {
    * @param Character The character to set session as.
    */
   virtual void set_character(Character) = 0;
+
+  /**
+   * @brief Moves the character of this session.
+   * @param coordinate The position to move the character to.
+   */
+  virtual void move_character(coordinate) = 0;
 };
 
 }  // namespace io_blair

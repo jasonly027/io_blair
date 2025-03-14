@@ -79,6 +79,8 @@ class LobbyController : public ILobbyController {
    */
   void set_character(Player& self, Player& other, Character character) override;
 
+  void move_character(Player& self, Player& other, coordinate coordinate) override;
+
   /**
    * @brief The lobby's join code.
    */

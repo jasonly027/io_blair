@@ -32,6 +32,11 @@ class MockHandler : public IHandler {
   inline void operator()(const json::in::CharacterHover& ev) override {
     return EvHover(ev);
   }
+
+  MOCK_METHOD(void, EvMove, (const json::in::CharacterMove&));
+  inline void operator()(const json::in::CharacterMove& ev) override {
+    return EvMove(ev);
+  }
 };
 
 }  // namespace io_blair

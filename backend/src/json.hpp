@@ -83,10 +83,18 @@ struct CharacterConfirm {
 };
 
 /**
+ * @brief Indicates the coordinate the client wants to move to.
+ */
+struct CharacterMove {
+  using Tag = rfl::Literal<"characterMove">;
+  std::array<int, 2> coordinate;
+};
+
+/**
  * @brief A union of all possible structs.
  */
 using AllJsonTypes = rfl::TaggedUnion<"type", LobbyCreate, LobbyJoin, LobbyLeave, Chat,
-                                      CharacterHover, CharacterConfirm>;
+                                      CharacterHover, CharacterConfirm, CharacterMove>;
 
 }  // namespace in
 
