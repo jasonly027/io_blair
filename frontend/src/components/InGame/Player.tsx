@@ -8,7 +8,7 @@ import { useEffect, useRef, type RefObject } from "react";
 import useGame from "../../hooks/useGame";
 import type Maze from "../../lib/Maze";
 import { DIST_TO_NEXT_GAP, DIST_TO_NEXT_TILE, GROUND_Y, OOB_Y } from "./Map";
-import type { CellKey, Coordinates } from "../../lib/Maze";
+import type { Coordinate } from "../../lib/Maze";
 import {
   CoefficientCombineRule,
   RapierRigidBody,
@@ -22,7 +22,7 @@ export const PLAYER_HEIGHT = 0.5;
 
 type Triplet = [x: number, y: number, z: number];
 
-function toMapPosition([x, y]: Coordinates): Triplet {
+function toMapPosition([x, y]: Coordinate): Triplet {
   return [
     y * DIST_TO_NEXT_TILE,
     GROUND_Y + PLAYER_HEIGHT / 2,
@@ -30,7 +30,7 @@ function toMapPosition([x, y]: Coordinates): Triplet {
   ];
 }
 
-function toCoordinates(x: number, z: number): Coordinates {
+function toCoordinates(x: number, z: number): Coordinate {
   return [x / DIST_TO_NEXT_TILE, z / DIST_TO_NEXT_TILE];
 }
 

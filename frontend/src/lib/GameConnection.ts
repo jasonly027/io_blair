@@ -1,5 +1,7 @@
 import type { GameCharacter } from "../types/character";
+import type { Matrix } from "../types/tuple";
 import { EventEmitter } from "./EventListener";
+import type { Coordinate } from "./Maze";
 import { QueuedSocket, SocketState } from "./QueuedSocket";
 
 /**
@@ -22,9 +24,9 @@ export type GameEventMap = {
     },
   ];
   /** Indicates teammate has joined the lobby */
-  lobbyOtherJoin: [],
+  lobbyOtherJoin: [];
   /** Indicates teammate has left the lobby */
-  lobbyOtherLeave: [],
+  lobbyOtherLeave: [];
   /** Indicates the server forwarded a message from another player. */
   chat: [
     {
@@ -46,6 +48,13 @@ export type GameEventMap = {
   ];
   /** Indicates transition to ingame */
   transitionToInGame: [];
+  inGameMaze: [
+    {
+      maze: Matrix<number, 8, 8>;
+      start: Coordinate;
+      end: Coordinate;
+    },
+  ];
 };
 
 export type GameEventKey = keyof GameEventMap;
@@ -202,6 +211,13 @@ const gameEventMapSchema = {
   characterHover: [{ character: "Io" }],
   characterConfirm: [{ character: null }],
   transitionToInGame: [],
+  inGameMaze: [
+    {
+      maze: undefined!,
+      start: [0, 0],
+      end: [0, 0],
+    },
+  ],
 } as const satisfies GameEventMap;
 
 /** Convert a raw message from the server to a GameEvent */

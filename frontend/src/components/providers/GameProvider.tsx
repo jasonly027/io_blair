@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import Maze, { type Coordinates, cellFromNumber } from "../../lib/Maze";
+import Maze, { type Cell, type Coordinate, cellFromNumber } from "../../lib/Maze";
 import {
   GameStatus,
   GameContext,
@@ -8,6 +8,7 @@ import {
 import usePlayers from "../../hooks/usePlayers";
 import useConnection from "../../hooks/useConnection";
 import type { GameConnectionListener } from "../../lib/GameConnection";
+import type { Matrix } from "../../types/tuple";
 
 /**
  * A provider for useGame.
@@ -33,7 +34,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 
   const { map } = useMap();
 
-  const [startCoords] = useState<Coordinates>([0, 0]);
+  const [startCoords] = useState<Coordinate>([0, 0]);
 
   const gameValues: GameValues = useMemo(
     () => ({
@@ -71,7 +72,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 const MINIMUM_LOADING_TIME = 1000;
 
 function useGameStatus(): GameStatus {
-  const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
+  const [gameStatus, setGameStatus] = useState(GameStatus.InGame);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -105,11 +106,12 @@ function useGameStatus(): GameStatus {
   useEffect(function listenForLobbyOtherLeave() {
     const onLobbyOtherLeave: GameConnectionListener<"lobbyOtherLeave"> = () => {
       setGameStatus(GameStatus.Lobby);
-    }
+    };
 
     addConnectionEventListener("lobbyOtherLeave", onLobbyOtherLeave);
-    return () => removeConnectionEventListener("lobbyOtherLeave", onLobbyOtherLeave);
-  })
+    return () =>
+      removeConnectionEventListener("lobbyOtherLeave", onLobbyOtherLeave);
+  });
 
   useEffect(
     function listenForTransitionToInGame() {
@@ -176,9 +178,9 @@ function usePlayerCount(): number {
 
       return () => {
         removeConnectionEventListener("lobbyJoin", onLobbyJoin);
-        removeConnectionEventListener("lobbyOtherJoin", onLobbyOtherJoin)
+        removeConnectionEventListener("lobbyOtherJoin", onLobbyOtherJoin);
         removeConnectionEventListener("lobbyOtherLeave", onLobbyOtherLeave);
-      }
+      };
     },
     [addConnectionEventListener, removeConnectionEventListener],
   );
@@ -192,6 +194,25 @@ interface useMapValues {
 
 function useMap(): useMapValues {
   const [maze, setMaze] = useState<Maze>(getDefaultMaze);
+
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  useEffect(
+    function listenForInGameMaze() {
+      const onInGameMaze: GameConnectionListener<"inGameMaze"> = ({
+        maze,
+        start,
+        end,
+      }) => {
+        setMaze(deserializeMaze(maze, start, end));
+      };
+
+      addConnectionEventListener("inGameMaze", onInGameMaze);
+      return () => removeConnectionEventListener("inGameMaze", onInGameMaze);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
 
   return useMemo(
     () => ({
@@ -209,4 +230,25 @@ function getDefaultMaze(): Maze {
       [0b0011, 0b1011, 0b1001],
     ].map((row) => row.map(cellFromNumber)),
   );
+}
+
+function deserializeMaze(
+  maze: Matrix<number, 8, 8>,
+  start: Coordinate,
+  end: Coordinate,
+): Maze {
+
+}
+
+function cellFromNumber(num: number): Cell {
+  return new Cell({
+    
+  });
+
+  return {
+    up: ((num >> 0) & 1) == 1,
+    right: ((num >> 1) & 1) == 1,
+    down: ((num >> 2) & 1) == 1,
+    left: ((num >> 3) & 1) == 1,
+  };
 }
