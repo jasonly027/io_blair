@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import Maze, { type Cell, type Coordinate, cellFromNumber } from "../../lib/Maze";
+import Maze, { Cell, type Coordinate, type MazeMatrix } from "../../lib/Maze";
 import {
   GameStatus,
   GameContext,
@@ -8,7 +8,6 @@ import {
 import usePlayers from "../../hooks/usePlayers";
 import useConnection from "../../hooks/useConnection";
 import type { GameConnectionListener } from "../../lib/GameConnection";
-import type { Matrix } from "../../types/tuple";
 
 /**
  * A provider for useGame.
@@ -32,7 +31,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 
   const { you, setYou, teammate } = usePlayers();
 
-  const { map } = useMap();
+  const map = useMap();
 
   const [startCoords] = useState<Coordinate>([0, 0]);
 
@@ -188,11 +187,7 @@ function usePlayerCount(): number {
   return playerCount;
 }
 
-interface useMapValues {
-  map: Maze;
-}
-
-function useMap(): useMapValues {
+function useMap(): Maze {
   const [maze, setMaze] = useState<Maze>(getDefaultMaze);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
@@ -205,7 +200,7 @@ function useMap(): useMapValues {
         start,
         end,
       }) => {
-        setMaze(deserializeMaze(maze, start, end));
+        setMaze(new Maze(deserializeMatrix(maze), start, end));
       };
 
       addConnectionEventListener("inGameMaze", onInGameMaze);
@@ -214,41 +209,82 @@ function useMap(): useMapValues {
     [addConnectionEventListener, removeConnectionEventListener],
   );
 
-  return useMemo(
-    () => ({
-      map: maze,
-    }),
-    [maze],
+  useEffect(
+    function listenForCharacterMove() {
+      const onCharacterMove: GameConnectionListener<"characterMove"> = ({
+        coordinate,
+        cell,
+        reset,
+      }) => {
+        if (reset) return;
+
+        setMaze((prev) => {
+          const maze = prev.clone();
+          updateCellWithOther(maze, coordinate, cell);
+          return maze;
+        });
+      };
+
+      addConnectionEventListener("characterMove", onCharacterMove);
+      return () =>
+        removeConnectionEventListener("characterMove", onCharacterMove);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
   );
+
+  return maze;
+}
+
+function updateCellWithOther(
+  maze: Maze,
+  coordinate: Coordinate,
+  other: number,
+) {
+  const nth_bit = (n: number): boolean => ((other >> n) & 1) == 1;
+  maze.bridge("Teammate", coordinate, "up", nth_bit(4));
+  maze.bridge("Teammate", coordinate, "right", nth_bit(5));
+  maze.bridge("Teammate", coordinate, "down", nth_bit(6));
+  maze.bridge("Teammate", coordinate, "left", nth_bit(7));
 }
 
 function getDefaultMaze(): Maze {
-  return new Maze(
-    [
-      [0b0011, 0b1111, 0b1101],
-      [0b0110, 0b1101, 0b0101],
-      [0b0011, 0b1011, 0b1001],
-    ].map((row) => row.map(cellFromNumber)),
-  );
+  const cells = [
+    [64, 32, 486, 168, 160, 196],
+    [84, 102, 153, 68, 34, 153],
+    [85, 85, 100, 145, 34, 200],
+    [51, 153, 85, 34, 136, 84],
+    [64, 34, 187, 170, 170, 153],
+    [50, 170, 136, 34, 170, 136],
+  ].map((row) => row.map(deserializeCell)) as MazeMatrix<Cell>;
+
+  return new Maze(cells, [1, 4], [4, 1]);
 }
 
-function deserializeMaze(
-  maze: Matrix<number, 8, 8>,
-  start: Coordinate,
-  end: Coordinate,
-): Maze {
+function deserializeMatrix(maze: MazeMatrix<number>): MazeMatrix<Cell> {
+  const cells = maze.map((row) => {
+    return row.map((num) => deserializeCell(num));
+  }) as MazeMatrix<Cell>;
 
+  return cells;
 }
 
-function cellFromNumber(num: number): Cell {
-  return new Cell({
-    
-  });
+function deserializeCell(num: number): Cell {
+  // Determines if nth bit of num is on
+  const nth_bit = (n: number): boolean => ((num >> n) & 1) == 1;
 
-  return {
-    up: ((num >> 0) & 1) == 1,
-    right: ((num >> 1) & 1) == 1,
-    down: ((num >> 2) & 1) == 1,
-    left: ((num >> 3) & 1) == 1,
-  };
+  const cell = new Cell();
+
+  cell.set_up("both", nth_bit(0));
+  cell.set_right("both", nth_bit(1));
+  cell.set_down("both", nth_bit(2));
+  cell.set_left("both", nth_bit(3));
+
+  cell.set_up("You", nth_bit(4));
+  cell.set_right("You", nth_bit(5));
+  cell.set_down("You", nth_bit(6));
+  cell.set_left("You", nth_bit(7));
+
+  cell.set_coin(nth_bit(8));
+
+  return cell;
 }

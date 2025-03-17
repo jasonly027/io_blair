@@ -5,6 +5,7 @@ import {
   type GameEventKey,
 } from "../lib/GameConnection";
 import type { GameCharacter } from "../types/character";
+import type { Coordinate } from "../lib/Maze";
 
 export const ConnectionContext = createContext<ConnectionValues | undefined>(
   undefined,
@@ -34,6 +35,8 @@ export interface ConnectionActions {
   hoverCharacter: (character: GameCharacter) => void;
 
   confirmCharacter: (character: GameCharacter | null) => void;
+
+  characterMove: (coordinate: Coordinate) => void;
 }
 
 /**

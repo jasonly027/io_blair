@@ -9,7 +9,7 @@ import { Physics } from "@react-three/rapier";
 import type { ReactNode } from "react";
 import { PointLightHelper } from "three";
 import Map from "./Map";
-import Player from "./Player";
+import { You } from "./Player/Player";
 
 export default function InGame() {
   return (
@@ -23,7 +23,7 @@ export default function InGame() {
 
         <GamePhysics>
           <Map />
-          <Player />
+          <You />
         </GamePhysics>
       </Canvas>
     </div>
@@ -57,9 +57,5 @@ function Lights() {
 }
 
 function GamePhysics({ children }: { children: ReactNode }) {
-  return (
-    <Physics gravity={[0, -9.82, 0]} debug>
-      {children}
-    </Physics>
-  );
+  return <Physics debug>{children}</Physics>;
 }

@@ -8,9 +8,14 @@ export interface Traversable {
   left: boolean;
 }
 
+export type TraversableKey = keyof Traversable;
+
+type CellGetDirectionParam = GamePlayer | "both" | "either";
+
 export class Cell {
   private readonly self: Traversable;
   private readonly other: Traversable;
+  private _coin: boolean;
 
   constructor(
     self: Traversable = {
@@ -25,12 +30,14 @@ export class Cell {
       down: false,
       left: false,
     },
+    coin: boolean = false,
   ) {
     this.self = self;
     this.other = other;
+    this._coin = coin;
   }
 
-  up(who: GamePlayer | "both" | "either"): boolean {
+  up(who: CellGetDirectionParam): boolean {
     switch (who) {
       case "You":
         return this.self.up;
@@ -43,7 +50,7 @@ export class Cell {
     }
   }
 
-  right(who: GamePlayer | "both" | "either"): boolean {
+  right(who: CellGetDirectionParam): boolean {
     switch (who) {
       case "You":
         return this.self.right;
@@ -56,7 +63,7 @@ export class Cell {
     }
   }
 
-  down(who: GamePlayer | "both" | "either"): boolean {
+  down(who: CellGetDirectionParam): boolean {
     switch (who) {
       case "You":
         return this.self.down;
@@ -69,7 +76,7 @@ export class Cell {
     }
   }
 
-  left(who: GamePlayer | "both" | "either"): boolean {
+  left(who: CellGetDirectionParam): boolean {
     switch (who) {
       case "You":
         return this.self.left;
@@ -80,6 +87,10 @@ export class Cell {
       case "either":
         return this.self.left || this.other.left;
     }
+  }
+
+  coin(): boolean {
+    return this._coin;
   }
 
   set_up(who: GamePlayer | "both", value: boolean): void {
@@ -141,19 +152,33 @@ export class Cell {
         break;
     }
   }
+
+  set_coin(value: boolean): void {
+    this._coin = value;
+  }
 }
 
 export type Coordinate = [x: number, y: number];
 
+export type MazeMatrix<T> = Matrix<T, 6, 6>;
+
 export default class Maze {
+  readonly matrix: MazeMatrix<Cell>;
   readonly rows: number;
   readonly cols: number;
-  private readonly moves: Matrix<Cell, 8, 8>;
+  readonly start: Readonly<Coordinate>;
+  readonly end: Readonly<Coordinate>;
 
-  constructor(moves: Matrix<Cell, 8, 8>) {
-    this.rows = moves.length;
-    this.cols = moves[0].length;
-    this.moves = moves;
+  constructor(
+    matrix: MazeMatrix<Cell>,
+    start: Readonly<Coordinate>,
+    end: Readonly<Coordinate>,
+  ) {
+    this.matrix = matrix;
+    this.rows = matrix.length;
+    this.cols = matrix[0].length;
+    this.start = start;
+    this.end = end;
   }
 
   /**
@@ -161,17 +186,53 @@ export default class Maze {
    * @returns Maze
    */
   public clone(): Maze {
-    return new Maze(this.moves);
+    return new Maze(this.matrix, this.start, this.end);
   }
 
   public inRange(x: number, y: number): boolean {
     return x >= 0 && x < this.cols && y >= 0 && y < this.rows;
   }
 
-  public at(x: number, y: number): Cell {
-    if (!this.inRange(x, y)) {
-      throw new Error("cell out of bounds");
-    }
-    return this.moves[y]![x]!;
+  public bridge(
+    who: GamePlayer | "both",
+    [x, y]: Coordinate,
+    dir: TraversableKey,
+    value: boolean,
+  ): void {
+    if (!this.inRange(x, y)) return;
+    this.matrix[y]![x]![`set_${dir}`](who, value);
+
+    [x, y] = translate([x, y], dir);
+    if (!this.inRange(x, y)) return;
+    this.matrix[y]![x]![`set_${opposite(dir)}`](who, value);
+  }
+}
+
+export const moveMap = {
+  up: [0, -1],
+  right: [1, 0],
+  down: [0, 1],
+  left: [-1, 0],
+} as const satisfies Record<TraversableKey, Coordinate>;
+
+export function translate(
+  [x, z]: Coordinate,
+  dir: TraversableKey,
+  value: number = 1,
+): Coordinate {
+  const [dX, dZ] = moveMap[dir];
+  return [x + dX * value, z + dZ * value];
+}
+
+export function opposite(dir: TraversableKey): TraversableKey {
+  switch (dir) {
+    case "up":
+      return "down";
+    case "right":
+      return "left";
+    case "down":
+      return "up";
+    case "left":
+      return "right";
   }
 }

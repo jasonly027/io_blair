@@ -22,8 +22,8 @@ using guard    = std::lock_guard<std::recursive_mutex>;
 namespace jout = json::out;
 
 namespace {
-constexpr coordinate kMazeStart = {1, 6};
-constexpr coordinate kMazeEnd   = {6, 1};
+constexpr coordinate kMazeStart = {1, 4};
+constexpr coordinate kMazeEnd   = {4, 1};
 
 // Gets the direction start needs to move to reach end.
 // Returns nullopt if coordinates aren't cardinal direction neighbors.

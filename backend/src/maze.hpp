@@ -288,7 +288,8 @@ class Cell {
    * up, right, down, and left, respectively.
    *
    * The next four bits are what \p character can see
-   * exclusively up, right, down, and left, respectively.
+   * up, right, down, and left, respectively. This does not imply
+   * whether the other character can or cannot see it.
    *
    * The remaining bit is whether this cell has a coin or not.
    * 
@@ -319,10 +320,10 @@ class Cell {
     res[1] = self[Both::kRight];
     res[2] = self[Both::kDown];
     res[3] = self[Both::kLeft];
-    res[4] = self[Character::kUp] && !self[Other::kUp];
-    res[5] = self[Character::kRight] && !self[Other::kRight];
-    res[6] = self[Character::kDown] && !self[Other::kDown];
-    res[7] = self[Character::kLeft] && !self[Other::kLeft];
+    res[4] = self[Character::kUp];
+    res[5] = self[Character::kRight];
+    res[6] = self[Character::kDown];
+    res[7] = self[Character::kLeft];
     res[8] = coin();
 
     return static_cast<int16_t>(res.to_ulong());

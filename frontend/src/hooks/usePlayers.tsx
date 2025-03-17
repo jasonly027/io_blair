@@ -44,7 +44,12 @@ export default function usePlayers(): usePlayersValues {
   const [you, setYou] = useState<Player>({ hover: null, confirm: null });
   const teammate = useTeammate(you, setYou);
 
-  const { hoverCharacter, confirmCharacter } = useConnection();
+  const {
+    hoverCharacter,
+    confirmCharacter,
+    addConnectionEventListener,
+    removeConnectionEventListener,
+  } = useConnection();
 
   const changeYou = useCallback(
     ({ type, character }: ChangePlayerAction) => {
@@ -67,6 +72,18 @@ export default function usePlayers(): usePlayersValues {
       return true;
     },
     [hoverCharacter, confirmCharacter, teammate],
+  );
+
+  useEffect(
+    function listenForLeave() {
+      const onLeave: GameConnectionListener<"lobbyOtherLeave"> = () => {
+        setYou({ hover: null, confirm: null });
+      };
+
+      addConnectionEventListener("lobbyOtherLeave", onLeave);
+      return () => removeConnectionEventListener("lobbyOtherLeave", onLeave);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
   );
 
   return useMemo(
@@ -132,6 +149,18 @@ function useTeammate(
       return () => removeConnectionEventListener("characterConfirm", onConfirm);
     },
     [addConnectionEventListener, removeConnectionEventListener, setYou, you],
+  );
+
+  useEffect(
+    function listenForLeave() {
+      const onLeave: GameConnectionListener<"lobbyOtherLeave"> = () => {
+        setTeammate({ hover: null, confirm: null });
+      };
+
+      addConnectionEventListener("lobbyOtherLeave", onLeave);
+      return () => removeConnectionEventListener("lobbyOtherLeave", onLeave);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
   );
 
   return teammate;

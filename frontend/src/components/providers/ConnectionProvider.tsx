@@ -86,9 +86,14 @@ function createActions(connection: GameConnection): ConnectionActions {
     },
 
     confirmCharacter(character) {
-      console.log("sent confirm");
       connection.send("characterConfirm", {
         character: character ?? "unknown",
+      });
+    },
+
+    characterMove(coordinate) {
+      connection.send("characterMove", {
+        coordinate,
       });
     },
   };

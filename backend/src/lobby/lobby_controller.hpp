@@ -22,7 +22,7 @@ namespace io_blair {
  */
 class LobbyController : public ILobbyController {
  public:
-  using Maze = Maze<8, 8>;
+  using Maze = Maze<6, 6>;
 
   /**
    * @brief Construct a new Lobby Controller object.

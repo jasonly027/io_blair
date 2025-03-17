@@ -1,7 +1,6 @@
 import type { GameCharacter } from "../types/character";
-import type { Matrix } from "../types/tuple";
 import { EventEmitter } from "./EventListener";
-import type { Coordinate } from "./Maze";
+import type { Coordinate, MazeMatrix } from "./Maze";
 import { QueuedSocket, SocketState } from "./QueuedSocket";
 
 /**
@@ -50,9 +49,16 @@ export type GameEventMap = {
   transitionToInGame: [];
   inGameMaze: [
     {
-      maze: Matrix<number, 8, 8>;
+      maze: MazeMatrix<number>;
       start: Coordinate;
       end: Coordinate;
+    },
+  ];
+  characterMove: [
+    {
+      coordinate: Coordinate;
+      cell: number;
+      reset: boolean;
     },
   ];
 };
@@ -90,6 +96,11 @@ export type GameSendMap = {
   characterConfirm: [
     {
       character: GameCharacter | "unknown";
+    },
+  ];
+  characterMove: [
+    {
+      coordinate: Coordinate;
     },
   ];
 };
@@ -216,6 +227,13 @@ const gameEventMapSchema = {
       maze: undefined!,
       start: [0, 0],
       end: [0, 0],
+    },
+  ],
+  characterMove: [
+    {
+      coordinate: [0, 0],
+      cell: 0,
+      reset: false,
     },
   ],
 } as const satisfies GameEventMap;
