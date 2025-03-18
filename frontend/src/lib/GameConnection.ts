@@ -1,6 +1,6 @@
 import type { GameCharacter } from "../types/character";
 import { EventEmitter } from "./EventListener";
-import type { Coordinate, MazeMatrix } from "./Maze";
+import type { Coordinate, MazeMatrix, TraversableKey } from "./Maze";
 import { QueuedSocket, SocketState } from "./QueuedSocket";
 
 /**
@@ -58,6 +58,12 @@ export type GameEventMap = {
     {
       coordinate: Coordinate;
       cell: number;
+      reset: boolean;
+    },
+  ];
+  characterOtherMove: [
+    {
+      direction: TraversableKey;
       reset: boolean;
     },
   ];
@@ -233,6 +239,12 @@ const gameEventMapSchema = {
     {
       coordinate: [0, 0],
       cell: 0,
+      reset: false,
+    },
+  ],
+  characterOtherMove: [
+    {
+      direction: "up",
       reset: false,
     },
   ],

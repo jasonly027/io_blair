@@ -9,7 +9,7 @@ import { Physics } from "@react-three/rapier";
 import type { ReactNode } from "react";
 import { PointLightHelper } from "three";
 import Map from "./Map";
-import { You } from "./Player/Player";
+import { Teammate, You } from "./Player/Player";
 
 export default function InGame() {
   return (
@@ -24,6 +24,7 @@ export default function InGame() {
         <GamePhysics>
           <Map />
           <You />
+          <Teammate />
         </GamePhysics>
       </Canvas>
     </div>
