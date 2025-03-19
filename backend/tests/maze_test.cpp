@@ -149,7 +149,7 @@ TEST(CellShould, SerializeToIo) {
   cell.set(direction::Blair::kLeft, true);
   cell.set_coin(true);
 
-  EXPECT_EQ(cell.serialize_for(Character::Io), 0b1'0100'0011);
+  EXPECT_EQ(cell.serialize_for(Character::Io), 0b1'0111'0011);
 }
 
 TEST(CellShould, SerializeToBlair) {
@@ -161,7 +161,7 @@ TEST(CellShould, SerializeToBlair) {
   cell.set(direction::Blair::kLeft, true);
   cell.set_coin(true);
 
-  EXPECT_EQ(cell.serialize_for(Character::Blair), 0b1'1000'0011);
+  EXPECT_EQ(cell.serialize_for(Character::Blair), 0b1'1011'0011);
 }
 
 TEST(MazeShould, InRange) {

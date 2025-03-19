@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <json.hpp>
 #include <random>
 
 
@@ -15,7 +16,8 @@ using std::string_view;
 using std::strlen;
 using std::uniform_int_distribution;
 using std::weak_ptr;
-using guard = std::lock_guard<std::recursive_mutex>;
+using guard    = std::lock_guard<std::recursive_mutex>;
+namespace jout = json::out;
 
 LobbyContext LobbyManager::create(weak_ptr<ISession> session) {
   guard lock(mutex_);
@@ -32,6 +34,8 @@ optional<LobbyContext> LobbyManager::join(weak_ptr<ISession> session, string_vie
   if (const auto it = lobbies_.find(code); it != lobbies_.end()) {
     return it->second.join(std::move(session));
   }
+
+  session.lock()->async_send(jout::lobby_join(nullopt, nullopt, nullopt));
   return nullopt;
 }
 

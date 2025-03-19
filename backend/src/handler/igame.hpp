@@ -39,6 +39,8 @@ class IGameHandler {
   virtual void operator()(IGame&, SessionContext&, const json::in::CharacterHover&);
   virtual void operator()(IGame&, SessionContext&, const json::in::CharacterConfirm&);
   virtual void operator()(IGame&, SessionContext&, const json::in::CharacterMove&);
+  virtual void operator()(IGame&, SessionContext&, const json::in::CheckWin&);
+  virtual void operator()(IGame&, SessionContext&, const json::in::NewGame&);
   virtual void operator()(IGame&, SessionContext&, SessionEvent);
 };
 

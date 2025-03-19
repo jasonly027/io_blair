@@ -26,6 +26,10 @@ class SessionController : public ISessionController {
 
   void move_character(coordinate) override;
 
+  void check_win() override;
+
+  void new_game() override;
+
  private:
   // The self and other passed to the underlying controller.
   Player& self_;

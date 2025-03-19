@@ -38,6 +38,10 @@ class ILobbyHandler {
                           const json::in::CharacterConfirm&);
   virtual void operator()(ILobby&, SessionContext&, LobbyContext&,
                           const json::in::CharacterMove&);
+  virtual void operator()(ILobby&, SessionContext&, LobbyContext&,
+                          const json::in::CheckWin&);
+  virtual void operator()(ILobby&, SessionContext&, LobbyContext&,
+                          const json::in::NewGame&);
   virtual void operator()(ILobby&, SessionContext&, LobbyContext&, SessionEvent);
 };
 }  // namespace io_blair

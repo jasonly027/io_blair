@@ -43,6 +43,16 @@ class ILobbyController {
   virtual void move_character(Player& self, Player& other, coordinate coordinate) = 0;
 
   /**
+   * @brief Check if the game is complete.
+   */
+  virtual void check_win() = 0;
+
+  /**
+   * @brief Starts a new game.
+   */
+  virtual void new_game() = 0;
+
+  /**
    * @brief Attempts to place \p session into the lobby.
    * Operation will succeed if the lobby isn't full or
    * at least one of the sessions already in the lobby

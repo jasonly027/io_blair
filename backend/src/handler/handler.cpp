@@ -43,6 +43,12 @@ void Game::operator()(const jin::CharacterConfirm& ev) {
 void Game::operator()(const jin::CharacterMove& ev) {
   (*state_)(*this, ctx_, ev);
 }
+void Game::operator()(const jin::CheckWin& ev) {
+  (*state_)(*this, ctx_, ev);
+}
+void Game::operator()(const jin::NewGame& ev) {
+  (*state_)(*this, ctx_, ev);
+}
 void Game::operator()(SessionEvent ev) {
   (*state_)(*this, ctx_, ev);
 }
@@ -89,6 +95,12 @@ void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CharacterCon
 void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CharacterMove& ev) {
   (*state_)(*this, sess_ctx, ctx_, ev);
 }
+void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CheckWin& ev) {
+  (*state_)(*this, sess_ctx, ctx_, ev);
+}
+void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::NewGame& ev) {
+  (*state_)(*this, sess_ctx, ctx_, ev);
+}
 
 void Lobby::operator()(IGame& game, SessionContext& sess_ctx, SessionEvent ev) {
   switch (ev) {
@@ -119,6 +131,31 @@ void InGame::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx,
   int x = ev.coordinate[0];
   int y = ev.coordinate[1];
   lob_ctx.controller->move_character({x, y});
+}
+
+void InGame::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx, const jin::CheckWin&) {
+  lob_ctx.controller->check_win();
+}
+
+void InGame::operator()(ILobby& lobby, SessionContext&, LobbyContext&, SessionEvent ev) {
+  switch (ev) {
+    case SessionEvent::kTransitionToCharacterSelect:
+      lobby.transition_to(make_unique<CharacterSelect>());
+      break;
+    case SessionEvent::kTransitionToGameDone: lobby.transition_to(make_unique<GameDone>()); break;
+    default:                                  break;
+  }
+}
+
+void GameDone::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx, const jin::NewGame&) {
+  lob_ctx.controller->new_game();
+}
+
+void GameDone::operator()(ILobby& lobby, SessionContext&, LobbyContext&, SessionEvent ev) {
+  switch (ev) {
+    case SessionEvent::kTransitionToInGame: lobby.transition_to(make_unique<InGame>()); break;
+    default:                                break;
+  }
 }
 
 }  // namespace io_blair

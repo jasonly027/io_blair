@@ -63,20 +63,21 @@ optional<LobbyContext> LobbyController::join(weak_ptr<ISession> session) {
   guard lock(mutex_);
 
   if (p1_.try_set(session)) {
-    p1_.send(
-        jout::lobby_join(code_, static_cast<int>(p1_.exists()) + static_cast<int>(p2_.exists())));
+    const int player_count = static_cast<int>(p1_.exists()) + static_cast<int>(p2_.exists());
+    p1_.send(jout::lobby_join(code_, player_count, p2_.character));
     p2_.send(jout::lobby_other_join());
+
     return LobbyContext{code_, p2_.session(), make_unique<SessionController>(p1_, p2_, *this)};
   }
 
   if (p2_.try_set(session)) {
-    p2_.send(
-        jout::lobby_join(code_, static_cast<int>(p1_.exists()) + static_cast<int>(p2_.exists())));
+    const int player_count = static_cast<int>(p1_.exists()) + static_cast<int>(p2_.exists());
+    p2_.send(jout::lobby_join(code_, player_count, p1_.character));
     p1_.send(jout::lobby_other_join());
+
     return LobbyContext{code_, p1_.session(), make_unique<SessionController>(p2_, p1_, *this)};
   }
 
-  session.lock()->async_send(jout::lobby_join(nullopt, nullopt));
   return nullopt;
 }
 
@@ -85,14 +86,20 @@ void LobbyController::leave(const weak_ptr<ISession>& session) {
   auto sess = session.lock();
 
   if (sess == p1_) {
-    p1_.reset();
+    p1_.reset(true);
+
+    p2_.reset(false);
     p2_.send(jout::lobby_other_leave());
+    p2_.send(SessionEvent::kTransitionToCharacterSelect);
     return;
   }
 
   if (sess == p2_) {
-    p2_.reset();
+    p2_.reset(true);
+
+    p1_.reset(false);
     p1_.send(jout::lobby_other_leave());
+    p1_.send(SessionEvent::kTransitionToCharacterSelect);
     return;
   }
 }
@@ -122,7 +129,7 @@ void LobbyController::set_character(Player& self, Player& other, Character chara
     return;
   }
 
-  start_game();
+  new_game();
 }
 
 void LobbyController::move_character(Player& self, Player& other, coordinate coordinate) {
@@ -134,30 +141,51 @@ void LobbyController::move_character(Player& self, Player& other, coordinate coo
                                                maze_.at(coordinate).serialize_for(other.character))
                         : jout::character_reset());
   other.send(jout::character_other_move(*to_dir(self.position, coordinate), !traversable));
+
   self.position = traversable ? coordinate : kMazeStart;
 
-  if (self.position != kMazeEnd || other.position != kMazeEnd) {
-    return;
-  }
-
-  // win
+  if (!maze_.at(coordinate).coin()) return;
+  maze_.take_coin(coordinate);
+  broadcast(make_shared<const string>(jout::coin_taken(coordinate)));
 }
 
-void LobbyController::start_game() {
+void LobbyController::check_win() {
   guard lock(mutex_);
 
-  auto msg = make_shared<const string>(jout::transition_to_ingame());
-  p1_.send(SessionEvent::kTransitionToInGame);
-  p1_.send(msg);
-  p2_.send(SessionEvent::kTransitionToInGame);
-  p2_.send(std::move(msg));
+  if (p1_.position != maze_.end() || p2_.position != maze_.end() || maze_.any_coin()) {
+    return;
+  }
+  broadcast(make_shared<const string>(jout::ingame_win()));
+  broadcast(SessionEvent::kTransitionToGameDone);
+}
+
+void LobbyController::new_game() {
+  guard lock(mutex_);
+
+  broadcast(make_shared<const string>(jout::transition_to_ingame()));
+  broadcast(SessionEvent::kTransitionToInGame);
 
   maze_.randomize();
   p1_.position = kMazeStart;
   p2_.position = kMazeStart;
 
-  p1_.send(jout::ingame_maze(maze_, p1_.character));
-  p2_.send(jout::ingame_maze(maze_, p2_.character));
+  p1_.send(jout::ingame_maze(maze_, p1_.character, p2_.character));
+  p2_.send(jout::ingame_maze(maze_, p2_.character, p1_.character));
+}
+
+
+void LobbyController::broadcast(std::shared_ptr<const std::string> msg) {
+  guard lock(mutex_);
+
+  p1_.send(msg);
+  p2_.send(std::move(msg));
+}
+
+void LobbyController::broadcast(SessionEvent ev) {
+  guard lock(mutex_);
+
+  p1_.send(ev);
+  p2_.send(ev);
 }
 
 }  // namespace io_blair

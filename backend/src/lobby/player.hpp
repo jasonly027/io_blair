@@ -52,8 +52,10 @@ class Player {
 
   /**
    * @brief Resets data members.
+   * 
+   * @param reset_session Determine whether to also reset the session.
    */
-  void reset();
+  void reset(bool reset_session);
 
   /**
    * @brief Determines if session hasn't expired.

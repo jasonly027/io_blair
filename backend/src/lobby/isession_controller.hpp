@@ -30,6 +30,16 @@ class ISessionController {
    * @param coordinate The position to move the character to.
    */
   virtual void move_character(coordinate) = 0;
+
+  /**
+   * @brief Check if the game is complete.
+   */
+  virtual void check_win() = 0;
+
+  /**
+   * @brief Starts a new game.
+   */
+  virtual void new_game() = 0;
 };
 
 }  // namespace io_blair

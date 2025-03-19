@@ -430,6 +430,18 @@ class Maze {
   }
 
   /**
+   * @brief Determines if there are any coins left.
+   * 
+   * @return true There are coins left.
+   * @return false There are no coins left.
+   */
+  constexpr bool any_coin() const {
+    return std::ranges::any_of(matrix_, [](const auto& row) {
+      return std::ranges::any_of(row, [](const Cell& cell) { return cell.coin(); });
+    });
+  }
+
+  /**
    * @brief Accesses a cell in the maze.
    * 
    * @warning Undefined behavior if out of bounds access.
@@ -548,6 +560,18 @@ class Maze {
       // Continue traversal from neighbor's cell
       stack.emplace(neighbor, 0, dir::random_dirs());
     }
+  }
+
+  /**
+   * @brief Removes the coin at \p coordinate. Does nothing
+   * if coordinate is out of range or there is no coin in that
+   * cell.
+   * 
+   * @param coordinate The coordinate to remove a coin from.
+   */
+  constexpr void take_coin(coordinate coordinate) {
+    if (!in_range(coordinate)) return;
+    at_mutable(coordinate).set_coin(false);
   }
 
   /**

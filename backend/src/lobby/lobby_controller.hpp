@@ -9,6 +9,7 @@
 #include <string>
 
 #include "character.hpp"
+#include "event.hpp"
 #include "ilobby_controller.hpp"
 #include "isession.hpp"
 #include "lobby_context.hpp"
@@ -81,13 +82,26 @@ class LobbyController : public ILobbyController {
 
   void move_character(Player& self, Player& other, coordinate coordinate) override;
 
+  void check_win() override;
+
+  /**
+   * @brief Starts a new game.
+   * Send transition msgs and events to both players.
+   * Initialize and send maze.
+   */
+  void new_game() override;
+
   /**
    * @brief The lobby's join code.
    */
   const std::string code_;
 
  private:
-  void start_game();
+  // Sends msg to both players.
+  void broadcast(std::shared_ptr<const std::string> msg);
+
+  // Sends event to both players.
+  void broadcast(SessionEvent);
 
   mutable std::recursive_mutex mutex_;
 

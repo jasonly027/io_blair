@@ -16,7 +16,15 @@ enum class SessionEvent {
   /**
    * @brief Indicates Lobby should transition to InGame.
    */
-  kTransitionToInGame
+  kTransitionToInGame,
+  /**
+   * @brief Indicates Lobby should transition to CharacterSelect.
+   */
+  kTransitionToCharacterSelect,
+  /**
+   * @brief Indicates Lobby should transition to GameDone.
+   */
+  kTransitionToGameDone,
 };
 
 }  // namespace io_blair

@@ -21,6 +21,8 @@ class IHandler {
   virtual void operator()(const json::in::CharacterHover&);
   virtual void operator()(const json::in::CharacterConfirm&);
   virtual void operator()(const json::in::CharacterMove&);
+  virtual void operator()(const json::in::CheckWin&);
+  virtual void operator()(const json::in::NewGame&);
   virtual void operator()(SessionEvent);
 };
 

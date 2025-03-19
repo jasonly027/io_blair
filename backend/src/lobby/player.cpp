@@ -23,10 +23,13 @@ bool Player::try_set(std::weak_ptr<ISession> session) {
   return session_.try_set(std::move(session));
 }
 
-void Player::reset() {
-  session_.reset();
+void Player::reset(bool reset_session) {
   character = Character::unknown;
   position  = {0, 0};
+
+  if (reset_session) {
+    session_.reset();
+  }
 }
 
 bool Player::exists() const {
