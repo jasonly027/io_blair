@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import Maze, { Cell, type Coordinate, type MazeMatrix } from "../../lib/Maze";
+import Maze, {
+  Cell,
+  translate,
+  type Coordinate,
+  type MazeMatrix,
+} from "../../lib/Maze";
 import {
   GameStatus,
   GameContext,
@@ -33,7 +38,9 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 
   const map = useMap();
 
-  const [startCoords] = useState<Coordinate>([0, 0]);
+  const youCoord = useYouCoord(map);
+
+  const teammateCoord = useTeammateCoord(map);
 
   const gameValues: GameValues = useMemo(
     () => ({
@@ -49,7 +56,8 @@ export function GameProvider({ children }: { children?: ReactNode }) {
       teammate,
 
       map,
-      startCoords,
+      youCoord,
+      teammateCoord,
     }),
     [
       gameStatus,
@@ -59,7 +67,8 @@ export function GameProvider({ children }: { children?: ReactNode }) {
       setYou,
       teammate,
       map,
-      startCoords,
+      youCoord,
+      teammateCoord,
     ],
   );
 
@@ -71,7 +80,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 const MINIMUM_LOADING_TIME = 1000;
 
 function useGameStatus(): GameStatus {
-  const [gameStatus, setGameStatus] = useState(GameStatus.InGame);
+  const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -287,4 +296,94 @@ function deserializeCell(num: number): Cell {
   cell.set_coin(nth_bit(8));
 
   return cell;
+}
+
+function useYouCoord(map: Maze): Readonly<Coordinate> {
+  const [coord, setCoord] = useState<Readonly<Coordinate>>([0, 0]);
+
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  useEffect(
+    function listenForInGameMaze() {
+      const onInGameMaze: GameConnectionListener<"inGameMaze"> = ({
+        start,
+      }) => {
+        setCoord(start);
+      };
+
+      addConnectionEventListener("inGameMaze", onInGameMaze);
+      return () => removeConnectionEventListener("inGameMaze", onInGameMaze);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  useEffect(
+    function listenForCharacterMove() {
+      const onCharacterMove: GameConnectionListener<"characterMove"> = ({
+        coordinate,
+        reset,
+      }) => {
+        if (reset) {
+          setCoord(map.start);
+          return;
+        }
+        setCoord(coordinate);
+      };
+
+      addConnectionEventListener("characterMove", onCharacterMove);
+      return () =>
+        removeConnectionEventListener("characterMove", onCharacterMove);
+    },
+    [addConnectionEventListener, map.start, removeConnectionEventListener],
+  );
+
+  return coord;
+}
+
+function useTeammateCoord(map: Maze): Readonly<Coordinate> {
+  const [coord, setCoord] = useState<Readonly<Coordinate>>([0, 0]);
+
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  useEffect(
+    function listenForInGameMaze() {
+      const onInGameMaze: GameConnectionListener<"inGameMaze"> = ({
+        start,
+      }) => {
+        setCoord(start);
+      };
+
+      addConnectionEventListener("inGameMaze", onInGameMaze);
+      return () => removeConnectionEventListener("inGameMaze", onInGameMaze);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  useEffect(
+    function listenForCharacterMove() {
+      const onCharacterMove: GameConnectionListener<"characterOtherMove"> = ({
+        direction,
+        reset,
+      }) => {
+        if (reset) {
+          setCoord(map.start);
+          return;
+        }
+        setCoord((prev) => translate(prev, direction));
+      };
+
+      addConnectionEventListener("characterOtherMove", onCharacterMove);
+      return () =>
+        removeConnectionEventListener("characterOtherMove", onCharacterMove);
+    },
+    [
+      addConnectionEventListener,
+      map.start,
+      removeConnectionEventListener,
+    ],
+  );
+
+  return coord;
 }

@@ -2,7 +2,7 @@ import { easings, SpringValue, useSpring } from "@react-spring/three";
 import useGame from "./useGame";
 import { toMapUnits } from "../lib/Map";
 import { translate, type Coordinate, type TraversableKey } from "../lib/Maze";
-import { useCallback, useMemo, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, type RefObject } from "react";
 import {
   DIST_TO_NEXT_CELL,
   DIST_TO_NEXT_GAP,
@@ -20,17 +20,26 @@ export type SprVals = {
 
 export interface useSpringBodySyncValues {
   moveBody: (dir: TraversableKey, reset: boolean) => void;
-  sprVals: SprVals;
+  moving: () => boolean;
 }
 
-export default function useSpringBodySync(
+export default function useBody(
+  initialCoord: Readonly<Coordinate>,
   bodyRef: RefObject<RapierRigidBody>,
   meshRef: RefObject<Mesh>,
 ): useSpringBodySyncValues {
   const { map } = useGame();
 
+  const currentCoord = useRef(toMapUnits(initialCoord));
+  useEffect(
+    function listenForInitialCoordChange() {
+      currentCoord.current = toMapUnits(initialCoord);
+    },
+    [initialCoord],
+  );
+
   const [sprVals, sprCtrl] = useSpring(() => {
-    const [x, z] = toMapUnits(map.start);
+    const [x, z] = currentCoord.current;
     return {
       moving: false,
       x,
@@ -40,21 +49,24 @@ export default function useSpringBodySync(
         easing: easings.easeOutCubic,
       },
     };
-  }, [map.start]);
+  }, [currentCoord]);
 
   const moveBody = useCallback(
     (dir: TraversableKey, reset: boolean) => {
-      const currentCoord: Coordinate = [sprVals.x.get(), sprVals.z.get()];
-      const [x, z] = translate(
-        currentCoord,
+      const newCoord = translate(
+        currentCoord.current,
         dir,
         reset ? DIST_TO_NEXT_GAP : DIST_TO_NEXT_CELL,
       );
 
       sprCtrl.start({
+        from: {
+          x: currentCoord.current[0],
+          z: currentCoord.current[1],
+        },
         to: {
-          x,
-          z,
+          x: newCoord[0],
+          z: newCoord[1],
         },
 
         onChange({ value: { x, z } }) {
@@ -84,6 +96,10 @@ export default function useSpringBodySync(
           }
 
           setTimeout(() => {
+            if (meshRef.current !== null) {
+              meshRef.current.visible = false;
+            }
+
             const [x, z] = toMapUnits(map.start);
             ctrl.start({
               to: {
@@ -97,11 +113,6 @@ export default function useSpringBodySync(
                   { x, y: GROUND_Y + -OOB_Y, z },
                   true,
                 );
-              },
-
-              onStart() {
-                if (meshRef.current === null) return;
-                meshRef.current.visible = false;
               },
 
               onRest() {
@@ -120,15 +131,21 @@ export default function useSpringBodySync(
           duration: 350 * (reset ? 0.75 : 1),
         },
       });
+
+      currentCoord.current = reset ? toMapUnits(map.start) : newCoord;
     },
-    [bodyRef, map.start, meshRef, sprCtrl, sprVals],
+    [bodyRef, map.start, meshRef, sprCtrl],
   );
+
+  const moving = useCallback(() => {
+    return sprVals.moving.get();
+  }, [sprVals]);
 
   return useMemo(
     () => ({
       moveBody,
-      sprVals,
+      moving,
     }),
-    [moveBody, sprVals],
+    [moveBody, moving],
   );
 }

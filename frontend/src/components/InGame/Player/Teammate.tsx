@@ -4,19 +4,27 @@ import type { Mesh } from "three";
 import { Character } from "./Character";
 import useConnection from "../../../hooks/useConnection";
 import type { GameConnectionListener } from "../../../lib/GameConnection";
-import useSpringBodySync from "../../../hooks/useSpringBodySync";
+import useBody from "../../../hooks/useBody";
+import useGame from "../../../hooks/useGame";
 
 const TEAMMATE_HEIGHT = 0.5;
 const TEAMMATE_RADIUS = 0.2;
 
 export function Teammate() {
+  const { teammateCoord } = useGame();
+  const initCoord = useRef(teammateCoord);
+
   const bodyRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Mesh>(null);
 
   useTeammateControls(bodyRef, meshRef);
 
   return (
-    <Character ref={bodyRef} height={TEAMMATE_HEIGHT}>
+    <Character
+      ref={bodyRef}
+      height={TEAMMATE_HEIGHT}
+      initialCoord={initCoord.current}
+    >
       <mesh ref={meshRef}>
         <cylinderGeometry
           args={[TEAMMATE_RADIUS, TEAMMATE_RADIUS, TEAMMATE_HEIGHT]}
@@ -31,7 +39,10 @@ function useTeammateControls(
   bodyRef: RefObject<RapierRigidBody>,
   meshRef: RefObject<Mesh>,
 ) {
-  const { moveBody } = useSpringBodySync(bodyRef, meshRef);
+  const { teammateCoord } = useGame();
+  const initCoord = useRef(teammateCoord);
+
+  const { moveBody } = useBody(initCoord.current, bodyRef, meshRef);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();

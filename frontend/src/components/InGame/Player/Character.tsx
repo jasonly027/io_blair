@@ -1,32 +1,31 @@
 import { RapierRigidBody, RigidBody } from "@react-three/rapier";
-import useGame from "../../../hooks/useGame";
 import { Vector3 } from "three";
 import { forwardRef, useMemo, type ForwardedRef, type ReactNode } from "react";
 import { toMapUnits } from "../../../lib/Map";
+import type { Coordinate } from "../../../lib/Maze";
 
 interface CharacterProps {
   children: ReactNode;
   height: number;
+  initialCoord: Readonly<Coordinate>;
 }
 
 export const Character = forwardRef(
   (
-    { children, height }: CharacterProps,
+    { children, height, initialCoord }: CharacterProps,
     bodyRef: ForwardedRef<RapierRigidBody>,
   ) => {
-    const { map } = useGame();
-
-    const position = useMemo(() => {
-      const [x, z] = toMapUnits(map.start);
+    const pos = useMemo(() => {
+      const [x, z] = toMapUnits(initialCoord);
       return new Vector3(x, height / 2, z);
-    }, [map.start, height]);
+    }, [height, initialCoord]);
 
     return (
       <RigidBody
         ref={bodyRef}
-        position={position}
+        position={pos}
         lockRotations
-        collisionGroups={(0x2 << 16) | 1}
+        collisionGroups={(0x2 << 16) | (0xFFFF & ~(0x2))}
       >
         {children}
       </RigidBody>

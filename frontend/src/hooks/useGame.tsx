@@ -1,7 +1,4 @@
-import {
-  createContext,
-  useContext,
-} from "react";
+import { createContext, useContext } from "react";
 import Maze, { type Coordinate } from "../lib/Maze";
 import type { ChangePlayerAction, Player } from "./usePlayers";
 
@@ -28,7 +25,8 @@ export interface GameValue {
   teammate: Player;
 
   map: Maze;
-  startCoords: Coordinate;
+  youCoord: Readonly<Coordinate>;
+  teammateCoord: Readonly<Coordinate>;
 }
 
 /**

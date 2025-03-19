@@ -19,23 +19,27 @@ import type Maze from "../../../lib/Maze";
 import { Character } from "./Character";
 import useConnection from "../../../hooks/useConnection";
 import type { GameConnectionListener } from "../../../lib/GameConnection";
-import { toNonMapUnits } from "../../../lib/Map";
-import useSpringBodySync, {
-  type SprVals,
-} from "../../../hooks/useSpringBodySync";
+import useBody from "../../../hooks/useBody";
 
 const YOU_HEIGHT = 0.5;
 const YOU_RADIUS = 0.2;
 const Y_FALLING_THRESHOLD = -0.001;
 
 export function You() {
+  const { youCoord } = useGame();
+  const initCoord = useRef(youCoord);
+
   const bodyRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Mesh>(null);
 
   useYouControls(bodyRef, meshRef);
 
   return (
-    <Character ref={bodyRef} height={YOU_HEIGHT}>
+    <Character
+      ref={bodyRef}
+      height={YOU_HEIGHT}
+      initialCoord={initCoord.current}
+    >
       <mesh ref={meshRef}>
         <cylinderGeometry args={[YOU_RADIUS, YOU_RADIUS, YOU_HEIGHT]} />
         <meshStandardMaterial />
@@ -59,10 +63,11 @@ function useYouControls(
   bodyRef: RefObject<RapierRigidBody>,
   meshRef: RefObject<Mesh>,
 ) {
-  const { map } = useGame();
+  const { map, youCoord } = useGame();
+  const initCoord = useRef(youCoord);
 
-  const { moveBody, sprVals } = useSpringBodySync(bodyRef, meshRef);
-  const { locked, moveDir } = useMoveSync(sprVals);
+  const { moveBody, moving } = useBody(initCoord.current, bodyRef, meshRef);
+  const { locked, moveDir } = useBodyLock(youCoord);
 
   useEffect(
     function listenForMoveKey() {
@@ -70,7 +75,7 @@ function useYouControls(
         if (
           !(key in controlMap) ||
           locked ||
-          sprVals.moving.get() ||
+          moving() ||
           bodyRef.current === null ||
           bodyRef.current.linvel().y < Y_FALLING_THRESHOLD
         )
@@ -79,14 +84,14 @@ function useYouControls(
         const dir = controlMap[key as keyof typeof controlMap];
         moveDir(dir);
 
-        const reset = shouldReset(map, [sprVals.x.get(), sprVals.z.get()], dir);
+        const reset = shouldReset(map, youCoord, dir);
         moveBody(dir, reset);
       };
 
       window.addEventListener("keydown", onKeyDown);
       return () => window.removeEventListener("keydown", onKeyDown);
     },
-    [bodyRef, locked, map, moveBody, moveDir, sprVals],
+    [bodyRef, locked, map, moveBody, moveDir, moving, youCoord],
   );
 }
 
@@ -95,7 +100,7 @@ interface useMoveSyncValues {
   moveDir: Dispatch<TraversableKey>;
 }
 
-function useMoveSync(sprVals: SprVals): useMoveSyncValues {
+function useBodyLock(youCoord: Readonly<Coordinate>): useMoveSyncValues {
   const [locked, setLocked] = useState(false);
 
   const {
@@ -119,11 +124,10 @@ function useMoveSync(sprVals: SprVals): useMoveSyncValues {
 
   const moveDir = useCallback(
     (dir: TraversableKey) => {
-      const coord = toNonMapUnits([sprVals.x.get(), sprVals.z.get()]);
-      characterMove(translate(coord, dir));
+      characterMove(translate(youCoord, dir));
       setLocked(true);
     },
-    [characterMove, sprVals],
+    [characterMove, youCoord],
   );
 
   return useMemo(
@@ -137,11 +141,9 @@ function useMoveSync(sprVals: SprVals): useMoveSyncValues {
 
 function shouldReset(
   map: Maze,
-  coord: Coordinate,
+  [x, z]: Readonly<Coordinate>,
   dir: TraversableKey,
 ): boolean {
-  const [x, z] = toNonMapUnits(coord);
-
   if (map.matrix[z]?.[x] !== undefined) {
     return !map.matrix[z][x][dir]("either");
   }

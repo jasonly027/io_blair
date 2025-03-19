@@ -216,7 +216,7 @@ export const moveMap = {
 } as const satisfies Record<TraversableKey, Coordinate>;
 
 export function translate(
-  [x, z]: Coordinate,
+  [x, z]: Readonly<Coordinate>,
   dir: TraversableKey,
   value: number = 1,
 ): Coordinate {
