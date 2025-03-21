@@ -12,7 +12,7 @@ const TEAMMATE_RADIUS = 0.2;
 
 export function Teammate() {
   const { teammateCoord } = useGame();
-  const initCoord = useRef(teammateCoord);
+  const initCoord = useRef(teammateCoord());
 
   const bodyRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Mesh>(null);
@@ -40,7 +40,7 @@ function useTeammateControls(
   meshRef: RefObject<Mesh>,
 ) {
   const { teammateCoord } = useGame();
-  const initCoord = useRef(teammateCoord);
+  const initCoord = useRef(teammateCoord());
 
   const { moveBody } = useBody(initCoord.current, bodyRef, meshRef);
 

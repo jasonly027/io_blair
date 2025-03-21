@@ -12,6 +12,9 @@ import {
 import type { RapierRigidBody } from "@react-three/rapier";
 import type { Mesh } from "three";
 
+export const SUCCESSFUL_MOVE_DURATION = 350;
+export const UNSUCCESSFUL_MOVE_DURATION = SUCCESSFUL_MOVE_DURATION * 0.75;
+
 export type SprVals = {
   moving: SpringValue<boolean>;
   x: SpringValue<number>;
@@ -23,6 +26,15 @@ export interface useSpringBodySyncValues {
   moving: () => boolean;
 }
 
+/**
+ * Provides a controller for moving the character body
+ * on the map.
+ *
+ * @param initialCoord
+ * @param bodyRef
+ * @param meshRef
+ * @returns
+ */
 export default function useBody(
   initialCoord: Readonly<Coordinate>,
   bodyRef: RefObject<RapierRigidBody>,
@@ -128,7 +140,9 @@ export default function useBody(
         },
 
         config: {
-          duration: 350 * (reset ? 0.75 : 1),
+          duration: reset
+            ? UNSUCCESSFUL_MOVE_DURATION
+            : SUCCESSFUL_MOVE_DURATION,
         },
       });
 

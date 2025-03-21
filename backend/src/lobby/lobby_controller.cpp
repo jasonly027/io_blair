@@ -144,7 +144,7 @@ void LobbyController::move_character(Player& self, Player& other, coordinate coo
 
   self.position = traversable ? coordinate : kMazeStart;
 
-  if (!maze_.at(coordinate).coin()) return;
+  if (traversable && !maze_.at(coordinate).coin()) return;
   maze_.take_coin(coordinate);
   broadcast(make_shared<const string>(jout::coin_taken(coordinate)));
 }

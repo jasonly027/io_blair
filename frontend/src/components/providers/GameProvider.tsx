@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Maze, {
   Cell,
   translate,
@@ -36,7 +43,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 
   const { you, setYou, teammate } = usePlayers();
 
-  const map = useMap();
+  const { map, coins } = useMap();
 
   const youCoord = useYouCoord(map);
 
@@ -56,6 +63,8 @@ export function GameProvider({ children }: { children?: ReactNode }) {
       teammate,
 
       map,
+      coins,
+
       youCoord,
       teammateCoord,
     }),
@@ -67,6 +76,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
       setYou,
       teammate,
       map,
+      coins,
       youCoord,
       teammateCoord,
     ],
@@ -196,8 +206,21 @@ function usePlayerCount(): number {
   return playerCount;
 }
 
-function useMap(): Maze {
+interface useMapValues {
+  map: Maze;
+  coins: number;
+}
+
+function useMap(): useMapValues {
   const [maze, setMaze] = useState<Maze>(getDefaultMaze);
+
+  const coins = useMemo(() => {
+    let coins = 0;
+    maze.matrix.forEach((row) =>
+      row.forEach((cell) => (coins += cell.coin() ? 1 : 0)),
+    );
+    return coins;
+  }, [maze]);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -208,8 +231,11 @@ function useMap(): Maze {
         maze,
         start,
         end,
+        cell,
       }) => {
-        setMaze(new Maze(deserializeMatrix(maze), start, end));
+        const map = new Maze(deserializeMatrix(maze), start, end);
+        updateCellWithOther(map, start, cell);
+        setMaze(map);
       };
 
       addConnectionEventListener("inGameMaze", onInGameMaze);
@@ -241,7 +267,31 @@ function useMap(): Maze {
     [addConnectionEventListener, removeConnectionEventListener],
   );
 
-  return maze;
+  useEffect(
+    function listenForCoinTaken() {
+      const onCoinTaken: GameConnectionListener<"coinTaken"> = ({
+        coordinate,
+      }) => {
+        setMaze((prev) => {
+          const maze = prev.clone();
+          maze.take_coin(coordinate);
+          return maze;
+        });
+      };
+
+      addConnectionEventListener("coinTaken", onCoinTaken);
+      return () => removeConnectionEventListener("coinTaken", onCoinTaken);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  return useMemo(
+    () => ({
+      map: maze,
+      coins,
+    }),
+    [coins, maze],
+  );
 }
 
 function updateCellWithOther(
@@ -298,8 +348,8 @@ function deserializeCell(num: number): Cell {
   return cell;
 }
 
-function useYouCoord(map: Maze): Readonly<Coordinate> {
-  const [coord, setCoord] = useState<Readonly<Coordinate>>([0, 0]);
+function useYouCoord(map: Maze): () => Readonly<Coordinate> {
+  const coord = useRef(map.start);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -309,7 +359,7 @@ function useYouCoord(map: Maze): Readonly<Coordinate> {
       const onInGameMaze: GameConnectionListener<"inGameMaze"> = ({
         start,
       }) => {
-        setCoord(start);
+        coord.current = start;
       };
 
       addConnectionEventListener("inGameMaze", onInGameMaze);
@@ -325,10 +375,10 @@ function useYouCoord(map: Maze): Readonly<Coordinate> {
         reset,
       }) => {
         if (reset) {
-          setCoord(map.start);
+          coord.current = map.start;
           return;
         }
-        setCoord(coordinate);
+        coord.current = coordinate;
       };
 
       addConnectionEventListener("characterMove", onCharacterMove);
@@ -338,11 +388,11 @@ function useYouCoord(map: Maze): Readonly<Coordinate> {
     [addConnectionEventListener, map.start, removeConnectionEventListener],
   );
 
-  return coord;
+  return useCallback(() => coord.current, []);
 }
 
-function useTeammateCoord(map: Maze): Readonly<Coordinate> {
-  const [coord, setCoord] = useState<Readonly<Coordinate>>([0, 0]);
+function useTeammateCoord(map: Maze): () => Readonly<Coordinate> {
+  const coord = useRef(map.start);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -352,7 +402,7 @@ function useTeammateCoord(map: Maze): Readonly<Coordinate> {
       const onInGameMaze: GameConnectionListener<"inGameMaze"> = ({
         start,
       }) => {
-        setCoord(start);
+        coord.current = start;
       };
 
       addConnectionEventListener("inGameMaze", onInGameMaze);
@@ -368,22 +418,18 @@ function useTeammateCoord(map: Maze): Readonly<Coordinate> {
         reset,
       }) => {
         if (reset) {
-          setCoord(map.start);
+          coord.current = map.start;
           return;
         }
-        setCoord((prev) => translate(prev, direction));
+        coord.current = translate(coord.current, direction);
       };
 
       addConnectionEventListener("characterOtherMove", onCharacterMove);
       return () =>
         removeConnectionEventListener("characterOtherMove", onCharacterMove);
     },
-    [
-      addConnectionEventListener,
-      map.start,
-      removeConnectionEventListener,
-    ],
+    [addConnectionEventListener, map.start, removeConnectionEventListener],
   );
 
-  return coord;
+  return useCallback(() => coord.current, []);
 }

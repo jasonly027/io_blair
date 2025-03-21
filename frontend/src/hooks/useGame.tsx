@@ -25,8 +25,9 @@ export interface GameValue {
   teammate: Player;
 
   map: Maze;
-  youCoord: Readonly<Coordinate>;
-  teammateCoord: Readonly<Coordinate>;
+  coins: number;
+  youCoord: () => Readonly<Coordinate>;
+  teammateCoord: () => Readonly<Coordinate>;
 }
 
 /**

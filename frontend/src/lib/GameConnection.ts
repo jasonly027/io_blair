@@ -20,6 +20,7 @@ export type GameEventMap = {
       code: string;
       /** The current number of players, including the player. */
       playerCount: number;
+      otherConfirm: GameCharacter | "unknown";
     },
   ];
   /** Indicates teammate has joined the lobby */
@@ -52,6 +53,7 @@ export type GameEventMap = {
       maze: MazeMatrix<number>;
       start: Coordinate;
       end: Coordinate;
+      cell: number;
     },
   ];
   characterMove: [
@@ -67,6 +69,13 @@ export type GameEventMap = {
       reset: boolean;
     },
   ];
+  coinTaken: [
+    {
+      coordinate: Coordinate;
+    },
+  ];
+
+  inGameWin: [];
 };
 
 export type GameEventKey = keyof GameEventMap;
@@ -221,7 +230,9 @@ export class GameConnection {
 const gameEventMapSchema = {
   open: [],
   close: [],
-  lobbyJoin: [{ success: false, code: "", playerCount: 0 }],
+  lobbyJoin: [
+    { success: false, code: "", playerCount: 0, otherConfirm: "unknown" },
+  ],
   lobbyOtherJoin: [],
   lobbyOtherLeave: [],
   chat: [{ msg: "" }],
@@ -233,6 +244,7 @@ const gameEventMapSchema = {
       maze: undefined!,
       start: [0, 0],
       end: [0, 0],
+      cell: 0,
     },
   ],
   characterMove: [
@@ -248,6 +260,12 @@ const gameEventMapSchema = {
       reset: false,
     },
   ],
+  coinTaken: [
+    {
+      coordinate: [0, 0],
+    },
+  ],
+  inGameWin: [],
 } as const satisfies GameEventMap;
 
 /** Convert a raw message from the server to a GameEvent */

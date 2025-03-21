@@ -5,7 +5,7 @@ import {
   type Coordinate,
   type TraversableKey,
 } from "../../../lib/Maze";
-import { Mesh } from "three";
+import { Mesh, PerspectiveCamera as PCamera } from "three";
 import {
   useCallback,
   useEffect,
@@ -20,6 +20,8 @@ import { Character } from "./Character";
 import useConnection from "../../../hooks/useConnection";
 import type { GameConnectionListener } from "../../../lib/GameConnection";
 import useBody from "../../../hooks/useBody";
+import { PerspectiveCamera } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 
 const YOU_HEIGHT = 0.5;
 const YOU_RADIUS = 0.2;
@@ -27,24 +29,35 @@ const Y_FALLING_THRESHOLD = -0.001;
 
 export function You() {
   const { youCoord } = useGame();
-  const initCoord = useRef(youCoord);
+  const initCoord = useRef(youCoord());
 
   const bodyRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Mesh>(null);
+  const cameraRef = useRef<PCamera>(null);
 
   useYouControls(bodyRef, meshRef);
 
+  useFrame(() => {
+    if (bodyRef.current === null || cameraRef.current === null) return;
+    const { x, z } = bodyRef.current.translation();
+    cameraRef.current.position.set(x, 5, z + 7);
+    cameraRef.current.lookAt(x, 0, z);
+  });
+
   return (
-    <Character
-      ref={bodyRef}
-      height={YOU_HEIGHT}
-      initialCoord={initCoord.current}
-    >
-      <mesh ref={meshRef}>
-        <cylinderGeometry args={[YOU_RADIUS, YOU_RADIUS, YOU_HEIGHT]} />
-        <meshStandardMaterial />
-      </mesh>
-    </Character>
+    <>
+      <Character
+        ref={bodyRef}
+        height={YOU_HEIGHT}
+        initialCoord={initCoord.current}
+      >
+        <mesh castShadow receiveShadow ref={meshRef}>
+          <cylinderGeometry args={[YOU_RADIUS, YOU_RADIUS, YOU_HEIGHT]} />
+          <meshStandardMaterial />
+        </mesh>
+      </Character>
+      <PerspectiveCamera ref={cameraRef} makeDefault />
+    </>
   );
 }
 
@@ -64,10 +77,10 @@ function useYouControls(
   meshRef: RefObject<Mesh>,
 ) {
   const { map, youCoord } = useGame();
-  const initCoord = useRef(youCoord);
+  const initCoord = useRef(youCoord());
 
   const { moveBody, moving } = useBody(initCoord.current, bodyRef, meshRef);
-  const { locked, moveDir } = useBodyLock(youCoord);
+  const { locked, moveDir } = useBodyLock();
 
   useEffect(
     function listenForMoveKey() {
@@ -84,7 +97,7 @@ function useYouControls(
         const dir = controlMap[key as keyof typeof controlMap];
         moveDir(dir);
 
-        const reset = shouldReset(map, youCoord, dir);
+        const reset = shouldReset(map, youCoord(), dir);
         moveBody(dir, reset);
       };
 
@@ -100,8 +113,10 @@ interface useMoveSyncValues {
   moveDir: Dispatch<TraversableKey>;
 }
 
-function useBodyLock(youCoord: Readonly<Coordinate>): useMoveSyncValues {
+function useBodyLock(): useMoveSyncValues {
   const [locked, setLocked] = useState(false);
+
+  const { youCoord } = useGame();
 
   const {
     addConnectionEventListener,
@@ -124,7 +139,7 @@ function useBodyLock(youCoord: Readonly<Coordinate>): useMoveSyncValues {
 
   const moveDir = useCallback(
     (dir: TraversableKey) => {
-      characterMove(translate(youCoord, dir));
+      characterMove(translate(youCoord(), dir));
       setLocked(true);
     },
     [characterMove, youCoord],

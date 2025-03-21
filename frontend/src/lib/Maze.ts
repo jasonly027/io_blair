@@ -206,6 +206,11 @@ export default class Maze {
     if (!this.inRange(x, y)) return;
     this.matrix[y]![x]![`set_${opposite(dir)}`](who, value);
   }
+
+  public take_coin([x, y]: Coordinate): void {
+    if (!this.inRange(x, y)) return;
+    this.matrix[y]![x]!.set_coin(false);
+  }
 }
 
 export const moveMap = {

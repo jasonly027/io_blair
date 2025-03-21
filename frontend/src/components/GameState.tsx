@@ -2,6 +2,7 @@ import useGame, { GameStatus } from "../hooks/useGame";
 import InGame from "./InGame/InGame";
 import Lobby from "./Lobby/Lobby";
 import Prelobby from "./Prelobby";
+import Sound from "./Sound";
 
 export default function GameState() {
   console.log("GameState render");
@@ -13,6 +14,7 @@ export default function GameState() {
       {gameStatus === GameStatus.Prelobby && <Prelobby />}
       {gameStatus === GameStatus.Lobby && <Lobby />}
       {gameStatus === GameStatus.InGame && <InGame />}
+      <Sound />
     </div>
   );
 }

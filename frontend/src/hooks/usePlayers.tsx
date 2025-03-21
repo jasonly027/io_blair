@@ -114,6 +114,21 @@ function useTeammate(
     useConnection();
 
   useEffect(
+    function listenForLobbyJoin() {
+      const onJoin: GameConnectionListener<"lobbyJoin"> = ({
+        otherConfirm,
+      }) => {
+        if (otherConfirm === "unknown") return;
+        setTeammate({ hover: otherConfirm, confirm: otherConfirm });
+      };
+
+      addConnectionEventListener("lobbyJoin", onJoin);
+      return () => removeConnectionEventListener("lobbyJoin", onJoin);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  useEffect(
     function listenForHover() {
       const onHover: GameConnectionListener<"characterHover"> = ({
         character,

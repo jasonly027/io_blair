@@ -1,6 +1,6 @@
 import { Helper, PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { type ReactNode, useRef } from "react";
+import { type ReactNode } from "react";
 import { PointLightHelper } from "three";
 import type { GameCharacter } from "../../types/character";
 import CatWaffle from "./CatWaffle";
@@ -57,8 +57,6 @@ function DashedContainer({
   strokeColor = "white",
   children,
 }: DashedBorderProps) {
-  const divRef = useRef<HTMLDivElement>(null!);
-
   const dashedBorderSvg = `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='${strokeColor}' stroke-width='15' stroke-dasharray='30' stroke-dashoffset='12' stroke-linecap='square'/%3e%3c/svg%3e")`;
   const outlineClasses = stroke === "full" ? "outline-8 -outline-offset-8" : "";
 
@@ -71,7 +69,6 @@ function DashedContainer({
 
   return (
     <a.div
-      ref={divRef}
       style={{
         ...scale,
         backgroundImage: stroke === "dashed" ? dashedBorderSvg : "",
