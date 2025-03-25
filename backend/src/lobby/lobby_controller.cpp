@@ -144,9 +144,12 @@ void LobbyController::move_character(Player& self, Player& other, coordinate coo
 
   self.position = traversable ? coordinate : kMazeStart;
 
-  if (traversable && !maze_.at(coordinate).coin()) return;
-  maze_.take_coin(coordinate);
-  broadcast(make_shared<const string>(jout::coin_taken(coordinate)));
+  if (traversable && maze_.at(coordinate).coin()) {
+    maze_.take_coin(coordinate);
+    broadcast(make_shared<const string>(jout::coin_taken(coordinate)));
+  }
+
+  check_win();
 }
 
 void LobbyController::check_win() {
@@ -155,7 +158,7 @@ void LobbyController::check_win() {
   if (p1_.position != maze_.end() || p2_.position != maze_.end() || maze_.any_coin()) {
     return;
   }
-  broadcast(make_shared<const string>(jout::ingame_win()));
+  broadcast(make_shared<const string>(jout::transition_to_gamedone()));
   broadcast(SessionEvent::kTransitionToGameDone);
 }
 

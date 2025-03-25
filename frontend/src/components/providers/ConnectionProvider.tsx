@@ -96,5 +96,9 @@ function createActions(connection: GameConnection): ConnectionActions {
         coordinate,
       });
     },
+
+    newGame() {
+      connection.send("newGame");
+    },
   };
 }

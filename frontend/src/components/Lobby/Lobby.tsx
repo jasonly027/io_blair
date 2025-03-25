@@ -30,13 +30,20 @@ function StatusBar() {
 function PlayerCount() {
   const { playerCount } = useGame();
 
+  const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
+
   return (
-    <h2>
-      Players:{" "}
-      <span className="rounded-md border-2 border-white bg-emerald-500 px-1 text-nowrap">
+    <div className="flex flex-row flex-wrap items-center justify-center space-x-2">
+      <h2>Players: </h2>
+      <a.span
+        style={scale}
+        onMouseEnter={increaseScale}
+        onMouseLeave={decreaseScale}
+        className="rounded-md border-2 border-white bg-emerald-500 px-1 text-nowrap"
+      >
         {`${playerCount}`} out of 2
-      </span>
-    </h2>
+      </a.span>
+    </div>
   );
 }
 
@@ -51,17 +58,18 @@ function LobbyCode() {
   const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
 
   return (
-    <div className="flex h-fit flex-row flex-wrap items-center justify-center space-x-2">
+    <div className="flex flex-row flex-wrap items-center justify-center space-x-2">
       <h2>Lobby Code:</h2>
-      <a.span
+      <a.button
         onClick={saveToClipboard}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
         style={scale}
+        title="Copy to clipboard"
         className="cursor-pointer rounded-md border-2 border-white bg-cyan-600 px-1"
       >
         {lobbyCode}
-      </a.span>
+      </a.button>
       <ToastContainer newestOnTop />
     </div>
   );

@@ -12,7 +12,7 @@ const TEAMMATE_RADIUS = 0.2;
 
 export function Teammate() {
   const { teammateCoord } = useGame();
-  const initCoord = useRef(teammateCoord());
+  const initCoord = useRef(teammateCoord);
 
   const bodyRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Mesh>(null);
@@ -39,8 +39,8 @@ function useTeammateControls(
   bodyRef: RefObject<RapierRigidBody>,
   meshRef: RefObject<Mesh>,
 ) {
-  const { teammateCoord } = useGame();
-  const initCoord = useRef(teammateCoord());
+  const { teammateCoord, incrementMovesCount } = useGame();
+  const initCoord = useRef(teammateCoord);
 
   const { moveBody } = useBody(initCoord.current, bodyRef, meshRef);
 
@@ -53,6 +53,7 @@ function useTeammateControls(
         direction,
         reset,
       }) => {
+        incrementMovesCount();
         moveBody(direction, reset);
       };
 
@@ -60,6 +61,11 @@ function useTeammateControls(
       return () =>
         removeConnectionEventListener("characterOtherMove", onOtherMove);
     },
-    [moveBody, addConnectionEventListener, removeConnectionEventListener],
+    [
+      moveBody,
+      addConnectionEventListener,
+      removeConnectionEventListener,
+      incrementMovesCount,
+    ],
   );
 }

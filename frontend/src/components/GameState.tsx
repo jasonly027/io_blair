@@ -13,7 +13,8 @@ export default function GameState() {
     <div className="flex min-h-screen flex-col items-center bg-linear-to-b from-blue-400 from-70% to-blue-500">
       {gameStatus === GameStatus.Prelobby && <Prelobby />}
       {gameStatus === GameStatus.Lobby && <Lobby />}
-      {gameStatus === GameStatus.InGame && <InGame />}
+      {(gameStatus === GameStatus.InGame ||
+        gameStatus === GameStatus.GameDone) && <InGame />}
       <Sound />
     </div>
   );

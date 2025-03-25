@@ -4,10 +4,12 @@ import {
   useMemo,
   useRef,
   useState,
+  type DispatchWithoutAction,
   type ReactNode,
 } from "react";
 import Maze, {
   Cell,
+  coordEqual,
   translate,
   type Coordinate,
   type MazeMatrix,
@@ -43,11 +45,21 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 
   const { you, setYou, teammate } = usePlayers();
 
-  const { map, coins } = useMap();
+  const { map, currentCoins, totalCoins } = useMap();
 
   const youCoord = useYouCoord(map);
 
   const teammateCoord = useTeammateCoord(map);
+
+  const { movesCount, incrementMovesCount } = useMovesCount();
+
+  const gameDone = useGameDone(
+    youCoord,
+    teammateCoord,
+    map,
+    currentCoins,
+    totalCoins,
+  );
 
   const gameValues: GameValues = useMemo(
     () => ({
@@ -63,10 +75,16 @@ export function GameProvider({ children }: { children?: ReactNode }) {
       teammate,
 
       map,
-      coins,
+      currentCoins,
+      totalCoins,
 
       youCoord,
       teammateCoord,
+
+      movesCount,
+      incrementMovesCount,
+
+      gameDone,
     }),
     [
       gameStatus,
@@ -76,9 +94,13 @@ export function GameProvider({ children }: { children?: ReactNode }) {
       setYou,
       teammate,
       map,
-      coins,
+      currentCoins,
+      totalCoins,
       youCoord,
       teammateCoord,
+      movesCount,
+      incrementMovesCount,
+      gameDone,
     ],
   );
 
@@ -140,6 +162,21 @@ function useGameStatus(): GameStatus {
       addConnectionEventListener("transitionToInGame", onTransition);
       return () =>
         removeConnectionEventListener("transitionToInGame", onTransition);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
+
+  useEffect(
+    function listenForTransitionToGameDone() {
+      const onTransition: GameConnectionListener<
+        "transitionToGameDone"
+      > = () => {
+        setGameStatus(GameStatus.GameDone);
+      };
+
+      addConnectionEventListener("transitionToGameDone", onTransition);
+      return () =>
+        removeConnectionEventListener("transitionToGameDone", onTransition);
     },
     [addConnectionEventListener, removeConnectionEventListener],
   );
@@ -208,19 +245,15 @@ function usePlayerCount(): number {
 
 interface useMapValues {
   map: Maze;
-  coins: number;
+  currentCoins: number;
+  totalCoins: number;
 }
 
 function useMap(): useMapValues {
   const [maze, setMaze] = useState<Maze>(getDefaultMaze);
 
-  const coins = useMemo(() => {
-    let coins = 0;
-    maze.matrix.forEach((row) =>
-      row.forEach((cell) => (coins += cell.coin() ? 1 : 0)),
-    );
-    return coins;
-  }, [maze]);
+  const [currentCoins, setCurrentCoins] = useState(0);
+  const [totalCoins, setTotalCoins] = useState(1);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -235,7 +268,16 @@ function useMap(): useMapValues {
       }) => {
         const map = new Maze(deserializeMatrix(maze), start, end);
         updateCellWithOther(map, start, cell);
+
         setMaze(map);
+        setCurrentCoins(0);
+        setTotalCoins(
+          map.matrix.reduce(
+            (sum, row) =>
+              sum + row.reduce((sum, cell) => sum + (cell.coin() ? 1 : 0), 0),
+            0,
+          ),
+        );
       };
 
       addConnectionEventListener("inGameMaze", onInGameMaze);
@@ -277,6 +319,7 @@ function useMap(): useMapValues {
           maze.take_coin(coordinate);
           return maze;
         });
+        setCurrentCoins((prev) => prev + 1);
       };
 
       addConnectionEventListener("coinTaken", onCoinTaken);
@@ -288,9 +331,10 @@ function useMap(): useMapValues {
   return useMemo(
     () => ({
       map: maze,
-      coins,
+      currentCoins,
+      totalCoins,
     }),
-    [coins, maze],
+    [currentCoins, maze, totalCoins],
   );
 }
 
@@ -348,8 +392,8 @@ function deserializeCell(num: number): Cell {
   return cell;
 }
 
-function useYouCoord(map: Maze): () => Readonly<Coordinate> {
-  const coord = useRef(map.start);
+function useYouCoord(map: Maze): Readonly<Coordinate> {
+  const [coord, setCoord] = useState(map.start);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -359,7 +403,7 @@ function useYouCoord(map: Maze): () => Readonly<Coordinate> {
       const onInGameMaze: GameConnectionListener<"inGameMaze"> = ({
         start,
       }) => {
-        coord.current = start;
+        setCoord(start);
       };
 
       addConnectionEventListener("inGameMaze", onInGameMaze);
@@ -375,10 +419,10 @@ function useYouCoord(map: Maze): () => Readonly<Coordinate> {
         reset,
       }) => {
         if (reset) {
-          coord.current = map.start;
+          setCoord(map.start);
           return;
         }
-        coord.current = coordinate;
+        setCoord(coordinate);
       };
 
       addConnectionEventListener("characterMove", onCharacterMove);
@@ -388,11 +432,11 @@ function useYouCoord(map: Maze): () => Readonly<Coordinate> {
     [addConnectionEventListener, map.start, removeConnectionEventListener],
   );
 
-  return useCallback(() => coord.current, []);
+  return coord;
 }
 
-function useTeammateCoord(map: Maze): () => Readonly<Coordinate> {
-  const coord = useRef(map.start);
+function useTeammateCoord(map: Maze): Readonly<Coordinate> {
+  const [coord, setCoord] = useState(map.start);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -402,7 +446,7 @@ function useTeammateCoord(map: Maze): () => Readonly<Coordinate> {
       const onInGameMaze: GameConnectionListener<"inGameMaze"> = ({
         start,
       }) => {
-        coord.current = start;
+        setCoord(start);
       };
 
       addConnectionEventListener("inGameMaze", onInGameMaze);
@@ -418,10 +462,10 @@ function useTeammateCoord(map: Maze): () => Readonly<Coordinate> {
         reset,
       }) => {
         if (reset) {
-          coord.current = map.start;
+          setCoord(map.start);
           return;
         }
-        coord.current = translate(coord.current, direction);
+        setCoord((prev) => translate(prev, direction));
       };
 
       addConnectionEventListener("characterOtherMove", onCharacterMove);
@@ -431,5 +475,55 @@ function useTeammateCoord(map: Maze): () => Readonly<Coordinate> {
     [addConnectionEventListener, map.start, removeConnectionEventListener],
   );
 
-  return useCallback(() => coord.current, []);
+  return coord;
+}
+
+interface useMovesCountValues {
+  movesCount: number;
+  incrementMovesCount: DispatchWithoutAction;
+}
+
+function useMovesCount(): useMovesCountValues {
+  const [movesCount, setMovesCount] = useState(0);
+
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
+
+  useEffect(function listenForInGameMaze() {
+    const onInGameMaze: GameConnectionListener<"inGameMaze"> = () => {
+      setMovesCount(0);
+    };
+
+    addConnectionEventListener("inGameMaze", onInGameMaze);
+    return () => removeConnectionEventListener("inGameMaze", onInGameMaze);
+  });
+
+  const incrementMovesCount = useCallback(
+    () => setMovesCount((prev) => prev + 1),
+    [],
+  );
+
+  return useMemo(
+    () => ({
+      movesCount,
+      incrementMovesCount,
+    }),
+    [incrementMovesCount, movesCount],
+  );
+}
+
+function useGameDone(
+  youCoord: Readonly<Coordinate>,
+  teammateCoord: Readonly<Coordinate>,
+  map: Maze,
+  currentCoins: number,
+  totalCoins: number,
+): boolean {
+  return useMemo(
+    () =>
+      coordEqual(youCoord, map.end) &&
+      coordEqual(teammateCoord, map.end) &&
+      currentCoins === totalCoins,
+    [currentCoins, map.end, teammateCoord, totalCoins, youCoord],
+  );
 }

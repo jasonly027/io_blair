@@ -37,6 +37,8 @@ export interface ConnectionActions {
   confirmCharacter: (character: GameCharacter | null) => void;
 
   characterMove: (coordinate: Coordinate) => void;
+
+  newGame: () => void;
 }
 
 /**

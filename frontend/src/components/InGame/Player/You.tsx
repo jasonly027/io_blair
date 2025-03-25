@@ -22,14 +22,14 @@ import type { GameConnectionListener } from "../../../lib/GameConnection";
 import useBody from "../../../hooks/useBody";
 import { PerspectiveCamera } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { gameFocused } from "../../../lib/game";
 
 const YOU_HEIGHT = 0.5;
 const YOU_RADIUS = 0.2;
-const Y_FALLING_THRESHOLD = -0.001;
 
 export function You() {
   const { youCoord } = useGame();
-  const initCoord = useRef(youCoord());
+  const initCoord = useRef(youCoord);
 
   const bodyRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Mesh>(null);
@@ -76,10 +76,8 @@ function useYouControls(
   bodyRef: RefObject<RapierRigidBody>,
   meshRef: RefObject<Mesh>,
 ) {
-  const { map, youCoord } = useGame();
-  const initCoord = useRef(youCoord());
-
-  const { moveBody, moving } = useBody(initCoord.current, bodyRef, meshRef);
+  const { map, youCoord, incrementMovesCount, gameDone } = useGame();
+  const { moveBody, moving } = useBody(youCoord, bodyRef, meshRef);
   const { locked, moveDir } = useBodyLock();
 
   useEffect(
@@ -87,33 +85,35 @@ function useYouControls(
       const onKeyDown = ({ key }: KeyboardEvent) => {
         if (
           !(key in controlMap) ||
+          !gameFocused() ||
+          gameDone ||
           locked ||
-          moving() ||
-          bodyRef.current === null ||
-          bodyRef.current.linvel().y < Y_FALLING_THRESHOLD
+          moving()
         )
           return;
+
+        incrementMovesCount();
 
         const dir = controlMap[key as keyof typeof controlMap];
         moveDir(dir);
 
-        const reset = shouldReset(map, youCoord(), dir);
+        const reset = shouldReset(map, youCoord, dir);
         moveBody(dir, reset);
       };
 
       window.addEventListener("keydown", onKeyDown);
       return () => window.removeEventListener("keydown", onKeyDown);
     },
-    [bodyRef, locked, map, moveBody, moveDir, moving, youCoord],
+    [gameDone, incrementMovesCount, locked, map, moveBody, moveDir, moving, youCoord],
   );
 }
 
-interface useMoveSyncValues {
+interface useBodyLockValues {
   locked: boolean;
   moveDir: Dispatch<TraversableKey>;
 }
 
-function useBodyLock(): useMoveSyncValues {
+function useBodyLock(): useBodyLockValues {
   const [locked, setLocked] = useState(false);
 
   const { youCoord } = useGame();
@@ -139,7 +139,7 @@ function useBodyLock(): useMoveSyncValues {
 
   const moveDir = useCallback(
     (dir: TraversableKey) => {
-      characterMove(translate(youCoord(), dir));
+      characterMove(translate(youCoord, dir));
       setLocked(true);
     },
     [characterMove, youCoord],

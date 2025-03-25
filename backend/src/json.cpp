@@ -95,8 +95,8 @@ string coin_taken(coordinate coordinate) {
   });
 }
 
-string ingame_win() {
-  return encode(inGameWin{});
+string transition_to_gamedone() {
+  return encode(transitionToGameDone{});
 }
 
 }  // namespace out

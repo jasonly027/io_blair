@@ -330,14 +330,14 @@ std::string coin_taken(coordinate coordinate);
 /**
  * @brief Indicates the game has finished.
  */
-struct inGameWin {};
+struct transitionToGameDone {};
 
 /**
  * @brief Encodes inGameWin as a string.
  *
  * @return std::string 
  */
-std::string ingame_win();
+std::string transition_to_gamedone();
 
 //NOLINTEND(readability-identifier-naming)
 }  // namespace out

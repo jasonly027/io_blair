@@ -241,3 +241,10 @@ export function opposite(dir: TraversableKey): TraversableKey {
       return "right";
   }
 }
+
+export function coordEqual(
+  [x1, y1]: Readonly<Coordinate>,
+  [x2, y2]: Readonly<Coordinate>,
+): boolean {
+  return x1 === x2 && y1 === y2;
+}

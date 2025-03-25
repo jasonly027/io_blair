@@ -39,10 +39,10 @@ function Cell({ coordinate, cell }: CellProps) {
   return (
     <>
       <Tile coordinate={coordinate}>
-        {cell.right("either") ? <Gap type="right" cell={cell} /> : null}
-        {cell.down("either") ? <Gap type="down" cell={cell} /> : null}
+        {cell.right("either") && <Gap type="right" cell={cell} />}
+        {cell.down("either") && <Gap type="down" cell={cell} />}
+        <Coin exists={cell.coin()} />
       </Tile>
-      <Coin coordinate={coordinate} exists={cell.coin()} />
     </>
   );
 }
@@ -54,13 +54,15 @@ interface TileProps {
 
 function Tile({ coordinate: [x, z], children }: TileProps) {
   return (
-    <RigidBody position={[x, 0, z]} type="fixed">
-      <mesh receiveShadow castShadow>
-        <boxGeometry args={[CELL_LEN, CELL_LEN, CELL_LEN]} />
-        <meshStandardMaterial color="darkgreen" />
-      </mesh>
+    <group position={[x, 0, z]}>
+      <RigidBody type="fixed">
+        <mesh receiveShadow castShadow>
+          <boxGeometry args={[CELL_LEN, CELL_LEN, CELL_LEN]} />
+          <meshStandardMaterial color="darkgreen" />
+        </mesh>
+      </RigidBody>
       {children}
-    </RigidBody>
+    </group>
   );
 }
 
@@ -75,39 +77,36 @@ function Gap({ type, cell }: GapProps) {
   const cellDir = cell[type].bind(cell);
 
   return (
-    <mesh
+    <RigidBody
       position={[
         type === "right" ? DIST_TO_NEXT_GAP : 0,
         0,
         type === "down" ? DIST_TO_NEXT_GAP : 0,
       ]}
+      type="fixed"
     >
-      <boxGeometry
-        args={[
-          CELL_LEN - Z_FIGHTING_BUFFER,
-          CELL_LEN,
-          CELL_LEN - Z_FIGHTING_BUFFER,
-        ]}
-      />
-      <meshStandardMaterial
-        color={
-          cellDir("both") ? "white" : cellDir("You") ? "dodgerblue" : "pink"
-        }
-        transparent={!cellDir("both")}
-        opacity={0.5}
-      />
-    </mesh>
+      <mesh>
+        <boxGeometry
+          args={[
+            CELL_LEN - Z_FIGHTING_BUFFER,
+            CELL_LEN,
+            CELL_LEN - Z_FIGHTING_BUFFER,
+          ]}
+        />
+        <meshStandardMaterial
+          color={
+            cellDir("both") ? "white" : cellDir("You") ? "lightgreen" : "pink"
+          }
+          opacity={cellDir("both") ? 1 : 0.5}
+          transparent
+        />
+      </mesh>
+    </RigidBody>
   );
 }
 
-function Coin({
-  coordinate: [x, z],
-  exists,
-}: {
-  coordinate: Coordinate;
-  exists: boolean;
-}) {
-  const [visible, setVisible] = useState(exists);
+function Coin({ exists }: { exists: boolean }) {
+  const [prevExists, setPrevExists] = useState(exists);
 
   const meshRef = useRef<Mesh>(null);
   useFrame((_, delta) => {
@@ -115,34 +114,46 @@ function Coin({
     meshRef.current.rotateZ(delta * 1.5);
   });
 
-  useEffect(() => {
-    if (exists) return;
+  const timeoutRef = useRef<number | null>(null);
 
-    const timeout = setTimeout(() => {
-      setVisible(false);
-    }, SUCCESSFUL_MOVE_DURATION);
+  if (exists !== prevExists) {
+    if (exists) {
+      setPrevExists(true);
+      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setPrevExists(false);
+      }, SUCCESSFUL_MOVE_DURATION);
+    }
+  }
 
-    return () => clearTimeout(timeout);
-  }, [exists]);
+  useEffect(function clearTimeoutOnDismount() {
+    return () => {
+      if (timeoutRef.current === null) return;
+      clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
-  return visible ? (
-    <RigidBody
-      position={[x, CELL_LEN, z]}
-      rotation={[-Math.PI * 1.5, 0, 0]}
-      type="fixed"
-      colliders={false}
-    >
-      <CuboidCollider
-        sensor
-        args={[0.2, 0.2, 0.2]}
-        onIntersectionEnter={() => {
-          setVisible(false);
-        }}
-      />
-      <mesh castShadow receiveShadow ref={meshRef}>
-        <cylinderGeometry args={[0.2, 0.2, 0.05]}></cylinderGeometry>
-        <meshStandardMaterial color="yellow" />
-      </mesh>
-    </RigidBody>
-  ) : null;
+  return (
+    prevExists && (
+      <RigidBody
+        position={[0, CELL_LEN, 0]}
+        rotation={[-Math.PI * 1.5, 0, 0]}
+        type="fixed"
+        colliders={false}
+      >
+        <CuboidCollider
+          sensor
+          args={[0.2, 0.2, 0.2]}
+          onIntersectionEnter={() => {
+            setPrevExists(false);
+          }}
+        />
+        <mesh castShadow receiveShadow ref={meshRef}>
+          <cylinderGeometry args={[0.2, 0.2, 0.05]}></cylinderGeometry>
+          <meshStandardMaterial color="yellow" />
+        </mesh>
+      </RigidBody>
+    )
+  );
 }

@@ -1,6 +1,6 @@
 import { easings, SpringValue, useSpring } from "@react-spring/three";
 import useGame from "./useGame";
-import { toMapUnits } from "../lib/Map";
+import { toMapUnits } from "../lib/map";
 import { translate, type Coordinate, type TraversableKey } from "../lib/Maze";
 import { useCallback, useEffect, useMemo, useRef, type RefObject } from "react";
 import {
@@ -11,9 +11,13 @@ import {
 } from "../components/InGame/Map";
 import type { RapierRigidBody } from "@react-three/rapier";
 import type { Mesh } from "three";
+import useConnection from "./useConnection";
+import type { GameConnectionListener } from "../lib/GameConnection";
 
 export const SUCCESSFUL_MOVE_DURATION = 350;
 export const UNSUCCESSFUL_MOVE_DURATION = SUCCESSFUL_MOVE_DURATION * 0.75;
+
+const Y_FALLING_THRESHOLD = -0.001;
 
 export type SprVals = {
   moving: SpringValue<boolean>;
@@ -42,14 +46,10 @@ export default function useBody(
 ): useSpringBodySyncValues {
   const { map } = useGame();
 
-  const currentCoord = useRef(toMapUnits(initialCoord));
-  useEffect(
-    function listenForInitialCoordChange() {
-      currentCoord.current = toMapUnits(initialCoord);
-    },
-    [initialCoord],
-  );
+  const { addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
 
+  const currentCoord = useRef(toMapUnits(initialCoord));
   const [sprVals, sprCtrl] = useSpring(() => {
     const [x, z] = currentCoord.current;
     return {
@@ -62,6 +62,43 @@ export default function useBody(
       },
     };
   }, [currentCoord]);
+
+  useEffect(
+    function listenForInGameMaze() {
+      const onInGameMaze: GameConnectionListener<"inGameMaze"> = ({
+        start,
+      }) => {
+        currentCoord.current = toMapUnits(start);
+        const [x, z] = currentCoord.current;
+        sprCtrl.start({
+          to: {
+            x,
+            z,
+          },
+          onRest() {
+            bodyRef.current?.setTranslation(
+              {
+                x,
+                y: bodyRef.current.translation().y,
+                z,
+              },
+              true,
+            );
+          },
+          immediate: true,
+        });
+      };
+
+      addConnectionEventListener("inGameMaze", onInGameMaze);
+      return () => removeConnectionEventListener("inGameMaze", onInGameMaze);
+    },
+    [
+      addConnectionEventListener,
+      removeConnectionEventListener,
+      sprCtrl,
+      bodyRef,
+    ],
+  );
 
   const moveBody = useCallback(
     (dir: TraversableKey, reset: boolean) => {
@@ -152,8 +189,12 @@ export default function useBody(
   );
 
   const moving = useCallback(() => {
-    return sprVals.moving.get();
-  }, [sprVals]);
+    return (
+      sprVals.moving.get() ||
+      bodyRef.current === null ||
+      bodyRef.current.linvel().y < Y_FALLING_THRESHOLD
+    );
+  }, [sprVals, bodyRef]);
 
   return useMemo(
     () => ({

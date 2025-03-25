@@ -35,6 +35,7 @@ export default function CharacterCard({
         style={{
           cursor: locked ? "not-allowed" : "pointer",
         }}
+        title={`Select ${name}`}
         className="flex size-[20rem] cursor-pointer flex-col rounded-md"
       >
         <h2 className="m-2 text-center select-none">{name}</h2>

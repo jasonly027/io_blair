@@ -11,5 +11,5 @@ export default function Loading() {
     return () => clearInterval(interval);
   }, []);
 
-  return <h2>Waiting for server{ellipsis}</h2>;
+  return <h2 className="text-center">Waiting for server{ellipsis}</h2>;
 }

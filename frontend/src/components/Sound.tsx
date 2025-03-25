@@ -1,34 +1,43 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { a } from "@react-spring/web";
+import useDynamicScale from "../hooks/useDynamicScale";
 
-const AUDIO_VOLUME = 0.2;
+const AUDIO_VOLUME = 0.05;
 
 export default function Sound() {
-  const audioRef = useRef<HTMLAudioElement>(new Audio("/audio/BGM.mp3"));
+  const audioRef = useRef<HTMLAudioElement>(
+    (() => {
+      const audio = new Audio("/audio/BGM.mp3");
+      audio.loop = true;
+      audio.volume = AUDIO_VOLUME;
+      return audio;
+    })(),
+  );
 
   const [muted, setMuted] = useState(true);
-
-  useEffect(function registerBGM() {
-    audioRef.current.loop = true;
-    audioRef.current.volume = AUDIO_VOLUME;
-    audioRef.current.play();
-  }, []);
 
   const onClick = () => {
     if (muted) {
       setMuted(false);
       audioRef.current.play();
-      return;
+    } else {
+      setMuted(true);
+      audioRef.current.pause();
     }
-
-    setMuted(true);
-    audioRef.current.pause();
   };
 
+  const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
+
   return (
-    <button
+    <a.button
       onClick={onClick}
+      style={scale}
+      onMouseEnter={increaseScale}
+      onMouseLeave={decreaseScale}
+      onMouseDown={decreaseScale}
+      onMouseUp={increaseScale}
       type="button"
-      className="fixed top-4 left-4 cursor-pointer"
+      className="fixed top-5 left-5 cursor-pointer focus:outline-0 [&>svg]:size-12 [&>svg]:rounded-lg [&>svg]:bg-emerald-400 [&>svg]:p-1 [&>svg]:outline-3 [&>svg]:outline-white [&>svg]:hover:bg-emerald-500 [&>svg]:active:bg-green-500"
     >
       {muted ? (
         <svg
@@ -37,8 +46,8 @@ export default function Sound() {
           viewBox="0 0 24 24"
           strokeWidth={2.5}
           stroke="currentColor"
-          className="size-12 rounded-lg bg-emerald-400 p-1"
         >
+          <title>Unmute</title>
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -52,8 +61,8 @@ export default function Sound() {
           viewBox="0 0 24 24"
           strokeWidth={2.5}
           stroke="currentColor"
-          className="size-12 rounded-lg bg-emerald-400 p-1"
         >
+          <title>Mute</title>
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -61,6 +70,6 @@ export default function Sound() {
           />
         </svg>
       )}
-    </button>
+    </a.button>
   );
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, type DispatchWithoutAction } from "react";
 import Maze, { type Coordinate } from "../lib/Maze";
 import type { ChangePlayerAction, Player } from "./usePlayers";
 
@@ -9,6 +9,7 @@ export enum GameStatus {
   Prelobby,
   Lobby,
   InGame,
+  GameDone,
 }
 
 /** Values available in the Game context */
@@ -25,9 +26,16 @@ export interface GameValue {
   teammate: Player;
 
   map: Maze;
-  coins: number;
-  youCoord: () => Readonly<Coordinate>;
-  teammateCoord: () => Readonly<Coordinate>;
+  currentCoins: number;
+  totalCoins: number;
+
+  youCoord: Readonly<Coordinate>;
+  teammateCoord: Readonly<Coordinate>;
+
+  movesCount: number;
+  incrementMovesCount: DispatchWithoutAction;
+
+  gameDone: boolean
 }
 
 /**

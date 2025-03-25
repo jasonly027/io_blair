@@ -74,8 +74,7 @@ export type GameEventMap = {
       coordinate: Coordinate;
     },
   ];
-
-  inGameWin: [];
+  transitionToGameDone: [];
 };
 
 export type GameEventKey = keyof GameEventMap;
@@ -118,6 +117,7 @@ export type GameSendMap = {
       coordinate: Coordinate;
     },
   ];
+  newGame: [];
 };
 
 export type GameSendKey = keyof GameSendMap;
@@ -265,7 +265,7 @@ const gameEventMapSchema = {
       coordinate: [0, 0],
     },
   ],
-  inGameWin: [],
+  transitionToGameDone: [],
 } as const satisfies GameEventMap;
 
 /** Convert a raw message from the server to a GameEvent */
