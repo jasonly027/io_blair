@@ -2,7 +2,12 @@ import { a } from "@react-spring/web";
 import { Helper } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type DispatchWithoutAction,
+  type ReactNode,
+} from "react";
 import { PointLightHelper } from "three";
 import Map from "./Map";
 import { Teammate, You } from "./Player/Player";
@@ -12,6 +17,7 @@ import useDynamicScale from "../../hooks/useDynamicScale";
 import Loading from "../Loading";
 import useConnection from "../../hooks/useConnection";
 import type { GameConnectionListener } from "../../lib/GameConnection";
+import { playClickSfx, SFX_VOLUME } from "../../lib/sounds";
 
 export default function InGame() {
   return (
@@ -61,7 +67,10 @@ function ChatContainer() {
       tabIndex={0}
       onMouseEnter={increaseScale}
       onMouseLeave={decreaseScale}
-      onMouseDown={decreaseScale}
+      onMouseDown={() => {
+        playClickSfx();
+        decreaseScale();
+      }}
       onMouseUp={increaseScale}
       className="group"
     >
@@ -97,6 +106,7 @@ function Hud() {
       </section>
       <ChatContainer />
       <WinScreen />
+      <Controls />
     </>
   );
 }
@@ -267,12 +277,29 @@ function CoinsCounter() {
   );
 }
 
+const winSfx = new Audio("/audio/win.mp3");
+winSfx.volume = SFX_VOLUME;
+
 function WinScreen() {
   const { gameStatus, gameDone } = useGame();
 
-  const { newGame } = useConnection();
+  const { newGame, addConnectionEventListener, removeConnectionEventListener } =
+    useConnection();
 
   const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
+
+  useEffect(
+    function listenForTransitionToGameDone() {
+      const onGameDone: GameConnectionListener<"transitionToGameDone"> = () => {
+        winSfx.play();
+      };
+
+      addConnectionEventListener("transitionToGameDone", onGameDone);
+      return () =>
+        removeConnectionEventListener("transitionToGameDone", onGameDone);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
 
   return (
     gameDone && (
@@ -293,7 +320,10 @@ function WinScreen() {
                 onClick={newGame}
                 onMouseEnter={increaseScale}
                 onMouseLeave={decreaseScale}
-                onMouseDown={decreaseScale}
+                onMouseDown={() => {
+                  playClickSfx();
+                  decreaseScale();
+                }}
                 onMouseUp={increaseScale}
                 className="cursor-pointer fill-emerald-400 hover:fill-emerald-500 focus:fill-emerald-500 active:fill-green-500"
               >
@@ -316,5 +346,77 @@ function WinScreen() {
         )}
       </div>
     )
+  );
+}
+
+function dispatchKeyEvent(key: string) {
+  document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+}
+
+function Controls() {
+  const onUp = () => dispatchKeyEvent("w");
+  const onRight = () => dispatchKeyEvent("d");
+  const onDown = () => dispatchKeyEvent("s");
+  const onLeft = () => dispatchKeyEvent("a");
+
+  return (
+    <>
+      <svg
+        width="160"
+        height="158"
+        viewBox="0 0 160 158"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="fixed right-5 bottom-5 size-55"
+      >
+        <Arrow
+          onClick={onUp}
+          origin="50% 20%"
+          d="M82.6651 8.75L102.151 42.5C103.113 44.1667 101.91 46.25 99.9856 46.25H61.0144C59.0899 46.25 57.8871 44.1667 58.8494 42.5L78.3349 8.75001C79.2972 7.08333 81.7028 7.08334 82.6651 8.75Z"
+        />
+        <Arrow
+          onClick={onRight}
+          origin="80% 50%"
+          d="M151.25 80.6651L117.5 100.151C115.833 101.113 113.75 99.9101 113.75 97.9856L113.75 59.0144C113.75 57.0899 115.833 55.8871 117.5 56.8494L151.25 76.3349C152.917 77.2972 152.917 79.7028 151.25 80.6651Z"
+        />
+        <Arrow
+          onClick={onDown}
+          origin="50% 80%"
+          d="M78.3349 149.25L58.8494 115.5C57.8871 113.833 59.0899 111.75 61.0144 111.75L99.9856 111.75C101.91 111.75 103.113 113.833 102.151 115.5L82.6651 149.25C81.7028 150.917 79.2972 150.917 78.3349 149.25Z"
+        />
+        <Arrow
+          onClick={onLeft}
+          origin="20% 50%"
+          d="M8.75 76.3349L42.5 56.8494C44.1667 55.8871 46.25 57.0899 46.25 59.0144L46.25 97.9856C46.25 99.9101 44.1667 101.113 42.5 100.151L8.75 80.6651C7.08333 79.7028 7.08334 77.2972 8.75 76.3349Z"
+        />
+      </svg>
+    </>
+  );
+}
+
+function Arrow({
+  d,
+  onClick,
+  origin,
+}: {
+  d: string;
+  onClick: DispatchWithoutAction;
+  origin: string;
+}) {
+  const { scale, increaseScale, decreaseScale } = useDynamicScale(1.1);
+
+  return (
+    <a.path
+      onClick={onClick}
+      onMouseDown={increaseScale}
+      onMouseUp={decreaseScale}
+      onTouchStart={increaseScale}
+      onTouchEnd={decreaseScale}
+      style={{ ...scale, transformOrigin: origin }}
+      d={d}
+      stroke="white"
+      strokeWidth="5"
+      className="cursor-pointer fill-emerald-400 hover:fill-emerald-500 active:fill-green-500"
+    />
   );
 }

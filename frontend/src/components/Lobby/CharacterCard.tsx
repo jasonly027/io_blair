@@ -1,10 +1,10 @@
-import { Helper, PerspectiveCamera } from "@react-three/drei";
+import { Helper, OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { type ReactNode } from "react";
 import { PointLightHelper } from "three";
 import type { GameCharacter } from "../../types/character";
-import CatWaffle from "./CatWaffle";
 import { a, useSpring } from "@react-spring/web";
+import { playClickSfx } from "../../lib/sounds";
 
 export interface CharacterCardProps {
   name: GameCharacter;
@@ -31,6 +31,9 @@ export default function CharacterCard({
       <div
         onClick={() => {
           if (!locked) onClick(name);
+        }}
+        onMouseDown={() => {
+          if (!locked) playClickSfx();
         }}
         style={{
           cursor: locked ? "not-allowed" : "pointer",
@@ -87,13 +90,17 @@ function CharacterScene() {
     <div className="size-full scale-none">
       <Canvas>
         <ambientLight intensity={0.3} />
-        <pointLight intensity={3} position={[20, 40, 100]} decay={0}>
+        <pointLight intensity={3} position={[2, 2, 2]} decay={0}>
           <Helper type={PointLightHelper} />
         </pointLight>
-        <PerspectiveCamera makeDefault position={[11, 30, 100]} fov={100} />
-        {/* <OrbitControls /> */}
-        {/* <axesHelper args={[500]} /> */}
-        <CatWaffle />
+
+        <PerspectiveCamera makeDefault position={[0, 0.5, 1]} />
+        <OrbitControls />
+
+        <mesh position={[0, 0, 0]}>
+          <cylinderGeometry args={[0.2, 0.2, 0.5]} />
+          <meshStandardMaterial />
+        </mesh>
       </Canvas>
     </div>
   );

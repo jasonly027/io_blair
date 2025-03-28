@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Mesh } from "three";
 import { SUCCESSFUL_MOVE_DURATION } from "../../hooks/useBody";
+import {  SFX_VOLUME } from "../../lib/sounds";
 
 export const CELL_LEN = 1;
 export const DIST_TO_NEXT_CELL = CELL_LEN + CELL_LEN;
@@ -95,15 +96,18 @@ function Gap({ type, cell }: GapProps) {
         />
         <meshStandardMaterial
           color={
-            cellDir("both") ? "white" : cellDir("You") ? "lightgreen" : "pink"
+            cellDir("both") ? "darkgreen" : "lightgreen"
           }
-          opacity={cellDir("both") ? 1 : 0.5}
+          opacity={cellDir("You") ? 1 : 0}
           transparent
         />
       </mesh>
     </RigidBody>
   );
 }
+
+const coinSfx = new Audio("/audio/coin.mp3");
+coinSfx.volume = SFX_VOLUME;
 
 function Coin({ exists }: { exists: boolean }) {
   const [prevExists, setPrevExists] = useState(exists);
@@ -146,6 +150,8 @@ function Coin({ exists }: { exists: boolean }) {
           sensor
           args={[0.2, 0.2, 0.2]}
           onIntersectionEnter={() => {
+            coinSfx.currentTime = 0
+            coinSfx.play();
             setPrevExists(false);
           }}
         />

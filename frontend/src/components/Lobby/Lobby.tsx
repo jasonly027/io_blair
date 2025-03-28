@@ -5,6 +5,7 @@ import { a } from "@react-spring/web";
 import useDynamicScale from "../../hooks/useDynamicScale";
 import CharacterSelect from "./CharacterSelect";
 import Chat from "../Chat";
+import { playClickSfx } from "../../lib/sounds";
 
 export default function Lobby() {
   return (
@@ -62,6 +63,7 @@ function LobbyCode() {
       <h2>Lobby Code:</h2>
       <a.button
         onClick={saveToClipboard}
+        onMouseDown={playClickSfx}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
         style={scale}

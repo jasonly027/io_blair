@@ -5,6 +5,7 @@ import Loading from "./Loading";
 import useDynamicScale from "../hooks/useDynamicScale";
 import type { GameConnectionListener } from "../lib/GameConnection";
 import useConnection from "../hooks/useConnection";
+import { playClickSfx } from "../lib/sounds";
 
 export default function Prelobby() {
   const { status, setToLoading } = usePrelobbyStatus();
@@ -50,7 +51,10 @@ function Create({ setToLoading }: CreateProps) {
         onClick={tryCreateLobby}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
-        onMouseDown={decreaseScale}
+        onMouseDown={() => {
+          playClickSfx();
+          decreaseScale();
+        }}
         onMouseUp={increaseScale}
         onKeyDown={({ key }) => {
           if (key !== "Enter") return;
@@ -133,7 +137,10 @@ function Join({ status, setToLoading }: JoinProps) {
           onClick={submitJoinCode}
           onMouseEnter={increaseScale}
           onMouseLeave={decreaseScale}
-          onMouseDown={decreaseScale}
+          onMouseDown={() => {
+            playClickSfx();
+            decreaseScale();
+          }}
           onMouseUp={increaseScale}
           className="group cursor-pointer"
         >

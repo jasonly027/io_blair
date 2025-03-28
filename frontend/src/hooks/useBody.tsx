@@ -13,6 +13,7 @@ import type { RapierRigidBody } from "@react-three/rapier";
 import type { Mesh } from "three";
 import useConnection from "./useConnection";
 import type { GameConnectionListener } from "../lib/GameConnection";
+import { SFX_VOLUME } from "../lib/sounds";
 
 export const SUCCESSFUL_MOVE_DURATION = 350;
 export const UNSUCCESSFUL_MOVE_DURATION = SUCCESSFUL_MOVE_DURATION * 0.75;
@@ -45,6 +46,14 @@ export default function useBody(
   meshRef: RefObject<Mesh>,
 ): useSpringBodySyncValues {
   const { map } = useGame();
+
+  const fallSfx = useRef<HTMLAudioElement>(
+    (() => {
+      const fallSfx = new Audio("/audio/fall.mp3");
+      fallSfx.volume = SFX_VOLUME;
+      return fallSfx;
+    })(),
+  );
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
@@ -144,6 +153,7 @@ export default function useBody(
             return;
           }
 
+          fallSfx.current.play();
           setTimeout(() => {
             if (meshRef.current !== null) {
               meshRef.current.visible = false;

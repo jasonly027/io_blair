@@ -1,28 +1,22 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { a } from "@react-spring/web";
 import useDynamicScale from "../hooks/useDynamicScale";
+import { BGM_VOLUME, playClickSfx } from "../lib/sounds";
 
-const AUDIO_VOLUME = 0.05;
+const bgm = new Audio("/audio/BGM.mp3");
+bgm.loop = true;
+bgm.volume = BGM_VOLUME;
 
 export default function Sound() {
-  const audioRef = useRef<HTMLAudioElement>(
-    (() => {
-      const audio = new Audio("/audio/BGM.mp3");
-      audio.loop = true;
-      audio.volume = AUDIO_VOLUME;
-      return audio;
-    })(),
-  );
-
   const [muted, setMuted] = useState(true);
 
   const onClick = () => {
     if (muted) {
       setMuted(false);
-      audioRef.current.play();
+      bgm.play();
     } else {
       setMuted(true);
-      audioRef.current.pause();
+      bgm.pause();
     }
   };
 
@@ -34,7 +28,10 @@ export default function Sound() {
       style={scale}
       onMouseEnter={increaseScale}
       onMouseLeave={decreaseScale}
-      onMouseDown={decreaseScale}
+      onMouseDown={() => {
+        playClickSfx();
+        decreaseScale();
+      }}
       onMouseUp={increaseScale}
       type="button"
       className="fixed top-5 left-5 cursor-pointer focus:outline-0 [&>svg]:size-12 [&>svg]:rounded-lg [&>svg]:bg-emerald-400 [&>svg]:p-1 [&>svg]:outline-3 [&>svg]:outline-white [&>svg]:hover:bg-emerald-500 [&>svg]:active:bg-green-500"

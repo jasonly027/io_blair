@@ -560,6 +560,11 @@ class Maze {
       // Continue traversal from neighbor's cell
       stack.emplace(neighbor, 0, dir::random_dirs());
     }
+
+    // Never coin at start
+    at_mutable(start_).set_coin(false);
+    // Always coin at end
+    at_mutable(end_).set_coin(true);
   }
 
   /**

@@ -4,6 +4,7 @@ import CharacterCard from "./CharacterCard";
 import { a } from "@react-spring/web";
 import useDynamicScale from "../../hooks/useDynamicScale";
 import useGame from "../../hooks/useGame";
+import { playClickSfx } from "../../lib/sounds";
 
 type StrokeKind = "none" | "dashed" | "full";
 
@@ -105,7 +106,10 @@ function ConfirmCharacter({
         }}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
-        onMouseDown={decreaseScale}
+        onMouseDown={() => {
+          playClickSfx();
+          decreaseScale();
+        }}
         onMouseUp={increaseScale}
         tabIndex={0}
         className="cursor-pointer fill-emerald-400 hover:fill-emerald-500 focus:fill-emerald-500 active:fill-green-500"

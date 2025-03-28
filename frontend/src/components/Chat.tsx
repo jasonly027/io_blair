@@ -3,11 +3,15 @@ import type { GameConnectionListener } from "../lib/GameConnection";
 import type { GamePlayer } from "../types/character";
 import useConnection from "../hooks/useConnection";
 import { setGameFocused } from "../lib/game";
+import { SFX_VOLUME } from "../lib/sounds";
 
 interface MessageData {
   who: GamePlayer;
   content: string;
 }
+
+const popSfx = new Audio("/audio/pop.mp3");
+popSfx.volume = SFX_VOLUME;
 
 export default function Chat() {
   const [history, setHistory] = useState<MessageData[]>([]);
@@ -20,6 +24,8 @@ export default function Chat() {
       const updateHistory: GameConnectionListener<"chat"> = ({
         msg: content,
       }) => {
+        popSfx.currentTime = 0;
+        popSfx.play();
         setHistory((prev) => [...prev, { who: "Teammate", content }]);
       };
 
