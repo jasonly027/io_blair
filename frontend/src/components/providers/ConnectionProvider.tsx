@@ -21,7 +21,7 @@ export default function ConnectionProvider({
   const connection = useRef<GameConnection>(null!);
   if (connection.current === null) {
     connection.current = new GameConnection(
-      `wss://${import.meta.env.VITE_SERVER_ENDPOINT}`,
+      `wss://3.233.50.203`,
     );
   }
 
