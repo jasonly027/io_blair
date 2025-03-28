@@ -1,9 +1,6 @@
 name: Deploy client to Pages
 
 on:
-  push:
-    branches: ['deploy_client']
-
   workflow_dispatch:
 
 permissions:
