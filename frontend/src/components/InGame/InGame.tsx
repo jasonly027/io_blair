@@ -18,6 +18,7 @@ import Loading from "../Loading";
 import useConnection from "../../hooks/useConnection";
 import type { GameConnectionListener } from "../../lib/GameConnection";
 import { playClickSfx, SFX_VOLUME } from "../../lib/sounds";
+import WIN from "/audio/win.mp3"
 
 export default function InGame() {
   return (
@@ -277,7 +278,7 @@ function CoinsCounter() {
   );
 }
 
-const winSfx = new Audio("/audio/win.mp3");
+const winSfx = new Audio(WIN);
 winSfx.volume = SFX_VOLUME;
 
 function WinScreen() {

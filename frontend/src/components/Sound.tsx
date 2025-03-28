@@ -2,8 +2,9 @@ import { useState } from "react";
 import { a } from "@react-spring/web";
 import useDynamicScale from "../hooks/useDynamicScale";
 import { BGM_VOLUME, playClickSfx } from "../lib/sounds";
+import BGM from "/audio/BGM.mp3"
 
-const bgm = new Audio("/audio/BGM.mp3");
+const bgm = new Audio(BGM);
 bgm.loop = true;
 bgm.volume = BGM_VOLUME;
 

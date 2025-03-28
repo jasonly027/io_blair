@@ -6,6 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import type { Mesh } from "three";
 import { SUCCESSFUL_MOVE_DURATION } from "../../hooks/useBody";
 import {  SFX_VOLUME } from "../../lib/sounds";
+import COIN from "/audio/coin.mp3"
 
 export const CELL_LEN = 1;
 export const DIST_TO_NEXT_CELL = CELL_LEN + CELL_LEN;
@@ -106,7 +107,7 @@ function Gap({ type, cell }: GapProps) {
   );
 }
 
-const coinSfx = new Audio("/audio/coin.mp3");
+const coinSfx = new Audio(COIN);
 coinSfx.volume = SFX_VOLUME;
 
 function Coin({ exists }: { exists: boolean }) {
