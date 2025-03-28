@@ -4,13 +4,14 @@ import type { GamePlayer } from "../types/character";
 import useConnection from "../hooks/useConnection";
 import { setGameFocused } from "../lib/game";
 import { SFX_VOLUME } from "../lib/sounds";
+import POP from "/audio/pop.mp3"
 
 interface MessageData {
   who: GamePlayer;
   content: string;
 }
 
-const popSfx = new Audio("/audio/pop.mp3");
+const popSfx = new Audio(POP);
 popSfx.volume = SFX_VOLUME;
 
 export default function Chat() {
