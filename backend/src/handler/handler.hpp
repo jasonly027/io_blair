@@ -26,7 +26,7 @@ class Prelobby : public IGameHandler {
 
  private:
   // Transitions the IGame to the Lobby state.
-  static void transition_to_lobby(IGame&, SessionContext&, LobbyContext);
+  static void transition_to_lobby(IGame&, LobbyContext);
 };
 
 /**
@@ -51,6 +51,9 @@ class Game : public IGame, public IHandler {
   void operator()(const json::in::Chat&) override;
   void operator()(const json::in::CharacterHover&) override;
   void operator()(const json::in::CharacterConfirm&) override;
+  void operator()(const json::in::CharacterMove&) override;
+  void operator()(const json::in::CheckWin&) override;
+  void operator()(const json::in::NewGame&) override;
   void operator()(SessionEvent) override;
 
  private:
@@ -100,6 +103,9 @@ class Lobby : public ILobby, public IGameHandler {
   void operator()(IGame&, SessionContext&, const json::in::Chat&) override;
   void operator()(IGame&, SessionContext&, const json::in::CharacterHover&) override;
   void operator()(IGame&, SessionContext&, const json::in::CharacterConfirm&) override;
+  void operator()(IGame&, SessionContext&, const json::in::CharacterMove&) override;
+  void operator()(IGame&, SessionContext&, const json::in::CheckWin&) override;
+  void operator()(IGame&, SessionContext&, const json::in::NewGame&) override;
   void operator()(IGame&, SessionContext&, SessionEvent) override;
 
  private:
@@ -115,14 +121,21 @@ class Lobby : public ILobby, public IGameHandler {
  */
 class InGame : public ILobbyHandler {
  public:
+  void operator()(ILobby&, SessionContext&, LobbyContext&, const json::in::CharacterMove&) override;
+  void operator()(ILobby&, SessionContext&, LobbyContext&, const json::in::CheckWin&) override;
+  void operator()(ILobby&, SessionContext&, LobbyContext&, SessionEvent) override;
+
  private:
 };
 
 /**
  * @brief A state of ILobby where the client has completed the game.
  */
-class GameFinished : public ILobbyHandler {
+class GameDone : public ILobbyHandler {
  public:
+  void operator()(ILobby&, SessionContext&, LobbyContext&, const json::in::NewGame&) override;
+  void operator()(ILobby&, SessionContext&, LobbyContext&, SessionEvent) override;
+
  private:
 };
 

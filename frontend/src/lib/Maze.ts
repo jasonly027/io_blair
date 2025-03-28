@@ -1,35 +1,184 @@
-export interface Cell {
+import type { GamePlayer } from "../types/character";
+import type { Matrix } from "../types/tuple";
+
+export interface Traversable {
   up: boolean;
   right: boolean;
   down: boolean;
   left: boolean;
 }
 
-export type CellKey = keyof Cell;
+export type TraversableKey = keyof Traversable;
 
-export function cellFromNumber(num: number): Cell {
-  return {
-    up: ((num >> 0) & 1) == 1,
-    right: ((num >> 1) & 1) == 1,
-    down: ((num >> 2) & 1) == 1,
-    left: ((num >> 3) & 1) == 1,
-  };
+type CellGetDirectionParam = GamePlayer | "both" | "either";
+
+export class Cell {
+  private readonly self: Traversable;
+  private readonly other: Traversable;
+  private _coin: boolean;
+
+  constructor(
+    self: Traversable = {
+      up: false,
+      right: false,
+      down: false,
+      left: false,
+    },
+    other: Traversable = {
+      up: false,
+      right: false,
+      down: false,
+      left: false,
+    },
+    coin: boolean = false,
+  ) {
+    this.self = self;
+    this.other = other;
+    this._coin = coin;
+  }
+
+  up(who: CellGetDirectionParam): boolean {
+    switch (who) {
+      case "You":
+        return this.self.up;
+      case "Teammate":
+        return this.other.up;
+      case "both":
+        return this.self.up && this.other.up;
+      case "either":
+        return this.self.up || this.other.up;
+    }
+  }
+
+  right(who: CellGetDirectionParam): boolean {
+    switch (who) {
+      case "You":
+        return this.self.right;
+      case "Teammate":
+        return this.other.right;
+      case "both":
+        return this.self.right && this.other.right;
+      case "either":
+        return this.self.right || this.other.right;
+    }
+  }
+
+  down(who: CellGetDirectionParam): boolean {
+    switch (who) {
+      case "You":
+        return this.self.down;
+      case "Teammate":
+        return this.other.down;
+      case "both":
+        return this.self.down && this.other.down;
+      case "either":
+        return this.self.down || this.other.down;
+    }
+  }
+
+  left(who: CellGetDirectionParam): boolean {
+    switch (who) {
+      case "You":
+        return this.self.left;
+      case "Teammate":
+        return this.other.left;
+      case "both":
+        return this.self.left && this.other.left;
+      case "either":
+        return this.self.left || this.other.left;
+    }
+  }
+
+  coin(): boolean {
+    return this._coin;
+  }
+
+  set_up(who: GamePlayer | "both", value: boolean): void {
+    switch (who) {
+      case "You":
+        this.self.up = value;
+        break;
+      case "Teammate":
+        this.other.up = value;
+        break;
+      case "both":
+        this.self.up = value;
+        this.other.up = value;
+        break;
+    }
+  }
+
+  set_right(who: GamePlayer | "both", value: boolean): void {
+    switch (who) {
+      case "You":
+        this.self.right = value;
+        break;
+      case "Teammate":
+        this.other.right = value;
+        break;
+      case "both":
+        this.self.right = value;
+        this.other.right = value;
+        break;
+    }
+  }
+
+  set_down(who: GamePlayer | "both", value: boolean): void {
+    switch (who) {
+      case "You":
+        this.self.down = value;
+        break;
+      case "Teammate":
+        this.other.down = value;
+        break;
+      case "both":
+        this.self.down = value;
+        this.other.down = value;
+        break;
+    }
+  }
+
+  set_left(who: GamePlayer | "both", value: boolean): void {
+    switch (who) {
+      case "You":
+        this.self.left = value;
+        break;
+      case "Teammate":
+        this.other.left = value;
+        break;
+      case "both":
+        this.self.left = value;
+        this.other.left = value;
+        break;
+    }
+  }
+
+  set_coin(value: boolean): void {
+    this._coin = value;
+  }
 }
 
-export type Coordinates = [x: number, y: number];
+export type Coordinate = [x: number, y: number];
+
+export type MazeMatrix<T> = Matrix<T, 6, 6>;
 
 export default class Maze {
+  readonly matrix: MazeMatrix<Cell>;
   readonly rows: number;
   readonly cols: number;
-  readonly moves: Cell[][];
+  readonly start: Readonly<Coordinate>;
+  readonly end: Readonly<Coordinate>;
 
-  constructor(moves: Cell[][]) {
-    if (moves.length <= 0 || moves[0]!.length <= 0) {
-      throw new Error("rows and columns must be greater than 0");
-    }
-    this.rows = moves.length;
-    this.cols = moves[0]!.length;
-    this.moves = moves;
+  constructor(
+    matrix: MazeMatrix<Cell>,
+    start: Readonly<Coordinate>,
+    end: Readonly<Coordinate>,
+  ) {
+    this.matrix = matrix;
+    this.rows = matrix.length;
+    this.cols = matrix[0].length;
+    this.start = start;
+    this.end = end;
   }
 
   /**
@@ -37,24 +186,65 @@ export default class Maze {
    * @returns Maze
    */
   public clone(): Maze {
-    return new Maze(this.moves);
+    return new Maze(this.matrix, this.start, this.end);
   }
 
-  public inRange([x, y]: Coordinates): boolean {
+  public inRange(x: number, y: number): boolean {
     return x >= 0 && x < this.cols && y >= 0 && y < this.rows;
   }
 
-  public getCell([x, y]: Coordinates): Cell {
-    if (!this.inRange([x, y])) {
-      throw new Error("cell out of bounds");
-    }
-    return this.moves[y]![x]!;
+  public bridge(
+    who: GamePlayer | "both",
+    [x, y]: Coordinate,
+    dir: TraversableKey,
+    value: boolean,
+  ): void {
+    if (!this.inRange(x, y)) return;
+    this.matrix[y]![x]![`set_${dir}`](who, value);
+
+    [x, y] = translate([x, y], dir);
+    if (!this.inRange(x, y)) return;
+    this.matrix[y]![x]![`set_${opposite(dir)}`](who, value);
   }
 
-  public setCell([x, y]: Coordinates, cell: Cell): void {
-    if (!this.inRange([x, y])) {
-      throw new Error("cell out of bounds");
-    }
-    this.moves[y]![x]! = cell;
+  public take_coin([x, y]: Coordinate): void {
+    if (!this.inRange(x, y)) return;
+    this.matrix[y]![x]!.set_coin(false);
   }
+}
+
+export const moveMap = {
+  up: [0, -1],
+  right: [1, 0],
+  down: [0, 1],
+  left: [-1, 0],
+} as const satisfies Record<TraversableKey, Coordinate>;
+
+export function translate(
+  [x, z]: Readonly<Coordinate>,
+  dir: TraversableKey,
+  value: number = 1,
+): Coordinate {
+  const [dX, dZ] = moveMap[dir];
+  return [x + dX * value, z + dZ * value];
+}
+
+export function opposite(dir: TraversableKey): TraversableKey {
+  switch (dir) {
+    case "up":
+      return "down";
+    case "right":
+      return "left";
+    case "down":
+      return "up";
+    case "left":
+      return "right";
+  }
+}
+
+export function coordEqual(
+  [x1, y1]: Readonly<Coordinate>,
+  [x2, y2]: Readonly<Coordinate>,
+): boolean {
+  return x1 === x2 && y1 === y2;
 }

@@ -1,39 +1,45 @@
 import { useEffect, useRef, useState, type SetStateAction } from "react";
-import { useSession } from "../hooks/useSession";
 import type { GameConnectionListener } from "../lib/GameConnection";
 import type { GamePlayer } from "../types/character";
+import useConnection from "../hooks/useConnection";
+import { setGameFocused } from "../lib/game";
+import { SFX_VOLUME } from "../lib/sounds";
 
 interface MessageData {
   who: GamePlayer;
   content: string;
 }
 
+const popSfx = new Audio("/audio/pop.mp3");
+popSfx.volume = SFX_VOLUME;
+
 export default function Chat() {
   const [history, setHistory] = useState<MessageData[]>([]);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
-    useSession();
+    useConnection();
 
-  useEffect(() => {
-    const updateHistory: GameConnectionListener<"chat"> = ({
-      msg: content,
-    }) => {
-      setHistory((prev) => [...prev, { who: "Teammate", content }]);
-    };
+  useEffect(
+    function listenForChatMessages() {
+      const updateHistory: GameConnectionListener<"chat"> = ({
+        msg: content,
+      }) => {
+        popSfx.currentTime = 0;
+        popSfx.play();
+        setHistory((prev) => [...prev, { who: "Teammate", content }]);
+      };
 
-    addConnectionEventListener("chat", updateHistory);
+      addConnectionEventListener("chat", updateHistory);
 
-    return () => {
-      removeConnectionEventListener("chat", updateHistory);
-    };
-  }, [addConnectionEventListener, removeConnectionEventListener]);
+      return () => removeConnectionEventListener("chat", updateHistory);
+    },
+    [addConnectionEventListener, removeConnectionEventListener],
+  );
 
   return (
-    <div className="fixed bottom-12 z-10 size-full max-h-72 max-w-104 sm:left-12">
-      <div className="flex size-full flex-col rounded-sm bg-black/20">
-        <History history={history} />
-        <Input setHistory={setHistory} />
-      </div>
+    <div className="flex size-full flex-col rounded-sm bg-black/30">
+      <History history={history} />
+      <Input setHistory={setHistory} />
     </div>
   );
 }
@@ -41,7 +47,7 @@ export default function Chat() {
 function History({ history }: { history: MessageData[] }) {
   const divRef = useRef<HTMLDivElement>(null!);
 
-  useEffect(() => {
+  useEffect(function scrollToBottomOnUpdate() {
     divRef.current.scrollTo({
       top: divRef.current.scrollHeight,
       behavior: "smooth",
@@ -67,7 +73,7 @@ function Message({
 }) {
   return (
     <div className="text-wrap break-all">
-      <span className={who === "You" ? "text-emerald-400" : "text-cyan-400"}>
+      <span className={who === "You" ? "text-emerald-300" : "text-cyan-300"}>
         {who}:{" "}
       </span>
       {content}
@@ -80,20 +86,12 @@ interface InputProps {
 }
 
 function Input({ setHistory }: InputProps) {
-  const { message } = useSession();
+  const { message } = useConnection();
 
   const inputRef = useRef<HTMLInputElement>(null!);
 
   useEffect(
     function registerEnterKeyListner() {
-      const toggleFocus = () => {
-        if (document.activeElement === inputRef.current) {
-          inputRef.current.blur();
-          return;
-        }
-        inputRef.current.focus();
-      };
-
       const submit = () => {
         if (inputRef.current.value === "") return;
 
@@ -103,10 +101,26 @@ function Input({ setHistory }: InputProps) {
         inputRef.current.value = "";
       };
 
+      const onEnter = () => {
+        if (document.activeElement === inputRef.current) {
+          submit();
+          inputRef.current.blur();
+        } else {
+          inputRef.current.focus();
+        }
+      };
+
+      const onEscape = () => inputRef.current.blur();
+
       const onKeyDown = ({ key }: KeyboardEvent) => {
-        if (key !== "Enter") return;
-        submit();
-        toggleFocus();
+        switch (key) {
+          case "Enter":
+            onEnter();
+            break;
+          case "Escape":
+            onEscape();
+            break;
+        }
       };
 
       window.addEventListener("keydown", onKeyDown);
@@ -118,6 +132,8 @@ function Input({ setHistory }: InputProps) {
   return (
     <input
       ref={inputRef}
+      onFocus={() => setGameFocused(false)}
+      onBlur={() => setGameFocused(true)}
       placeholder="Send Message (Enter)"
       className="m-1 rounded-sm border-2 border-black/25 px-2 text-lg font-semibold placeholder:text-white/65 placeholder:select-none focus:outline-0"
     />

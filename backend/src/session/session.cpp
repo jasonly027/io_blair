@@ -1,6 +1,5 @@
 #include "session.hpp"
 
-#include <format>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -67,13 +66,6 @@ void Session::async_handle(SessionEvent ev) {
 }
 
 bool Session::is_fatal(error_code ec) {
-#ifndef NDEBUG
-  std::cerr << std::format(
-      "Websocket read err ({}) [Fatal={}]\n",
-      ec.what(),
-      (ec == websocket::error::closed || ec == net::error::connection_aborted
-       || ec == net::error::connection_reset || ec == net::error::operation_aborted));
-#endif
   return ec == websocket::error::closed || ec == net::error::connection_aborted
          || ec == net::error::connection_reset || ec == net::error::operation_aborted;
 }

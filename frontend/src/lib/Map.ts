@@ -1,15 +1,10 @@
-const mapUserDataTypes = ["oobSensor"] as const;
-type MapUserDataType = (typeof mapUserDataTypes)[number];
+import { DIST_TO_NEXT_CELL } from "../components/InGame/Map";
+import type { Coordinate } from "./Maze";
 
-export interface MapUserData {
-  type: MapUserDataType;
+export function toMapUnits([x, z]: Readonly<Coordinate>): Coordinate {
+  return [x * DIST_TO_NEXT_CELL, z * DIST_TO_NEXT_CELL];
 }
 
-export function isMapUserData(value: unknown): value is MapUserData {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "type" in value &&
-    mapUserDataTypes.includes(value.type as MapUserDataType)
-  );
+export function toNonMapUnits([x, z]: Readonly<Coordinate>): Coordinate {
+  return [x / DIST_TO_NEXT_CELL, z / DIST_TO_NEXT_CELL];
 }

@@ -9,6 +9,7 @@
 #include "character.hpp"
 #include "isession.hpp"
 #include "lobby_context.hpp"
+#include "maze.hpp"
 #include "player.hpp"
 
 
@@ -30,6 +31,26 @@ class ILobbyController {
    * @param character The character to set \p self as. 
    */
   virtual void set_character(Player& self, Player& other, Character character) = 0;
+
+  /**
+   * @brief Moves self's character. Will reset the \p self 's position if
+   * the traversal is not permitted by the maze.
+   * 
+   * @param self 
+   * @param other 
+   * @param coordinate The coordinate to move to.
+   */
+  virtual void move_character(Player& self, Player& other, coordinate coordinate) = 0;
+
+  /**
+   * @brief Check if the game is complete.
+   */
+  virtual void check_win() = 0;
+
+  /**
+   * @brief Starts a new game.
+   */
+  virtual void new_game() = 0;
 
   /**
    * @brief Attempts to place \p session into the lobby.

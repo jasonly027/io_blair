@@ -1,10 +1,11 @@
 import { StrictMode } from "react";
-import { SessionProvider } from "../components/SessionProvider";
+import { GameProvider } from "../components/providers/GameProvider";
 import GameState from "../components/GameState";
 
 // Fix react-spring/web and react-spring/three conflict:
 // https://github.com/pmndrs/react-spring/issues/1586
 import { Globals } from "@react-spring/shared";
+import ConnectionProvider from "../components/providers/ConnectionProvider";
 Globals.assign({
   frameLoop: "always",
 });
@@ -22,10 +23,12 @@ console.warn = (message) => {
 
 export default function App() {
   return (
-    <SessionProvider>
+    <ConnectionProvider>
       <StrictMode>
-        <GameState />
+        <GameProvider>
+          <GameState />
+        </GameProvider>
       </StrictMode>
-    </SessionProvider>
+    </ConnectionProvider>
   );
 }

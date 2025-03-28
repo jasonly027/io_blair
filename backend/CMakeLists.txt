@@ -6,6 +6,7 @@ project(io_blair_server
 )
 
 option(ENABLE_TESTING "" ON)
+option(BUILD_DOCS "" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -24,4 +25,6 @@ if(ENABLE_TESTING)
     add_subdirectory(tests)
 endif()
 
-add_subdirectory(docs)
+if(BUILD_DOCS)
+    add_subdirectory(docs)
+endif()

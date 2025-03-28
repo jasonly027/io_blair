@@ -10,7 +10,6 @@
 
 namespace io_blair {
 using std::make_unique;
-using std::nullopt;
 using std::string_view;
 using std::unique_ptr;
 namespace jin  = json::in;
@@ -41,28 +40,34 @@ void Game::operator()(const jin::CharacterHover& ev) {
 void Game::operator()(const jin::CharacterConfirm& ev) {
   (*state_)(*this, ctx_, ev);
 }
+void Game::operator()(const jin::CharacterMove& ev) {
+  (*state_)(*this, ctx_, ev);
+}
+void Game::operator()(const jin::CheckWin& ev) {
+  (*state_)(*this, ctx_, ev);
+}
+void Game::operator()(const jin::NewGame& ev) {
+  (*state_)(*this, ctx_, ev);
+}
 void Game::operator()(SessionEvent ev) {
   (*state_)(*this, ctx_, ev);
 }
 
 void Prelobby::operator()(IGame& game, SessionContext& ctx, const jin::LobbyCreate&) {
-  transition_to_lobby(game, ctx, ctx.lobby_manager.create(ctx.session));
+  transition_to_lobby(game, ctx.lobby_manager.create(ctx.session));
 }
 
 void Prelobby::operator()(IGame& game, SessionContext& ctx, const jin::LobbyJoin& ev) {
   auto opt = ctx.lobby_manager.join(ctx.session, ev.code);
   if (!opt.has_value()) {
-    ctx.session.lock()->async_send(jout::lobby_join(nullopt));
     return;
   }
 
-  transition_to_lobby(game, ctx, std::move(*opt));
+  transition_to_lobby(game, std::move(*opt));
 }
 
-void Prelobby::transition_to_lobby(IGame& game, SessionContext& ctx, LobbyContext lob_ctx) {
-  auto code = lob_ctx.code;
+void Prelobby::transition_to_lobby(IGame& game, LobbyContext lob_ctx) {
   game.transition_to(make_unique<Lobby>(std::move(lob_ctx)));
-  ctx.session.lock()->async_send(jout::lobby_join(code));
 }
 
 Lobby::Lobby(LobbyContext ctx, unique_ptr<ILobbyHandler>&& handler)
@@ -87,6 +92,16 @@ void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CharacterHov
 void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CharacterConfirm& ev) {
   (*state_)(*this, sess_ctx, ctx_, ev);
 }
+void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CharacterMove& ev) {
+  (*state_)(*this, sess_ctx, ctx_, ev);
+}
+void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::CheckWin& ev) {
+  (*state_)(*this, sess_ctx, ctx_, ev);
+}
+void Lobby::operator()(IGame&, SessionContext& sess_ctx, const jin::NewGame& ev) {
+  (*state_)(*this, sess_ctx, ctx_, ev);
+}
+
 void Lobby::operator()(IGame& game, SessionContext& sess_ctx, SessionEvent ev) {
   switch (ev) {
     case SessionEvent::kCloseSession: (*this)(game, sess_ctx, jin::LobbyLeave{}); break;
@@ -105,6 +120,38 @@ void CharacterSelect::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx
 }
 
 void CharacterSelect::operator()(ILobby& lobby, SessionContext&, LobbyContext&, SessionEvent ev) {
+  switch (ev) {
+    case SessionEvent::kTransitionToInGame: lobby.transition_to(make_unique<InGame>()); break;
+    default:                                break;
+  }
+}
+
+void InGame::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx,
+                        const jin::CharacterMove& ev) {
+  int x = ev.coordinate[0];
+  int y = ev.coordinate[1];
+  lob_ctx.controller->move_character({x, y});
+}
+
+void InGame::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx, const jin::CheckWin&) {
+  lob_ctx.controller->check_win();
+}
+
+void InGame::operator()(ILobby& lobby, SessionContext&, LobbyContext&, SessionEvent ev) {
+  switch (ev) {
+    case SessionEvent::kTransitionToCharacterSelect:
+      lobby.transition_to(make_unique<CharacterSelect>());
+      break;
+    case SessionEvent::kTransitionToGameDone: lobby.transition_to(make_unique<GameDone>()); break;
+    default:                                  break;
+  }
+}
+
+void GameDone::operator()(ILobby&, SessionContext&, LobbyContext& lob_ctx, const jin::NewGame&) {
+  lob_ctx.controller->new_game();
+}
+
+void GameDone::operator()(ILobby& lobby, SessionContext&, LobbyContext&, SessionEvent ev) {
   switch (ev) {
     case SessionEvent::kTransitionToInGame: lobby.transition_to(make_unique<InGame>()); break;
     default:                                break;

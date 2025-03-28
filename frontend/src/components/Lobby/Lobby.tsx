@@ -1,17 +1,19 @@
 import { Slide, toast, ToastContainer } from "react-toastify";
-import { useSession } from "../hooks/useSession";
-import Pregame from "./Pregame";
+import useGame from "../../hooks/useGame";
+import Pregame from "../Pregame";
 import { a } from "@react-spring/web";
-import useDynamicScale from "../hooks/useDynamicScale";
+import useDynamicScale from "../../hooks/useDynamicScale";
 import CharacterSelect from "./CharacterSelect";
+import Chat from "../Chat";
+import { playClickSfx } from "../../lib/sounds";
 
 export default function Lobby() {
   return (
     <Pregame>
-      <div className="space-y-8 rounded-lg p-8">
+      <div className="flex w-full flex-col items-center justify-center space-y-8 rounded-lg p-8">
         <StatusBar />
         <CharacterSelect />
-        <ChatSpaceOffset />
+        <ChatContainer />
       </div>
     </Pregame>
   );
@@ -19,7 +21,7 @@ export default function Lobby() {
 
 function StatusBar() {
   return (
-    <div className="flex w-full max-w-3xl flex-col items-center space-x-4 text-center select-none max-lg:space-y-4 min-lg:flex-row min-lg:justify-between">
+    <div className="flex w-full max-w-2xl flex-col items-center space-x-4 text-center select-none max-lg:space-y-4 min-lg:flex-row min-lg:justify-between">
       <PlayerCount />
       <LobbyCode />
     </div>
@@ -27,20 +29,27 @@ function StatusBar() {
 }
 
 function PlayerCount() {
-  const { playerCount } = useSession();
+  const { playerCount } = useGame();
+
+  const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
 
   return (
-    <h2>
-      Players:{" "}
-      <span className="rounded-md border-2 border-white bg-emerald-500 px-1 text-nowrap">
+    <div className="flex flex-row flex-wrap items-center justify-center space-x-2">
+      <h2>Players: </h2>
+      <a.span
+        style={scale}
+        onMouseEnter={increaseScale}
+        onMouseLeave={decreaseScale}
+        className="rounded-md border-2 border-white bg-emerald-500 px-1 text-nowrap"
+      >
         {`${playerCount}`} out of 2
-      </span>
-    </h2>
+      </a.span>
+    </div>
   );
 }
 
 function LobbyCode() {
-  const { lobbyCode } = useSession();
+  const { lobbyCode } = useGame();
 
   const saveToClipboard = () => {
     clipboardToast();
@@ -50,17 +59,19 @@ function LobbyCode() {
   const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
 
   return (
-    <div className="flex h-fit flex-row flex-wrap items-center justify-center space-x-2">
+    <div className="flex flex-row flex-wrap items-center justify-center space-x-2">
       <h2>Lobby Code:</h2>
-      <a.span
+      <a.button
         onClick={saveToClipboard}
+        onMouseDown={playClickSfx}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
         style={scale}
+        title="Copy to clipboard"
         className="cursor-pointer rounded-md border-2 border-white bg-cyan-600 px-1"
       >
         {lobbyCode}
-      </a.span>
+      </a.button>
       <ToastContainer newestOnTop />
     </div>
   );
@@ -99,6 +110,10 @@ function ClipboardToastComponent() {
   );
 }
 
-function ChatSpaceOffset() {
-  return <div className="h-72 min-lg:h-0"></div>;
+function ChatContainer() {
+  return (
+    <div className="bottom-5 left-5 flex h-72 w-full max-w-[25rem] items-center justify-center min-2xl:fixed">
+      <Chat />
+    </div>
+  );
 }

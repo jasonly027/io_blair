@@ -1,16 +1,19 @@
-import { Helper, PerspectiveCamera } from "@react-three/drei";
+import { Helper, OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { type ReactNode, useRef } from "react";
+import { type ReactNode } from "react";
 import { PointLightHelper } from "three";
-import type { GameCharacter } from "../types/character";
-import CatWaffle from "./CatWaffle";
+import type { GameCharacter } from "../../types/character";
 import { a, useSpring } from "@react-spring/web";
+import { playClickSfx } from "../../lib/sounds";
 
-interface CharacterCardProps {
+export interface CharacterCardProps {
   name: GameCharacter;
   stroke: StrokeKind;
   strokeColor: string;
   locked: boolean;
+  /**
+   * Does not call handler if card is locked.
+   */
   onClick?: (name: GameCharacter) => void;
 }
 
@@ -26,10 +29,16 @@ export default function CharacterCard({
   return (
     <DashedContainer stroke={stroke} strokeColor={strokeColor}>
       <div
-        onClick={() => onClick(name)}
+        onClick={() => {
+          if (!locked) onClick(name);
+        }}
+        onMouseDown={() => {
+          if (!locked) playClickSfx();
+        }}
         style={{
           cursor: locked ? "not-allowed" : "pointer",
         }}
+        title={`Select ${name}`}
         className="flex size-[20rem] cursor-pointer flex-col rounded-md"
       >
         <h2 className="m-2 text-center select-none">{name}</h2>
@@ -39,9 +48,9 @@ export default function CharacterCard({
   );
 }
 
-type StrokeKind = "none" | "dashed" | "full";
+export type StrokeKind = "none" | "dashed" | "full";
 
-interface DashedBorderProps {
+export interface DashedBorderProps {
   stroke?: StrokeKind;
   strokeColor?: string;
   children: ReactNode;
@@ -52,8 +61,6 @@ function DashedContainer({
   strokeColor = "white",
   children,
 }: DashedBorderProps) {
-  const divRef = useRef<HTMLDivElement>(null!);
-
   const dashedBorderSvg = `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='${strokeColor}' stroke-width='15' stroke-dasharray='30' stroke-dashoffset='12' stroke-linecap='square'/%3e%3c/svg%3e")`;
   const outlineClasses = stroke === "full" ? "outline-8 -outline-offset-8" : "";
 
@@ -66,7 +73,6 @@ function DashedContainer({
 
   return (
     <a.div
-      ref={divRef}
       style={{
         ...scale,
         backgroundImage: stroke === "dashed" ? dashedBorderSvg : "",
@@ -84,13 +90,17 @@ function CharacterScene() {
     <div className="size-full scale-none">
       <Canvas>
         <ambientLight intensity={0.3} />
-        <pointLight intensity={3} position={[20, 40, 100]} decay={0}>
+        <pointLight intensity={3} position={[2, 2, 2]} decay={0}>
           <Helper type={PointLightHelper} />
         </pointLight>
-        <PerspectiveCamera makeDefault position={[11, 30, 100]} fov={100} />
-        {/* <OrbitControls /> */}
-        {/* <axesHelper args={[500]} /> */}
-        <CatWaffle />
+
+        <PerspectiveCamera makeDefault position={[0, 0.5, 1]} />
+        <OrbitControls />
+
+        <mesh position={[0, 0, 0]}>
+          <cylinderGeometry args={[0.2, 0.2, 0.5]} />
+          <meshStandardMaterial />
+        </mesh>
       </Canvas>
     </div>
   );

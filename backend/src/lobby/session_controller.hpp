@@ -6,6 +6,7 @@
 #include "character.hpp"
 #include "ilobby_controller.hpp"
 #include "isession_controller.hpp"
+#include "maze.hpp"
 #include "player.hpp"
 
 
@@ -22,6 +23,12 @@ class SessionController : public ISessionController {
   SessionController(Player& self, Player& other, ILobbyController&);
 
   void set_character(Character) override;
+
+  void move_character(coordinate) override;
+
+  void check_win() override;
+
+  void new_game() override;
 
  private:
   // The self and other passed to the underlying controller.

@@ -8,6 +8,7 @@
 #include <string>
 
 #include "character.hpp"
+#include "event.hpp"
 #include "json.hpp"
 #include "mock/mock_session.hpp"
 
@@ -17,7 +18,7 @@ using std::make_shared;
 using std::nullopt;
 using std::shared_ptr;
 using std::string;
-using ::testing::_;
+using ::testing::HasSubstr;
 using ::testing::Matcher;
 using ::testing::NiceMock;
 using ::testing::Pointee;
@@ -44,7 +45,9 @@ TEST(LobbyControllerShould, SendOnOtherSessionJoining) {
   auto s1 = make_shared<MockSession>();
   auto s2 = make_shared<MockSession>();
 
-  EXPECT_CALL(*s1, async_send(Matcher<string>(_)));
+  EXPECT_CALL(*s1, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
+  EXPECT_CALL(*s1, async_send(Matcher<string>(HasSubstr("lobbyOtherJoin"))));
+  EXPECT_CALL(*s2, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
 
   controller.join(s1);
   controller.join(s2);
@@ -85,6 +88,22 @@ TEST(LobbyControllerShould, ReplaceSecondSessionWhenExpired) {
   EXPECT_NE(controller.join(s3), nullopt);
 }
 
+TEST(LobbyControllerShould, SendOnOtherSessionLeaving) {
+  LobbyController controller("");
+  auto s1 = make_shared<NiceMock<MockSession>>();
+  auto s2 = make_shared<NiceMock<MockSession>>();
+
+  EXPECT_CALL(*s1, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
+  EXPECT_CALL(*s1, async_send(Matcher<string>(HasSubstr("lobbyOtherJoin"))));
+  EXPECT_CALL(*s2, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
+  EXPECT_CALL(*s2, async_send(jout::lobby_other_leave()));
+  EXPECT_CALL(*s2, async_handle(SessionEvent::kTransitionToCharacterSelect));
+
+  controller.join(s1);
+  controller.join(s2);
+  controller.leave(s1);
+}
+
 class LobbyControllerFShould : public ::testing::Test {
  protected:
   std::shared_ptr<StrictMock<MockSession>> s1_ = std::make_shared<StrictMock<MockSession>>();
@@ -100,9 +119,9 @@ class LobbyControllerFShould : public ::testing::Test {
 };
 
 TEST_F(LobbyControllerFShould, NotSetCharacterWhenAlreadyCharacter) {
-  p1_.session.try_set(s1_);
+  p1_.try_set(s1_);
   p1_.character = Character::Io;
-  p2_.session.try_set(s2_);
+  p2_.try_set(s2_);
   LobbyController controller("");
 
   // Shouldn't trigger StrictMock's
@@ -110,9 +129,9 @@ TEST_F(LobbyControllerFShould, NotSetCharacterWhenAlreadyCharacter) {
 }
 
 TEST_F(LobbyControllerFShould, NotSetCharacterWhenOtherIsAlreadyCharacter) {
-  p1_.session.try_set(s1_);
+  p1_.try_set(s1_);
   p1_.character = Character::Io;
-  p2_.session.try_set(s2_);
+  p2_.try_set(s2_);
   p2_.character = Character::Blair;
   LobbyController controller("");
 
@@ -125,8 +144,8 @@ TEST_F(LobbyControllerFShould, SetCharacterAndSendOther) {
   constexpr Character kCharacter = Character::Io;
   EXPECT_CALL(*s2_, async_send(jout::character_confirm(kCharacter)));
 
-  p1_.session.try_set(s1_);
-  p2_.session.try_set(s2_);
+  p1_.try_set(s1_);
+  p2_.try_set(s2_);
   LobbyController controller("");
 
   controller.set_character(p1_, p2_, kCharacter);
@@ -137,9 +156,9 @@ TEST_F(LobbyControllerFShould, SetCharacterAndSendOther) {
 TEST_F(LobbyControllerFShould, SetCharacterToUnknown) {
   EXPECT_CALL(*s2_, async_send(jout::character_confirm(Character::unknown)));
 
-  p1_.session.try_set(s1_);
+  p1_.try_set(s1_);
   p1_.character = Character::Io;
-  p2_.session.try_set(s2_);
+  p2_.try_set(s2_);
   LobbyController controller("");
 
   controller.set_character(p1_, p2_, Character::unknown);
@@ -150,20 +169,31 @@ TEST_F(LobbyControllerFShould, SetCharacterToUnknown) {
 TEST_F(LobbyControllerFShould, SetCharactersAndTransitionToInGame) {
   using MatcherSharedStr = Matcher<shared_ptr<const string>>;
 
+  EXPECT_CALL(*s1_, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
+  EXPECT_CALL(*s1_, async_send(Matcher<string>(HasSubstr("lobbyOtherJoin"))));
+  EXPECT_CALL(*s2_, async_send(Matcher<string>(HasSubstr("lobbyJoin"))));
+
   EXPECT_CALL(*s1_, async_send(jout::character_confirm(Character::Blair)));
+  EXPECT_CALL(*s2_, async_send(jout::character_confirm(Character::Io)));
+
   EXPECT_CALL(*s1_, async_handle(SessionEvent::kTransitionToInGame));
   EXPECT_CALL(*s1_, async_send(MatcherSharedStr(Pointee(jout::transition_to_ingame()))));
 
-  EXPECT_CALL(*s2_, async_send(jout::character_confirm(Character::Io)));
   EXPECT_CALL(*s2_, async_handle(SessionEvent::kTransitionToInGame));
   EXPECT_CALL(*s2_, async_send(MatcherSharedStr(Pointee(jout::transition_to_ingame()))));
 
-  p1_.session.try_set(s1_);
-  p2_.session.try_set(s2_);
+  EXPECT_CALL(*s1_, async_send(Matcher<string>(HasSubstr("inGameMaze"))));
+  EXPECT_CALL(*s2_, async_send(Matcher<string>(HasSubstr("inGameMaze"))));
+
+  p1_.try_set(s1_);
+  p2_.try_set(s2_);
   LobbyController controller("");
+  controller.join(s1_);
+  controller.join(s2_);
 
   controller.set_character(p1_, p2_, Character::Io);
   controller.set_character(p2_, p1_, Character::Blair);
+
 }
 
 }  // namespace io_blair::testing

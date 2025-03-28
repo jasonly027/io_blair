@@ -7,6 +7,9 @@ void IHandler::operator()(const json::in::LobbyLeave&) {}
 void IHandler::operator()(const json::in::Chat&) {}
 void IHandler::operator()(const json::in::CharacterHover&) {}
 void IHandler::operator()(const json::in::CharacterConfirm&) {}
+void IHandler::operator()(const json::in::CharacterMove&) {}
+void IHandler::operator()(const json::in::CheckWin&) {}
+void IHandler::operator()(const json::in::NewGame&) {}
 void IHandler::operator()(SessionEvent) {}
 
 }  // namespace io_blair

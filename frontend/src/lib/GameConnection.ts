@@ -1,5 +1,6 @@
 import type { GameCharacter } from "../types/character";
 import { EventEmitter } from "./EventListener";
+import type { Coordinate, MazeMatrix, TraversableKey } from "./Maze";
 import { QueuedSocket, SocketState } from "./QueuedSocket";
 
 /**
@@ -19,8 +20,13 @@ export type GameEventMap = {
       code: string;
       /** The current number of players, including the player. */
       playerCount: number;
+      otherConfirm: GameCharacter | "unknown";
     },
   ];
+  /** Indicates teammate has joined the lobby */
+  lobbyOtherJoin: [];
+  /** Indicates teammate has left the lobby */
+  lobbyOtherLeave: [];
   /** Indicates the server forwarded a message from another player. */
   chat: [
     {
@@ -40,6 +46,35 @@ export type GameEventMap = {
       character: GameCharacter | null;
     },
   ];
+  /** Indicates transition to ingame */
+  transitionToInGame: [];
+  inGameMaze: [
+    {
+      maze: MazeMatrix<number>;
+      start: Coordinate;
+      end: Coordinate;
+      cell: number;
+    },
+  ];
+  characterMove: [
+    {
+      coordinate: Coordinate;
+      cell: number;
+      reset: boolean;
+    },
+  ];
+  characterOtherMove: [
+    {
+      direction: TraversableKey;
+      reset: boolean;
+    },
+  ];
+  coinTaken: [
+    {
+      coordinate: Coordinate;
+    },
+  ];
+  transitionToGameDone: [];
 };
 
 export type GameEventKey = keyof GameEventMap;
@@ -77,6 +112,12 @@ export type GameSendMap = {
       character: GameCharacter | "unknown";
     },
   ];
+  characterMove: [
+    {
+      coordinate: Coordinate;
+    },
+  ];
+  newGame: [];
 };
 
 export type GameSendKey = keyof GameSendMap;
@@ -189,10 +230,42 @@ export class GameConnection {
 const gameEventMapSchema = {
   open: [],
   close: [],
-  lobbyJoin: [{ success: false, code: "", playerCount: 0 }],
+  lobbyJoin: [
+    { success: false, code: "", playerCount: 0, otherConfirm: "unknown" },
+  ],
+  lobbyOtherJoin: [],
+  lobbyOtherLeave: [],
   chat: [{ msg: "" }],
   characterHover: [{ character: "Io" }],
   characterConfirm: [{ character: null }],
+  transitionToInGame: [],
+  inGameMaze: [
+    {
+      maze: undefined!,
+      start: [0, 0],
+      end: [0, 0],
+      cell: 0,
+    },
+  ],
+  characterMove: [
+    {
+      coordinate: [0, 0],
+      cell: 0,
+      reset: false,
+    },
+  ],
+  characterOtherMove: [
+    {
+      direction: "up",
+      reset: false,
+    },
+  ],
+  coinTaken: [
+    {
+      coordinate: [0, 0],
+    },
+  ],
+  transitionToGameDone: [],
 } as const satisfies GameEventMap;
 
 /** Convert a raw message from the server to a GameEvent */
