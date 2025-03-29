@@ -51,11 +51,12 @@ function Create({ setToLoading }: CreateProps) {
         onClick={tryCreateLobby}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
-        onMouseDown={() => {
+        onPointerDown={() => {
           playClickSfx();
-          decreaseScale();
+          increaseScale();
         }}
-        onMouseUp={increaseScale}
+        onPointerUp={decreaseScale}
+        onPointerLeave={decreaseScale}
         onKeyDown={({ key }) => {
           if (key !== "Enter") return;
           decreaseScale();
@@ -137,11 +138,12 @@ function Join({ status, setToLoading }: JoinProps) {
           onClick={submitJoinCode}
           onMouseEnter={increaseScale}
           onMouseLeave={decreaseScale}
-          onMouseDown={() => {
+          onPointerDown={() => {
             playClickSfx();
-            decreaseScale();
+            increaseScale();
           }}
-          onMouseUp={increaseScale}
+          onPointerUp={decreaseScale}
+          onPointerLeave={decreaseScale}
           className="group cursor-pointer"
         >
           <path

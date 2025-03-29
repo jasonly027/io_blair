@@ -40,6 +40,9 @@ function PlayerCount() {
         style={scale}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
+        onPointerDown={increaseScale}
+        onPointerUp={decreaseScale}
+        onPointerLeave={decreaseScale}
         className="rounded-md border-2 border-white bg-emerald-500 px-1 text-nowrap"
       >
         {`${playerCount}`} out of 2
@@ -63,7 +66,12 @@ function LobbyCode() {
       <h2>Lobby Code:</h2>
       <a.button
         onClick={saveToClipboard}
-        onMouseDown={playClickSfx}
+        onPointerDown={() => {
+          playClickSfx();
+          increaseScale();
+        }}
+        onPointerUp={decreaseScale}
+        onPointerLeave={decreaseScale}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
         style={scale}

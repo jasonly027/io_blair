@@ -1,12 +1,19 @@
 import useGame from "../../hooks/useGame";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Cell as MazeCell, type Coordinate } from "../../lib/Maze";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type ReactNode,
+} from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Mesh } from "three";
 import { SUCCESSFUL_MOVE_DURATION } from "../../hooks/useBody";
-import {  SFX_VOLUME } from "../../lib/sounds";
-import COIN from "/audio/coin.mp3"
+import { SFX_VOLUME } from "../../lib/sounds";
+import COIN from "/audio/coin.mp3";
 
 export const CELL_LEN = 1;
 export const DIST_TO_NEXT_CELL = CELL_LEN + CELL_LEN;
@@ -96,9 +103,7 @@ function Gap({ type, cell }: GapProps) {
           ]}
         />
         <meshStandardMaterial
-          color={
-            cellDir("both") ? "darkgreen" : "lightgreen"
-          }
+          color={cellDir("both") ? "darkgreen" : "lightgreen"}
           opacity={cellDir("You") ? 1 : 0}
           transparent
         />
@@ -111,7 +116,7 @@ const coinSfx = new Audio(COIN);
 coinSfx.volume = SFX_VOLUME;
 
 function Coin({ exists }: { exists: boolean }) {
-  const [prevExists, setPrevExists] = useState(exists);
+  const { visible, setVisibleImmediate } = useVisible(exists);
 
   const meshRef = useRef<Mesh>(null);
   useFrame((_, delta) => {
@@ -119,28 +124,8 @@ function Coin({ exists }: { exists: boolean }) {
     meshRef.current.rotateZ(delta * 1.5);
   });
 
-  const timeoutRef = useRef<number | null>(null);
-
-  if (exists !== prevExists) {
-    if (exists) {
-      setPrevExists(true);
-      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
-    } else {
-      timeoutRef.current = setTimeout(() => {
-        setPrevExists(false);
-      }, SUCCESSFUL_MOVE_DURATION);
-    }
-  }
-
-  useEffect(function clearTimeoutOnDismount() {
-    return () => {
-      if (timeoutRef.current === null) return;
-      clearTimeout(timeoutRef.current);
-    };
-  }, []);
-
   return (
-    prevExists && (
+    visible && (
       <RigidBody
         position={[0, CELL_LEN, 0]}
         rotation={[-Math.PI * 1.5, 0, 0]}
@@ -151,9 +136,9 @@ function Coin({ exists }: { exists: boolean }) {
           sensor
           args={[0.2, 0.2, 0.2]}
           onIntersectionEnter={() => {
-            coinSfx.currentTime = 0
+            coinSfx.currentTime = 0;
             coinSfx.play();
-            setPrevExists(false);
+            setVisibleImmediate(false);
           }}
         />
         <mesh castShadow receiveShadow ref={meshRef}>
@@ -162,5 +147,38 @@ function Coin({ exists }: { exists: boolean }) {
         </mesh>
       </RigidBody>
     )
+  );
+}
+
+function useVisible(exists: boolean): {
+  visible: boolean;
+  setVisibleImmediate: Dispatch<boolean>;
+} {
+  const [visible, setVisible] = useState(exists);
+
+  const timeoutRef = useRef<number | null>(null);
+
+  if (exists && !visible) {
+    setVisible(true);
+  } else if (!exists && visible) {
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setVisible(false);
+    }, SUCCESSFUL_MOVE_DURATION);
+  }
+
+  const setVisibleImmediate = useCallback(
+    (value: boolean) => setVisible(value),
+    [],
+  );
+
+  return useMemo(
+    () => ({
+      visible,
+      setVisibleImmediate,
+    }),
+    [visible, setVisibleImmediate],
   );
 }

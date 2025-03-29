@@ -50,6 +50,7 @@ export default function CharacterSelect() {
   const [confirmed, setConfirmed] = useState(false);
 
   const onConfirmClick = () => {
+    if (you.hover === null) return;
     const ok = setYou({
       type: "confirm",
       character: confirmed ? null : you.hover,
@@ -106,11 +107,12 @@ function ConfirmCharacter({
         }}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
-        onMouseDown={() => {
+        onPointerDown={() => {
           playClickSfx();
-          decreaseScale();
+          increaseScale();
         }}
-        onMouseUp={increaseScale}
+        onPointerUp={decreaseScale}
+        onPointerLeave={decreaseScale}
         tabIndex={0}
         className="cursor-pointer fill-emerald-400 hover:fill-emerald-500 focus:fill-emerald-500 active:fill-green-500"
       >

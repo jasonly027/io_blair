@@ -4,7 +4,7 @@ import type { GamePlayer } from "../types/character";
 import useConnection from "../hooks/useConnection";
 import { setGameFocused } from "../lib/game";
 import { SFX_VOLUME } from "../lib/sounds";
-import POP from "/audio/pop.mp3"
+import POP from "/audio/pop.mp3";
 
 interface MessageData {
   who: GamePlayer;
@@ -105,7 +105,6 @@ function Input({ setHistory }: InputProps) {
       const onEnter = () => {
         if (document.activeElement === inputRef.current) {
           submit();
-          inputRef.current.blur();
         } else {
           inputRef.current.focus();
         }

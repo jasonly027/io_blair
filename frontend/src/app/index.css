@@ -36,5 +36,6 @@ body {
   line-height: 2rem;
 
   color: white;
-  background-color: black;
+  background: linear-gradient(to bottom, #60a5fa 70%, #3b82f6 100%);
+  overscroll-behavior: none;
 }

@@ -18,7 +18,7 @@ import Loading from "../Loading";
 import useConnection from "../../hooks/useConnection";
 import type { GameConnectionListener } from "../../lib/GameConnection";
 import { playClickSfx, SFX_VOLUME } from "../../lib/sounds";
-import WIN from "/audio/win.mp3"
+import WIN from "/audio/win.mp3";
 
 export default function InGame() {
   return (
@@ -64,25 +64,23 @@ function ChatContainer() {
   const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
 
   return (
-    <div
-      tabIndex={0}
-      onMouseEnter={increaseScale}
-      onMouseLeave={decreaseScale}
-      onMouseDown={() => {
-        playClickSfx();
-        decreaseScale();
-      }}
-      onMouseUp={increaseScale}
-      className="group"
-    >
+    <div tabIndex={0} className="group">
       <a.svg
         style={scale}
+        onMouseEnter={increaseScale}
+        onMouseLeave={decreaseScale}
+        onPointerDown={() => {
+          playClickSfx();
+          increaseScale();
+        }}
+        onPointerUp={decreaseScale}
+        onPointerLeave={decreaseScale}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth={2}
         stroke="currentColor"
-        className="fixed bottom-5 left-5 z-20 size-12 rounded-lg bg-emerald-400 p-1 outline-3 outline-white group-focus-within:invisible hover:bg-emerald-500 active:bg-green-400 min-md:invisible"
+        className="fixed bottom-3 left-3 z-20 size-12 rounded-lg bg-emerald-400 p-1 outline-3 outline-white group-focus-within:invisible hover:bg-emerald-500 active:bg-green-400 min-md:invisible"
       >
         <path
           strokeLinecap="round"
@@ -90,7 +88,7 @@ function ChatContainer() {
           d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
         />
       </a.svg>
-      <div className="fixed bottom-5 left-5 z-20 flex h-72 w-full max-w-[25rem] items-center justify-center group-focus-within:visible max-[426px]:left-3 max-md:invisible">
+      <div className="fixed bottom-3 left-3 z-20 flex h-72 w-full max-w-[min(25rem,92vw)] items-center justify-center group-focus-within:visible max-[426px]:left-3 max-md:invisible">
         <Chat />
       </div>
     </div>
@@ -100,7 +98,7 @@ function ChatContainer() {
 function Hud() {
   return (
     <>
-      <section className="fixed top-5 right-5 flex flex-col items-center justify-center space-y-3 select-none min-md:flex-row min-md:space-y-0 min-md:space-x-6">
+      <section className="absolute top-3 right-3 flex flex-col items-center justify-center space-y-3 select-none min-md:flex-row min-md:space-y-0 min-md:space-x-6 [&>svg]:h-[8vh] [&>svg]:min-h-12 [&>svg]:w-fit">
         <CoinsCounter />
         <MovesCounter />
         <TimeCounter />
@@ -122,6 +120,9 @@ function MovesCounter() {
       style={scale}
       onMouseEnter={increaseScale}
       onMouseLeave={decreaseScale}
+      onPointerDown={increaseScale}
+      onPointerUp={decreaseScale}
+      onPointerLeave={decreaseScale}
       width="150"
       height="61"
       viewBox="0 0 150 61"
@@ -199,6 +200,9 @@ function TimeCounter() {
       style={scale}
       onMouseEnter={increaseScale}
       onMouseLeave={decreaseScale}
+      onPointerDown={increaseScale}
+      onPointerUp={decreaseScale}
+      onPointerLeave={decreaseScale}
       width="150"
       height="66"
       viewBox="0 0 150 66"
@@ -243,6 +247,9 @@ function CoinsCounter() {
       style={scale}
       onMouseEnter={increaseScale}
       onMouseLeave={decreaseScale}
+      onPointerDown={increaseScale}
+      onPointerUp={decreaseScale}
+      onPointerLeave={decreaseScale}
       width="168"
       height="67"
       viewBox="0 0 168 67"
@@ -321,11 +328,12 @@ function WinScreen() {
                 onClick={newGame}
                 onMouseEnter={increaseScale}
                 onMouseLeave={decreaseScale}
-                onMouseDown={() => {
+                onPointerDown={() => {
                   playClickSfx();
-                  decreaseScale();
+                  increaseScale();
                 }}
-                onMouseUp={increaseScale}
+                onPointerUp={decreaseScale}
+                onPointerLeave={decreaseScale}
                 className="cursor-pointer fill-emerald-400 hover:fill-emerald-500 focus:fill-emerald-500 active:fill-green-500"
               >
                 <path
@@ -368,7 +376,7 @@ function Controls() {
         viewBox="0 0 160 158"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="fixed right-5 bottom-5 size-55"
+        className="fixed right-3 bottom-3 size-[min(30vh,50vw)] max-h-40 max-w-40"
       >
         <Arrow
           onClick={onUp}
@@ -409,10 +417,11 @@ function Arrow({
   return (
     <a.path
       onClick={onClick}
-      onMouseDown={increaseScale}
-      onMouseUp={decreaseScale}
-      onTouchStart={increaseScale}
-      onTouchEnd={decreaseScale}
+      onMouseEnter={increaseScale}
+      onMouseLeave={decreaseScale}
+      onPointerDown={increaseScale}
+      onPointerUp={decreaseScale}
+      onPointerLeave={decreaseScale}
       style={{ ...scale, transformOrigin: origin }}
       d={d}
       stroke="white"
