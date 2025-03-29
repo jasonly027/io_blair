@@ -1,20 +1,29 @@
-FROM silkeh/clang:20
+FROM silkeh/clang:20 AS builder
 
-ENV SERVER_PORT=443
+ENV CPM_SOURCE_CACHE=/.cpm_cache
 
-EXPOSE ${SERVER_PORT}
+VOLUME [ "${CPM_SOURCE_CACHE}" ]
 
-COPY . /app
+RUN apt-get update && apt-get install -y ninja-build && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-RUN cmake -B build -S . \
+COPY . .
+
+RUN cmake -B build -S .       \
+  -G Ninja                    \
   -D CMAKE_BUILD_TYPE=Release \
-  -D ENABLE_TESTING=OFF \
-  -D BUILD_DOCS=OFF 
+  -D ENABLE_TESTING=OFF       \
+  -D BUILD_DOCS=OFF &&        \
+  cmake --build build --config Release --target io_blair_server
 
-RUN cmake --build build --config Release --target io_blair_server
+FROM gcr.io/distroless/cc-debian12
 
-WORKDIR /app/build/bin
+ENV SERVER_PORT=443
+EXPOSE ${SERVER_PORT}
 
-CMD ./io_blair_server ${SERVER_PORT}
+WORKDIR /app
+
+COPY --from=builder /app/build/bin/io_blair_server .
+
+ENTRYPOINT [ "./io_blair_server" ]
