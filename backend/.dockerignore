@@ -8,3 +8,4 @@ docs/
 .dockerignore
 .editorconfig
 .gitignore
+.env
