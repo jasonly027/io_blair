@@ -29,13 +29,14 @@ export default function Sound() {
       style={scale}
       onMouseEnter={increaseScale}
       onMouseLeave={decreaseScale}
-      onMouseDown={() => {
+      onPointerDown={() => {
         playClickSfx();
-        decreaseScale();
+        increaseScale();
       }}
-      onMouseUp={increaseScale}
+      onPointerUp={decreaseScale}
+      onPointerLeave={decreaseScale}
       type="button"
-      className="fixed top-5 left-5 cursor-pointer focus:outline-0 [&>svg]:size-12 [&>svg]:rounded-lg [&>svg]:bg-emerald-400 [&>svg]:p-1 [&>svg]:outline-3 [&>svg]:outline-white [&>svg]:hover:bg-emerald-500 [&>svg]:active:bg-green-500"
+      className="fixed top-3 left-3 cursor-pointer focus:outline-0 [&>svg]:size-12 [&>svg]:rounded-lg [&>svg]:bg-emerald-400 [&>svg]:p-1 [&>svg]:outline-3 [&>svg]:outline-white [&>svg]:hover:bg-emerald-500 [&>svg]:active:bg-green-500"
     >
       {muted ? (
         <svg

@@ -14,6 +14,7 @@ import type { Mesh } from "three";
 import useConnection from "./useConnection";
 import type { GameConnectionListener } from "../lib/GameConnection";
 import { SFX_VOLUME } from "../lib/sounds";
+import FALL from "/audio/fall.mp3"
 
 export const SUCCESSFUL_MOVE_DURATION = 350;
 export const UNSUCCESSFUL_MOVE_DURATION = SUCCESSFUL_MOVE_DURATION * 0.75;
@@ -49,7 +50,7 @@ export default function useBody(
 
   const fallSfx = useRef<HTMLAudioElement>(
     (() => {
-      const fallSfx = new Audio("/audio/fall.mp3");
+      const fallSfx = new Audio(FALL);
       fallSfx.volume = SFX_VOLUME;
       return fallSfx;
     })(),

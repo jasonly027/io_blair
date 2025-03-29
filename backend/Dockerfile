@@ -19,7 +19,7 @@ RUN cmake -B build -S .       \
 
 FROM gcr.io/distroless/cc-debian12
 
-ENV SERVER_PORT=443
+ENV SERVER_PORT=80
 EXPOSE ${SERVER_PORT}
 
 WORKDIR /app

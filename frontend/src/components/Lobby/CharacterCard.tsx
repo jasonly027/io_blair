@@ -1,4 +1,4 @@
-import { Helper, OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { Helper,  PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { type ReactNode } from "react";
 import { PointLightHelper } from "three";
@@ -32,7 +32,7 @@ export default function CharacterCard({
         onClick={() => {
           if (!locked) onClick(name);
         }}
-        onMouseDown={() => {
+        onPointerDown={() => {
           if (!locked) playClickSfx();
         }}
         style={{
@@ -94,8 +94,7 @@ function CharacterScene() {
           <Helper type={PointLightHelper} />
         </pointLight>
 
-        <PerspectiveCamera makeDefault position={[0, 0.5, 1]} />
-        <OrbitControls />
+        <PerspectiveCamera makeDefault position={[0, 0, 1]} />
 
         <mesh position={[0, 0, 0]}>
           <cylinderGeometry args={[0.2, 0.2, 0.5]} />
