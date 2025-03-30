@@ -35,8 +35,6 @@ import type { GameConnectionListener } from "../../lib/GameConnection";
  * - startCoords will be [0, 0]
  */
 export function GameProvider({ children }: { children?: ReactNode }) {
-  console.log("GameProvider render");
-
   const gameStatus = useGameStatus();
 
   const lobbyCode = useLobbyCode();

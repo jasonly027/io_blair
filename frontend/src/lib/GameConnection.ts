@@ -167,7 +167,6 @@ export class GameConnection {
   private setupEventEmitter(): void {
     this.addSocketListener("message", ({ data }) => {
       const obj = JSON.parse(data);
-      console.log(obj);
       const gameEvent = toGameEvent(obj);
       if (gameEvent === null) return;
 

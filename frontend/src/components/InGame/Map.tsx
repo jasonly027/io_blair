@@ -3,6 +3,7 @@ import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Cell as MazeCell, type Coordinate } from "../../lib/Maze";
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -23,7 +24,6 @@ export const GROUND_Y = 0;
 export const OOB_Y = -10;
 
 export default function Map() {
-  console.log("Map render");
   const { map } = useGame();
 
   return (
@@ -156,18 +156,22 @@ function useVisible(exists: boolean): {
 } {
   const [visible, setVisible] = useState(exists);
 
-  const timeoutRef = useRef<number | null>(null);
-
-  if (exists && !visible) {
-    setVisible(true);
-  } else if (!exists && visible) {
-    if (timeoutRef.current !== null) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      setVisible(false);
-    }, SUCCESSFUL_MOVE_DURATION);
-  }
+  useEffect(
+    function delayedFalseChange() {
+      if (exists) {
+        // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+        setVisible(true);
+      } else {
+        const timeout = setTimeout(
+          () => setVisible(false),
+          SUCCESSFUL_MOVE_DURATION,
+        );
+        return () => clearTimeout(timeout);
+      }
+      return;
+    },
+    [exists],
+  );
 
   const setVisibleImmediate = useCallback(
     (value: boolean) => setVisible(value),

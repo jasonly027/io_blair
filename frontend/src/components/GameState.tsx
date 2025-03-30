@@ -5,12 +5,10 @@ import Prelobby from "./Prelobby";
 import Sound from "./Sound";
 
 export default function GameState() {
-  console.log("GameState render");
-
   const { gameStatus } = useGame();
 
   return (
-    <div className="flex min-h-screen flex-col items-center ">
+    <div className="flex min-h-[100dvh] flex-col items-center ">
       {gameStatus === GameStatus.Prelobby && <Prelobby />}
       {gameStatus === GameStatus.Lobby && <Lobby />}
       {(gameStatus === GameStatus.InGame ||

@@ -50,7 +50,7 @@ export default function CharacterSelect() {
   const [confirmed, setConfirmed] = useState(false);
 
   const onConfirmClick = () => {
-    if (you.hover === null) return;
+    if (you.hover === null && !confirmed) return;
     const ok = setYou({
       type: "confirm",
       character: confirmed ? null : you.hover,
