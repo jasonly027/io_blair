@@ -11,10 +11,12 @@ import {
   type ReactNode,
 } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { Mesh } from "three";
+import { SpotLight as SpLight, type Mesh } from "three";
 import { SUCCESSFUL_MOVE_DURATION } from "../../hooks/useBody";
 import { SFX_VOLUME } from "../../lib/sounds";
 import COIN from "/audio/coin.mp3";
+import { SpotLight } from "@react-three/drei";
+import { toMapUnits } from "../../lib/map";
 
 export const CELL_LEN = 1;
 export const DIST_TO_NEXT_CELL = CELL_LEN + CELL_LEN;
@@ -24,7 +26,18 @@ export const GROUND_Y = 0;
 export const OOB_Y = -10;
 
 export default function Map() {
-  const { map } = useGame();
+  const spotLightRef = useRef<SpLight>(null);
+
+  const { map, currentCoins, totalCoins } = useGame();
+
+  const [endX, endZ] = useMemo(() => {
+    return toMapUnits(map.end);
+  }, [map.end]);
+
+  useEffect(() => {
+    if (spotLightRef.current === null) return;
+    spotLightRef.current.target.position.set(endX, 0, endZ);
+  }, [endX, endZ]);
 
   return (
     <group position={[0, GROUND_Y - CELL_LEN / 2, 0]}>
@@ -35,6 +48,15 @@ export default function Map() {
           return <Cell key={`${x},${z}`} coordinate={[x, z]} cell={cell} />;
         }),
       )}
+      <SpotLight
+        ref={spotLightRef}
+        visible={currentCoins === totalCoins}
+        position={[endX, 5, endZ]}
+        angle={0.12}
+        anglePower={0.8}
+        attenuation={5}
+        color="yellow"
+      />
     </group>
   );
 }
@@ -65,7 +87,7 @@ function Tile({ coordinate: [x, z], children }: TileProps) {
   return (
     <group position={[x, 0, z]}>
       <RigidBody type="fixed">
-        <mesh receiveShadow castShadow>
+        <mesh castShadow receiveShadow>
           <boxGeometry args={[CELL_LEN, CELL_LEN, CELL_LEN]} />
           <meshStandardMaterial color="darkgreen" />
         </mesh>
@@ -80,8 +102,6 @@ interface GapProps {
   cell: MazeCell;
 }
 
-const Z_FIGHTING_BUFFER = 0.001;
-
 function Gap({ type, cell }: GapProps) {
   const cellDir = cell[type].bind(cell);
 
@@ -94,16 +114,10 @@ function Gap({ type, cell }: GapProps) {
       ]}
       type="fixed"
     >
-      <mesh>
-        <boxGeometry
-          args={[
-            CELL_LEN - Z_FIGHTING_BUFFER,
-            CELL_LEN,
-            CELL_LEN - Z_FIGHTING_BUFFER,
-          ]}
-        />
+      <mesh receiveShadow castShadow>
+        <boxGeometry args={[CELL_LEN, CELL_LEN, CELL_LEN]} />
         <meshStandardMaterial
-          color={cellDir("both") ? "darkgreen" : "lightgreen"}
+          color={cellDir("both") ? "green" : "lightgreen"}
           opacity={cellDir("You") ? 1 : 0}
           transparent
         />
