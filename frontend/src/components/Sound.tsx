@@ -36,7 +36,7 @@ export default function Sound() {
       onPointerUp={decreaseScale}
       onPointerLeave={decreaseScale}
       type="button"
-      className="fixed top-3 left-3 cursor-pointer focus:outline-0 [&>svg]:size-12 [&>svg]:rounded-lg [&>svg]:bg-emerald-400 [&>svg]:p-1 [&>svg]:outline-3 [&>svg]:outline-white [&>svg]:hover:bg-emerald-500 [&>svg]:active:bg-green-500"
+      className="fixed top-3 left-3 cursor-pointer focus:outline-0 [&>svg]:size-9 border-3 border-white rounded-lg bg-emerald-400 p-1 hover:bg-emerald-500 active:bg-green-500"
     >
       {muted ? (
         <svg

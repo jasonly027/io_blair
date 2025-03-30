@@ -5,8 +5,6 @@ import Prelobby from "./Prelobby";
 import Sound from "./Sound";
 
 export default function GameState() {
-  console.log("GameState render");
-
   const { gameStatus } = useGame();
 
   return (

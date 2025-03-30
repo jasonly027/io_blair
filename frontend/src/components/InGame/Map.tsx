@@ -24,7 +24,6 @@ export const GROUND_Y = 0;
 export const OOB_Y = -10;
 
 export default function Map() {
-  console.log("Map render");
   const { map } = useGame();
 
   return (
