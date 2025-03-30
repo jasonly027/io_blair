@@ -22,6 +22,7 @@ import {
 import usePlayers from "../../hooks/usePlayers";
 import useConnection from "../../hooks/useConnection";
 import type { GameConnectionListener } from "../../lib/GameConnection";
+import { playWinRevealSfx } from "../../lib/sounds";
 
 /**
  * A provider for useGame.
@@ -317,13 +318,19 @@ function useMap(): useMapValues {
           maze.take_coin(coordinate);
           return maze;
         });
-        setCurrentCoins((prev) => prev + 1);
+        setCurrentCoins((prev) => {
+          if (prev + 1 === totalCoins) {
+            playWinRevealSfx();
+          }
+
+          return prev + 1;
+        });
       };
 
       addConnectionEventListener("coinTaken", onCoinTaken);
       return () => removeConnectionEventListener("coinTaken", onCoinTaken);
     },
-    [addConnectionEventListener, removeConnectionEventListener],
+    [addConnectionEventListener, removeConnectionEventListener, totalCoins],
   );
 
   return useMemo(

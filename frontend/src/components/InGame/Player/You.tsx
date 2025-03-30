@@ -104,7 +104,16 @@ function useYouControls(
       window.addEventListener("keydown", onKeyDown);
       return () => window.removeEventListener("keydown", onKeyDown);
     },
-    [gameDone, incrementMovesCount, locked, map, moveBody, moveDir, moving, youCoord],
+    [
+      gameDone,
+      incrementMovesCount,
+      locked,
+      map,
+      moveBody,
+      moveDir,
+      moving,
+      youCoord,
+    ],
   );
 }
 

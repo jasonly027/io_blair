@@ -44,10 +44,18 @@ export default function InGame() {
 function Background() {
   return (
     <>
-      <pointLight castShadow position={[10, 7, 10]} intensity={3} decay={0}>
+      <pointLight
+        castShadow
+        position={[10, 7, 10]}
+        intensity={2}
+        decay={0}
+        shadow-normalBias={0.02}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+      >
         <Helper type={PointLightHelper} />
       </pointLight>
-      <ambientLight intensity={1} />
+      <ambientLight intensity={0.8} />
     </>
   );
 }
