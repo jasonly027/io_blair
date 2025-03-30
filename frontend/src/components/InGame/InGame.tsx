@@ -22,7 +22,7 @@ import WIN from "/audio/win.mp3";
 
 export default function InGame() {
   return (
-    <div className="z-0 h-screen w-screen">
+    <div className="z-0 h-[100dvh] w-[100dvw]">
       <Canvas
         tabIndex={-1}
         shadows
