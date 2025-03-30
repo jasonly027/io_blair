@@ -30,8 +30,6 @@ export default function InGame() {
       >
         <Background />
 
-        <axesHelper />
-
         <GamePhysics>
           <Map />
           <You />
@@ -55,7 +53,7 @@ function Background() {
 }
 
 function GamePhysics({ children }: { children: ReactNode }) {
-  return <Physics debug>{children}</Physics>;
+  return <Physics>{children}</Physics>;
 }
 
 function ChatContainer() {
