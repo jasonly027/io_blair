@@ -48,13 +48,13 @@ function Create({ setToLoading }: CreateProps) {
       style={scale}
     >
       <g
-        onClick={tryCreateLobby}
+        onClick={() => {
+          playClickSfx();
+          tryCreateLobby();
+        }}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
-        onPointerDown={() => {
-          playClickSfx();
-          increaseScale();
-        }}
+        onPointerDown={increaseScale}
         onPointerUp={decreaseScale}
         onPointerLeave={decreaseScale}
         onKeyDown={({ key }) => {
@@ -135,13 +135,13 @@ function Join({ status, setToLoading }: JoinProps) {
         className="peer"
       >
         <g
-          onClick={submitJoinCode}
+          onClick={() => {
+            playClickSfx();
+            submitJoinCode();
+          }}
           onMouseEnter={increaseScale}
           onMouseLeave={decreaseScale}
-          onPointerDown={() => {
-            playClickSfx();
-            increaseScale();
-          }}
+          onPointerDown={increaseScale}
           onPointerUp={decreaseScale}
           onPointerLeave={decreaseScale}
           className="group cursor-pointer"
