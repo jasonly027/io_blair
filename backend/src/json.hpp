@@ -13,6 +13,7 @@
 #include "character.hpp"
 #include "lobby/lobby_controller.hpp"
 #include "maze.hpp"
+#include "rfl/Literal.hpp"
 
 namespace io_blair {
 class IHandler;
@@ -30,6 +31,13 @@ namespace io_blair::json {
  * make sure to add them to @ref AllJsonTypes.
  */
 namespace in {
+
+/**
+ * @brief Indicates a heartbeat ping.
+ */
+struct Ping {
+  using Tag = rfl::Literal<"ping">;
+};
 
 /**
  * @brief Indicates the client wants to create a new lobby.
@@ -106,7 +114,7 @@ struct NewGame {
  * @brief A union of all possible structs.
  */
 using AllJsonTypes
-    = rfl::TaggedUnion<"type", LobbyCreate, LobbyJoin, LobbyLeave, Chat, CharacterHover,
+    = rfl::TaggedUnion<"type", Ping, LobbyCreate, LobbyJoin, LobbyLeave, Chat, CharacterHover,
                        CharacterConfirm, CharacterMove, CheckWin, NewGame>;
 
 }  // namespace in
@@ -126,6 +134,13 @@ void decode(const std::string& data, IHandler& handler);
  */
 namespace out {
 // NOLINTBEGIN(readability-identifier-naming)
+
+/**
+ * @brief In response to client ping.
+ */
+struct pong {};
+
+std::string pong_msg();
 
 /**
  * @brief In response to the client trying to create/join a lobby.

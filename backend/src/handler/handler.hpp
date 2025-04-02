@@ -45,6 +45,7 @@ class Game : public IGame, public IHandler {
 
   void transition_to(std::unique_ptr<IGameHandler> handler) override;
 
+  void operator()(const json::in::Ping&) override;
   void operator()(const json::in::LobbyCreate&) override;
   void operator()(const json::in::LobbyJoin&) override;
   void operator()(const json::in::LobbyLeave&) override;

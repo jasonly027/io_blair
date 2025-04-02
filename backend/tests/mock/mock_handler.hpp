@@ -8,6 +8,11 @@
 namespace io_blair::testing {
 class MockHandler : public IHandler {
  public:
+  MOCK_METHOD(void, EvPing, (const json::in::Ping&));
+  inline void operator()(const json::in::Ping& ev) override {
+    return EvPing(ev);
+  }
+
   MOCK_METHOD(void, EvLobbyCreate, (const json::in::LobbyCreate&));
   inline void operator()(const json::in::LobbyCreate& ev) override {
     return EvLobbyCreate(ev);

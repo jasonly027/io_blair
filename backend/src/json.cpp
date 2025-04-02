@@ -28,6 +28,10 @@ constexpr const char* kEmptyStr = "abc";
 }  // namespace
 
 namespace out {
+string pong_msg() {
+  return encode(pong{});
+}
+
 string lobby_join(const optional<string_view>& code, optional<int> player_count,
                   optional<Character> other_confirm) {
   return encode(lobbyJoin{.success       = code.has_value(),

@@ -84,6 +84,7 @@ export type GameEventKey = keyof GameEventMap;
  * the corresponding data required with them.
  */
 export type GameSendMap = {
+  ping: [];
   /** Request to create a lobby */
   lobbyCreate: [];
   /** Request to join a lobby */
@@ -112,11 +113,13 @@ export type GameSendMap = {
       character: GameCharacter | "unknown";
     },
   ];
+  /** Send the new position of the player */
   characterMove: [
     {
       coordinate: Coordinate;
     },
   ];
+  /** Request a new game */
   newGame: [];
 };
 
@@ -148,6 +151,13 @@ export class GameConnection {
   private setupSocket(): void {
     this.addSocketListener("open", () => this.eventEmitter.emit("open"));
     this.addSocketListener("close", () => this.eventEmitter.emit("close"));
+
+    const interval = setInterval(() => {
+      this.send("ping");
+    }, 10000);
+    this.cleanupActions.push(() => {
+      clearInterval(interval);
+    });
   }
 
   /** Add an event listener to the WebSocket. The unsubscribe

@@ -14,6 +14,7 @@ namespace io_blair {
 class IHandler {
  public:
   virtual ~IHandler() = default;
+  virtual void operator()(const json::in::Ping&);
   virtual void operator()(const json::in::LobbyCreate&);
   virtual void operator()(const json::in::LobbyJoin&);
   virtual void operator()(const json::in::LobbyLeave&);
