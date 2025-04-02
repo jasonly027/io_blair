@@ -24,6 +24,13 @@ export class QueuedSocket extends WebSocket {
         this.send(this.msgQueue.shift()!);
       }
     });
+
+    this.addEventListener("close", (err) => {
+      console.log("Close error", err);
+    })
+    this.addEventListener("error", (err) => {
+      console.log("Error", err);
+    })
   }
 
   /**

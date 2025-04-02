@@ -1,42 +1,34 @@
 import { useState } from "react";
 import { a } from "@react-spring/web";
 import useDynamicScale from "../hooks/useDynamicScale";
-import { BGM_VOLUME, playClickSfx } from "../lib/sounds";
-import BGM from "/audio/BGM.mp3"
-
-const bgm = new Audio(BGM);
-bgm.loop = true;
-bgm.volume = BGM_VOLUME;
+import { playClickSfx, setAllAudioMute } from "../lib/sounds";
 
 export default function Sound() {
   const [muted, setMuted] = useState(true);
 
   const onClick = () => {
-    if (muted) {
-      setMuted(false);
-      bgm.play();
-    } else {
-      setMuted(true);
-      bgm.pause();
-    }
+    setMuted((prev) => {
+      setAllAudioMute(!prev);
+      return !prev;
+    });
   };
 
   const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
 
   return (
     <a.button
-      onClick={onClick}
+      onClick={() => {
+        playClickSfx();
+        onClick();
+      }}
       style={scale}
       onMouseEnter={increaseScale}
       onMouseLeave={decreaseScale}
-      onPointerDown={() => {
-        playClickSfx();
-        increaseScale();
-      }}
+      onPointerDown={increaseScale}
       onPointerUp={decreaseScale}
       onPointerLeave={decreaseScale}
       type="button"
-      className="fixed top-3 left-3 cursor-pointer focus:outline-0 [&>svg]:size-9 border-3 border-white rounded-lg bg-emerald-400 p-1 hover:bg-emerald-500 active:bg-green-500"
+      className="ml-safe-l mt-safe-t fixed top-3 left-3 cursor-pointer rounded-lg border-3 border-white bg-emerald-400 p-1 hover:bg-emerald-500 focus:outline-0 active:bg-green-500 [&>svg]:size-9"
     >
       {muted ? (
         <svg

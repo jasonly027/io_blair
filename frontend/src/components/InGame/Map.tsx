@@ -50,11 +50,10 @@ export default function Map() {
       )}
       <SpotLight
         ref={spotLightRef}
-        visible={currentCoins === totalCoins}
         position={[endX, 5, endZ]}
         angle={0.12}
         anglePower={0.8}
-        attenuation={5}
+        attenuation={currentCoins === totalCoins ? 5 : 0}
         color="yellow"
       />
     </group>

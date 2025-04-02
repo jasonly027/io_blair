@@ -17,10 +17,15 @@ import useDynamicScale from "../../hooks/useDynamicScale";
 import Loading from "../Loading";
 import useConnection from "../../hooks/useConnection";
 import type { GameConnectionListener } from "../../lib/GameConnection";
-import { playClickSfx, SFX_VOLUME } from "../../lib/sounds";
-import WIN from "/audio/win.mp3";
+import { playClickSfx, playWinSfx } from "../../lib/sounds";
+import { setMetaThemeColor } from "../../lib/game";
 
 export default function InGame() {
+  useEffect(() => {
+    setMetaThemeColor("#b8e6fe");
+    return () => setMetaThemeColor("#60a5fa");
+  }, []);
+
   return (
     <div className="z-0 h-[100dvh] w-[100dvw]">
       <Canvas
@@ -69,15 +74,12 @@ function ChatContainer() {
 
   return (
     <div tabIndex={0} className="group">
-      <div className="fixed bottom-3 left-3 z-20 rounded-lg border-3 border-white bg-emerald-400 p-1 group-focus-within:invisible hover:bg-emerald-500 active:bg-green-400 min-md:invisible">
+      <div className="ml-safe-l mb-safe-b fixed bottom-3 left-3 z-20 rounded-lg border-3 border-white bg-emerald-400 p-1 group-focus-within:invisible hover:bg-emerald-500 active:bg-green-400 min-md:invisible">
         <a.svg
           style={scale}
           onMouseEnter={increaseScale}
           onMouseLeave={decreaseScale}
-          onPointerDown={() => {
-            playClickSfx();
-            increaseScale();
-          }}
+          onPointerDown={increaseScale}
           onPointerUp={decreaseScale}
           onPointerLeave={decreaseScale}
           xmlns="http://www.w3.org/2000/svg"
@@ -94,7 +96,7 @@ function ChatContainer() {
           />
         </a.svg>
       </div>
-      <div className="fixed bottom-3 left-3 z-20 flex h-72 w-full max-w-[min(25rem,92vw)] items-center justify-center group-focus-within:visible max-[426px]:left-3 max-md:invisible">
+      <div className="ml-safe-l mb-safe-b ml-safe fixed bottom-3 left-3 z-20 flex size-full max-h-[min(18rem,50vh)] max-w-[min(25rem,92vw)] items-center justify-center group-focus-within:visible max-[426px]:left-3 max-md:invisible">
         <Chat />
       </div>
     </div>
@@ -104,7 +106,7 @@ function ChatContainer() {
 function Hud() {
   return (
     <>
-      <section className="absolute top-3 right-3 flex flex-col items-center justify-center space-y-3 select-none min-md:flex-row min-md:space-y-0 min-md:space-x-6 [&>svg]:h-[8vh] [&>svg]:min-h-12 [&>svg]:w-fit">
+      <section className="mt-safe-t mr-safe-r absolute top-3 right-3 flex flex-col items-center justify-center space-y-3 select-none min-md:flex-row min-md:space-y-0 min-md:space-x-4 [&>svg]:h-[8vh] [&>svg]:w-fit min-md:[&>svg]:h-auto">
         <CoinsCounter />
         <MovesCounter />
         <TimeCounter />
@@ -291,9 +293,6 @@ function CoinsCounter() {
   );
 }
 
-const winSfx = new Audio(WIN);
-winSfx.volume = SFX_VOLUME;
-
 function WinScreen() {
   const { gameStatus, gameDone } = useGame();
 
@@ -305,7 +304,7 @@ function WinScreen() {
   useEffect(
     function listenForTransitionToGameDone() {
       const onGameDone: GameConnectionListener<"transitionToGameDone"> = () => {
-        winSfx.play();
+        playWinSfx();
       };
 
       addConnectionEventListener("transitionToGameDone", onGameDone);
@@ -382,7 +381,7 @@ function Controls() {
         viewBox="0 0 160 158"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="fixed right-3 bottom-3 size-[min(30vh,50vw)] max-h-40 max-w-40"
+        className="mr-safe-r mb-safe-b fixed right-3 bottom-3 size-[min(30vh,50vw)] max-h-40 max-w-40"
       >
         <Arrow
           onClick={onUp}
