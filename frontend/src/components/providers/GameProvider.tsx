@@ -111,7 +111,7 @@ export function GameProvider({ children }: { children?: ReactNode }) {
 const MINIMUM_LOADING_TIME = 1000;
 
 function useGameStatus(): GameStatus {
-  const [gameStatus, setGameStatus] = useState(GameStatus.InGame);
+  const [gameStatus, setGameStatus] = useState(GameStatus.Prelobby);
 
   const { addConnectionEventListener, removeConnectionEventListener } =
     useConnection();
