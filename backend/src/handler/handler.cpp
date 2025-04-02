@@ -22,6 +22,9 @@ void Game::transition_to(unique_ptr<IGameHandler> handler) {
   state_ = std::move(handler);
 }
 
+void Game::operator()(const jin::Ping&) {
+  ctx_.session.lock()->async_send(jout::pong_msg());
+}
 void Game::operator()(const jin::LobbyCreate& ev) {
   (*state_)(*this, ctx_, ev);
 }
