@@ -20,6 +20,10 @@
 
 @theme {
   --font-sans: Monsterrat, sans-serif;
+  --spacing-safe-l: env(safe-area-inset-left);
+  --spacing-safe-r: env(safe-area-inset-right);
+  --spacing-safe-t: env(safe-area-inset-top);
+  --spacing-safe-b: env(safe-area-inset-bottom);
 }
 
 :root {
@@ -39,6 +43,7 @@ body {
   background: linear-gradient(to bottom, #60a5fa 70%, #3b82f6 100%);
 }
 
-html, body {
+html,
+body {
   overscroll-behavior: none;
 }

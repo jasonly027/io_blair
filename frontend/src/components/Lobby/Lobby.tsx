@@ -65,11 +65,11 @@ function LobbyCode() {
     <div className="flex flex-row flex-wrap items-center justify-center space-x-2">
       <h2>Lobby Code:</h2>
       <a.button
-        onClick={saveToClipboard}
-        onPointerDown={() => {
+        onClick={() => {
           playClickSfx();
-          increaseScale();
+          saveToClipboard();
         }}
+        onPointerDown={increaseScale}
         onPointerUp={decreaseScale}
         onPointerLeave={decreaseScale}
         onMouseEnter={increaseScale}

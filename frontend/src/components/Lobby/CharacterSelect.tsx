@@ -99,7 +99,10 @@ function ConfirmCharacter({
       style={scale}
     >
       <g
-        onClick={() => onClick()}
+        onClick={() => {
+          playClickSfx();
+          onClick();
+        }}
         onKeyDown={(e) => {
           if (e.key !== "Enter") return;
           e.stopPropagation();
@@ -107,10 +110,7 @@ function ConfirmCharacter({
         }}
         onMouseEnter={increaseScale}
         onMouseLeave={decreaseScale}
-        onPointerDown={() => {
-          playClickSfx();
-          increaseScale();
-        }}
+        onPointerDown={increaseScale}
         onPointerUp={decreaseScale}
         onPointerLeave={decreaseScale}
         tabIndex={0}

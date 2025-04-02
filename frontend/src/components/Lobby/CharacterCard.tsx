@@ -1,4 +1,4 @@
-import { Helper,  PerspectiveCamera } from "@react-three/drei";
+import { Helper, PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { type ReactNode } from "react";
 import { PointLightHelper } from "three";
@@ -30,10 +30,9 @@ export default function CharacterCard({
     <DashedContainer stroke={stroke} strokeColor={strokeColor}>
       <div
         onClick={() => {
-          if (!locked) onClick(name);
-        }}
-        onPointerDown={() => {
-          if (!locked) playClickSfx();
+          if (locked) return;
+          playClickSfx();
+          onClick(name);
         }}
         style={{
           cursor: locked ? "not-allowed" : "pointer",
