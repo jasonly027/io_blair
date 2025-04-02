@@ -56,7 +56,7 @@ function LobbyCode() {
 
   const saveToClipboard = () => {
     clipboardToast();
-    navigator.clipboard.writeText(lobbyCode);
+    navigator.clipboard?.writeText(lobbyCode);
   };
 
   const { scale, increaseScale, decreaseScale } = useDynamicScale(1.05);
