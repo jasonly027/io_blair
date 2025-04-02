@@ -71,6 +71,14 @@ export default function useBody(
       }) => {
         currentCoord.current = toMapUnits(start);
         const [x, z] = currentCoord.current;
+        bodyRef.current?.setTranslation(
+          {
+            x,
+            y: bodyRef.current.translation().y,
+            z,
+          },
+          true,
+        );
         sprCtrl.start({
           to: {
             x,
