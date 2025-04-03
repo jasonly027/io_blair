@@ -130,6 +130,7 @@ function Input({ setHistory }: InputProps) {
       onFocus={() => setGameFocused(false)}
       onBlur={() => setGameFocused(true)}
       placeholder="Send Message (Enter)"
+      maxLength={120}
       className="m-1 rounded-sm border-2 border-black/25 px-2 text-lg font-semibold placeholder:text-white/65 placeholder:select-none focus:outline-0"
     />
   );
