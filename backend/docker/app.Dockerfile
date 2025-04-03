@@ -1,9 +1,5 @@
 FROM silkeh/clang:20 AS builder
 
-ENV CPM_SOURCE_CACHE=/.cpm_cache
-
-VOLUME [ "${CPM_SOURCE_CACHE}" ]
-
 RUN apt-get update && apt-get install -y ninja-build && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -20,7 +16,7 @@ RUN cmake -B build -S .       \
 FROM gcr.io/distroless/cc-debian12
 
 ENV SERVER_PORT=80
-EXPOSE ${SERVER_PORT}
+EXPOSE $SERVER_PORT
 
 WORKDIR /app
 
