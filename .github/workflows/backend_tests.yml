@@ -1,0 +1,25 @@
+name: Run backend tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@v1
+
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Build tests
+        run: docker compose build tests
+        working-directory: ./backend
+
+      - name: Run tests
+        run: docker compose up tests
+        working-directory: ./backend
