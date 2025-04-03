@@ -15,6 +15,8 @@ TEST(JsonDecodeShould, NotCallHandlerOnInvalidJson) {
   json::decode("", handler);
   json::decode("{}", handler);
   json::decode("invalid json", handler);
+
+  FAIL();
 }
 
 }  // namespace io_blair::testing
