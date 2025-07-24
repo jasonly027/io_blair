@@ -1,0 +1,7 @@
+services:
+  app:
+    image: jasonly027/io_blair_backend
+    environment:
+      SERVER_PORT: 80
+    ports:
+      - "80:80"
