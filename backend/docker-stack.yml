@@ -6,10 +6,10 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.app.rule=Host(`ioblair-server.uk`)"
-        - "traefik.http.services.app.loadbalancer.server.port=8080"
-        - "traefik.http.routers.app.entrypoints=websecure"
-        - "traefik.http.routers.app.tls.certresolver=myresolver"
+        - "traefik.http.routers.ioblair.rule=Host(`ioblair-server.uk`)"
+        - "traefik.http.services.ioblair.loadbalancer.server.port=8080"
+        - "traefik.http.routers.ioblair.entrypoints=websecure"
+        - "traefik.http.routers.ioblair.tls.certresolver=myresolver"
     networks:
       - traefik-net
 
