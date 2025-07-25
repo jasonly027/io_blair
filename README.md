@@ -1,15 +1,15 @@
 <h1 align="center">Io and Blair</h1>
 
 <div align="center">
-<a href="https://jasonly027.github.io/io_blair/"><img alt="Game Icon" src=".github/assets/icon.svg" width=200></a>
+<a href="https://ioblair.jsonis.me/"><img alt="Game Icon" src=".github/assets/icon.svg" width=200></a>
 </div>
 
-<h4 align="center">A co-op WebSocket game in the browser. (MODELS PENDING) Play it <a href="https://jasonly027.github.io/io_blair/">here</a>!</h4>
+<h4 align="center">A co-op WebSocket game in the browser. (MODELS PENDING) Play it <a href="https://ioblair.jsonis.me/">here</a>!</h4>
 
 <p>Navigate randomly generated, perilous islands in the sky to collect all the coins. Work together with a partner to uncover hidden paths.</p>
 
 <div align="center">
-<a href="https://jasonly027.github.io/io_blair/">
+<a href="https://ioblair.jsonis.me/">
 <img alt="Play Now" src="https://img.shields.io/badge/PLAY-NOW-e9d4ff?style=for-the-badge&color=%23e9d4ff">
 </a>
 <a href="https://hub.docker.com/r/jasonly027/io_blair_backend/">
