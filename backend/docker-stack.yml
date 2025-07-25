@@ -1,0 +1,18 @@
+services:
+  app:
+    image: jasonly027/io_blair_backend
+    environment:
+      - SERVER_PORT=8080
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.app.rule=Host(`ioblair-server.uk`)"
+        - "traefik.http.services.app.loadbalancer.server.port=8080"
+        - "traefik.http.routers.app.entrypoints=websecure"
+        - "traefik.http.routers.app.tls.certresolver=myresolver"
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true
